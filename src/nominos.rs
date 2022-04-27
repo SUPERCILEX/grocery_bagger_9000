@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::{entity::ShapeBundle, prelude::*};
+use bevy_rapier3d::prelude::*;
 use paste::paste;
 
 use crate::nomino_consts::*;
@@ -7,62 +8,34 @@ use crate::nomino_consts::*;
 pub trait Nomino {
     fn path(&self) -> &Path;
 
-    fn bounding_boxes(&self) -> &'static [Rect<f32>];
+    fn vertices(&self) -> &'static [Point<Real>];
 }
 
 #[derive(Component, Default)]
 pub struct NominoMarker;
 
-#[derive(Component, Deref)]
-pub struct BoundingBoxes(&'static [Rect<f32>]);
-
-impl BoundingBoxes {
-    pub fn contains(&self, base_position: &Transform, mouse_position: Vec2) -> bool {
-        for bound in self.0 {
-            let rotated_start_corner = base_position.mul_vec3(bound.start().extend(0.)).truncate();
-            let rotated_end_corner = base_position.mul_vec3(bound.end().extend(0.)).truncate();
-
-            let within_bounds = mouse_position.cmpge(rotated_start_corner)
-                == mouse_position.cmple(rotated_end_corner);
-            if within_bounds {
-                return true;
-            }
-        }
-        false
-    }
-}
-
-trait RectHelpers {
-    fn start(&self) -> Vec2;
-
-    fn end(&self) -> Vec2;
-}
-
-impl RectHelpers for Rect<f32> {
-    #[inline]
-    fn start(&self) -> Vec2 {
-        Vec2::new(self.left, self.bottom)
-    }
-
-    #[inline]
-    fn end(&self) -> Vec2 {
-        Vec2::new(self.right, self.top)
-    }
-}
-
 #[derive(Bundle)]
 pub struct NominoBundle {
     #[bundle]
     shape: ShapeBundle,
-    bounding_boxes: BoundingBoxes,
+    #[bundle]
+    collider: ColliderBundle,
     _marker: NominoMarker,
 }
 
 impl NominoBundle {
     pub fn new(nomino: impl Nomino, draw_mode: DrawMode, transform: Transform) -> Self {
+        let collider = ColliderBundle {
+            shape: ColliderShape::convex_hull(nomino.vertices())
+                .unwrap()
+                .into(),
+            position: (transform.translation, transform.rotation).into(),
+            ..Default::default()
+        };
+
         Self {
             shape: GeometryBuilder::build_as(nomino.path(), draw_mode, transform),
-            bounding_boxes: BoundingBoxes(nomino.bounding_boxes()),
+            collider,
             _marker: default(),
         }
     }
@@ -84,8 +57,8 @@ macro_rules! nomino {
                     &[<$type:upper _ $shape:upper _PATH>]
                 }
 
-                fn bounding_boxes(&self) -> &'static [Rect<f32>] {
-                    [<$type:upper _ $shape:upper _BOUNDING_BOXES>]
+                fn vertices(&self) -> &'static [Point<Real>] {
+                    &*[<$type:upper _ $shape:upper _VERTICES>]
                 }
             }
         }

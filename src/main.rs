@@ -1,4 +1,5 @@
 #![feature(let_chains)]
+#![allow(clippy::too_many_arguments)]
 
 use bevy::{
     app::App,
