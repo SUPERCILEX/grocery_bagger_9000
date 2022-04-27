@@ -144,6 +144,7 @@ fn selected_piece_mover(
                 camera_transform,
             ) - (position.rotation * selected_piece.offset.extend(0.))
                 .truncate())
+            .round()
             .extend(0.);
             *physics_position = (position.translation, position.rotation).into();
         }
