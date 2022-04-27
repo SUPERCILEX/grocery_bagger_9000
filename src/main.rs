@@ -13,7 +13,9 @@ use crate::{gb9000::GroceryBagger9000Plugin, window_management::WindowManager};
 mod gb9000;
 mod nomino_consts;
 mod nominos;
+mod piece_movement;
 mod window_management;
+mod window_utils;
 
 fn main() {
     #[cfg(target_arch = "wasm32")]
