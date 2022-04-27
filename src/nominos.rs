@@ -18,14 +18,13 @@ pub struct BoundingBoxes(&'static [Rect<f32>]);
 
 impl BoundingBoxes {
     pub fn contains(&self, base_position: &Transform, mouse_position: Vec2) -> bool {
-        let t = base_position.translation.truncate();
-        if !mouse_position.cmpge(t).all() {
-            return false;
-        }
-        let t = mouse_position - t;
-
         for bound in self.0 {
-            if t.cmpge(bound.start()).all() && t.cmple(bound.end()).all() {
+            let rotated_start_corner = base_position.mul_vec3(bound.start().extend(0.)).truncate();
+            let rotated_end_corner = base_position.mul_vec3(bound.end().extend(0.)).truncate();
+
+            let within_bounds = mouse_position.cmpge(rotated_start_corner)
+                == mouse_position.cmple(rotated_end_corner);
+            if within_bounds {
                 return true;
             }
         }

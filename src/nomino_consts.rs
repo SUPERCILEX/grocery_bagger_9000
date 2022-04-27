@@ -1,9 +1,14 @@
+use std::f32::consts::PI;
+
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::{
     tess::{math::Point, path::path::Builder},
     *,
 };
 use static_init::dynamic;
+
+#[dynamic]
+pub static ROTATION_90: Quat = Quat::from_rotation_z(-PI / 2.);
 
 #[dynamic]
 pub static TETROMINO_STRAIGHT_PATH: Path = {

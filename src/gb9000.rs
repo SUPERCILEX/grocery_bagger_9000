@@ -1,7 +1,7 @@
 use bevy::{ecs::system::EntityCommands, prelude::*, render::camera::RenderTarget};
 use bevy_prototype_lyon::prelude::*;
 
-use crate::{nominos::*, window_management::MainCamera};
+use crate::{nomino_consts::ROTATION_90, nominos::*, window_management::MainCamera};
 
 pub struct GroceryBagger9000Plugin;
 
@@ -9,12 +9,13 @@ impl Plugin for GroceryBagger9000Plugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup)
             .add_system(piece_selection_handler)
+            .add_system(piece_rotation_handler)
             .add_system(selected_piece_mover.before(piece_selection_handler))
             .init_resource::<PieceSelection>();
     }
 }
 
-#[derive(Deref, Default)]
+#[derive(Deref, DerefMut, Default)]
 struct PieceSelection(Option<SelectedPiece>);
 
 struct SelectedPiece {
@@ -61,9 +62,9 @@ fn setup(mut commands: Commands) {
 fn piece_selection_handler(
     mut commands: Commands,
     windows: Res<Windows>,
+    camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mouse_button_input: Res<Input<MouseButton>>,
     pieces: Query<(Entity, &Transform, &BoundingBoxes), With<NominoMarker>>,
-    camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mut selected_piece: ResMut<PieceSelection>,
 ) {
     if mouse_button_input.just_released(MouseButton::Left) {
@@ -78,14 +79,33 @@ fn piece_selection_handler(
         if let Some(cursor_position) = compute_cursor_position(windows, camera) {
             for (id, transform, bounds) in pieces.iter() {
                 if bounds.contains(transform, cursor_position) {
+                    let offset = (transform.rotation.inverse()
+                        * (cursor_position - transform.translation.truncate()).extend(0.))
+                    .truncate();
+
                     commands.entity(id).insert(PieceSelectedMarker);
-                    *selected_piece = PieceSelection(Some(SelectedPiece {
-                        id,
-                        offset: cursor_position - transform.translation.truncate(),
-                    }));
+                    *selected_piece = PieceSelection(Some(SelectedPiece { id, offset }));
+                    break;
                 }
             }
         }
+    }
+}
+
+fn piece_rotation_handler(
+    mouse_button_input: Res<Input<MouseButton>>,
+    windows: Res<Windows>,
+    camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    mut pieces: Query<&mut Transform, With<PieceSelectedMarker>>,
+) {
+    if mouse_button_input.just_released(MouseButton::Right) &&
+    let Ok(mut piece) = pieces.get_single_mut() &&
+    let Some(cursor_position) = compute_cursor_position(windows, camera)
+    {
+        piece.rotate_around(
+            cursor_position.extend(0.),
+            *ROTATION_90,
+        );
     }
 }
 
@@ -105,8 +125,9 @@ fn selected_piece_mover(
                 windows.get(e.id).unwrap(),
                 camera,
                 camera_transform,
-            ) - selected_piece.offset)
-                .extend(0.);
+            ) - (position.rotation * selected_piece.offset.extend(0.))
+                .truncate())
+            .extend(0.);
         }
     }
 }
