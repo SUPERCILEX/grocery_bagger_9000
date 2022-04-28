@@ -4,9 +4,9 @@ use crate::{
     bags,
     bags::{BagBundle, Level1Bag},
     conveyor_belt,
-    dpi::{Dips, Pixels},
     levels::CurrentLevel,
     nominos::{NominoBundle, TetrominoL},
+    window_management::MainCamera,
 };
 
 const LEVEL_COLOR: Color = Color::ORANGE;
@@ -29,6 +29,7 @@ fn init_level(
     current: Res<CurrentLevel>,
     windows: Res<Windows>,
     initialized: Option<Res<Level1Initialized>>,
+    projection_2d: Query<&OrthographicProjection, With<MainCamera>>,
 ) {
     if current.level >= 1 {
         if let Some(initialized) = initialized {
@@ -43,13 +44,14 @@ fn init_level(
     let root = commands
         .spawn_bundle(TransformBundle::default())
         .with_children(|parent| {
+            let scale = projection_2d.single().scale;
             let window = windows.get_primary().unwrap();
-            let window_width = Pixels(window.width());
-            let window_height = Pixels(window.height());
+            let window_width = window.width() * scale;
+            let window_height = window.height() * scale;
 
             let centered_bag_coords = Vec3::new(
-                (*(window_width / Dips(2.) - bags::RADIUS)).round(),
-                (*((window_height - conveyor_belt::HEIGHT) / Dips(2.) - bags::RADIUS)).round(),
+                (window_width / 2. - bags::RADIUS).round(),
+                ((window_height - conveyor_belt::HEIGHT) / 2. - bags::RADIUS).round(),
                 0.,
             );
             parent.spawn_bundle(BagBundle::new(
@@ -59,8 +61,8 @@ fn init_level(
             ));
 
             let l_position = Vec3::new(
-                *(window_width - conveyor_belt::LENGTH),
-                *(window_height - conveyor_belt::HEIGHT),
+                window_width - conveyor_belt::LENGTH,
+                window_height - conveyor_belt::HEIGHT,
                 0.,
             );
             parent.spawn_bundle(NominoBundle::new(

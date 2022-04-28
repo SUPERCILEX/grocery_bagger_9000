@@ -1,4 +1,2 @@
-use crate::dpi::Dips;
-
-pub const HEIGHT: Dips = Dips(6.);
-pub const LENGTH: Dips = Dips(3. * 9.);
+pub const HEIGHT: f32 = 6.;
+pub const LENGTH: f32 = 3. * 9.;

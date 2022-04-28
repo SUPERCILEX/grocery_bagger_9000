@@ -8,9 +8,7 @@ use bevy_prototype_lyon::{
 };
 use bevy_rapier3d::prelude::*;
 
-use crate::dpi::Dips;
-
-pub const RADIUS: Dips = Dips(3.);
+pub const RADIUS: f32 = 3.;
 
 pub const BAG_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(1 << 1, 1 << 1);
 

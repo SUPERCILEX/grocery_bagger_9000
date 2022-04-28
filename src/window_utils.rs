@@ -2,9 +2,6 @@ use bevy::{prelude::*, render::camera::RenderTarget};
 
 use crate::window_management::MainCamera;
 
-pub const PIXELS_PER_UNIT: f32 = 25.;
-pub const TARGET_WIDTH_UNITS: f32 = 48.;
-
 pub fn compute_cursor_position(
     windows: Res<Windows>,
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,

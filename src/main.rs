@@ -9,7 +9,6 @@ use crate::{gb9000::GroceryBagger9000Plugin, window_management::WindowManager};
 
 mod bags;
 mod conveyor_belt;
-mod dpi;
 mod gb9000;
 mod level1;
 mod levels;
