@@ -6,7 +6,7 @@ use bevy_prototype_lyon::{
         *,
     },
 };
-use bevy_rapier3d::prelude::{Point as PhysPoint, *};
+use bevy_rapier3d::prelude::*;
 
 use crate::dpi::Dips;
 
@@ -15,7 +15,7 @@ pub const RADIUS: Dips = Dips(3.);
 pub trait Bag {
     fn path(&self) -> &Path;
 
-    fn vertices(&self) -> &[PhysPoint<Real>];
+    fn collider(&self) -> &ColliderShape;
 }
 
 #[derive(Bundle)]
@@ -29,7 +29,7 @@ pub struct BagBundle {
 impl BagBundle {
     pub fn new(bag: impl Bag, color: Color, transform: Transform) -> Self {
         let collider = ColliderBundle {
-            shape: ColliderShape::convex_hull(bag.vertices()).unwrap().into(),
+            shape: bag.collider().clone().into(),
             position: (transform.translation, transform.rotation).into(),
             ..default()
         };
@@ -51,7 +51,7 @@ impl BagBundle {
 
 pub struct Level1Bag {
     path: Path,
-    vertices: [PhysPoint<Real>; 10],
+    collider: ColliderShape,
 }
 
 impl Default for Level1Bag {
@@ -72,20 +72,26 @@ impl Default for Level1Bag {
 
         let path = Path(b.build());
 
-        let vertices: [PhysPoint<Real>; 10] = [
-            Vec3::new(0., 0., 0.).into(),
-            Vec3::new(0., 6., 0.).into(),
-            Vec3::new(2., 6., 0.).into(),
-            Vec3::new(2., 4., 0.).into(),
-            Vec3::new(3., 4., 0.).into(),
-            Vec3::new(3., 5., 0.).into(),
-            Vec3::new(5., 5., 0.).into(),
-            Vec3::new(5., 6., 0.).into(),
-            Vec3::new(6., 6., 0.).into(),
-            Vec3::new(6., 0., 0.).into(),
-        ];
+        let collider = ColliderShape::compound(vec![
+            (
+                Vec3::new(3., 2., 0.).into(),
+                ColliderShape::cuboid(3., 2., 0.),
+            ),
+            (
+                Vec3::new(1., 5., 0.).into(),
+                ColliderShape::cuboid(1., 1., 0.),
+            ),
+            (
+                Vec3::new(4.5, 4.5, 0.).into(),
+                ColliderShape::cuboid(1.5, 0.5, 0.),
+            ),
+            (
+                Vec3::new(5.5, 5.5, 0.).into(),
+                ColliderShape::cuboid(0.5, 0.5, 0.),
+            ),
+        ]);
 
-        Self { path, vertices }
+        Self { path, collider }
     }
 }
 
@@ -94,7 +100,7 @@ impl Bag for Level1Bag {
         &self.path
     }
 
-    fn vertices(&self) -> &[PhysPoint<Real>] {
-        &self.vertices
+    fn collider(&self) -> &ColliderShape {
+        &self.collider
     }
 }

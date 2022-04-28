@@ -1,5 +1,6 @@
-use crate::level1::Level1Plugin;
 use bevy::prelude::*;
+
+use crate::level1::Level1Plugin;
 
 pub struct LevelsPlugin;
 
