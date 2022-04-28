@@ -12,6 +12,8 @@ use crate::dpi::Dips;
 
 pub const RADIUS: Dips = Dips(3.);
 
+pub const BAG_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(1 << 1, 1 << 1);
+
 pub trait Bag {
     fn path(&self) -> &Path;
 
@@ -29,8 +31,14 @@ pub struct BagBundle {
 impl BagBundle {
     pub fn new(bag: impl Bag, color: Color, transform: Transform) -> Self {
         let collider = ColliderBundle {
+            collider_type: ColliderType::Sensor.into(),
             shape: bag.collider().clone().into(),
             position: (transform.translation, transform.rotation).into(),
+            flags: ColliderFlags {
+                collision_groups: BAG_COLLIDER_GROUP,
+                ..default()
+            }
+            .into(),
             ..default()
         };
 

@@ -5,6 +5,8 @@ use paste::paste;
 
 use crate::nomino_consts::*;
 
+pub const NOMINO_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(1 << 0, 1 << 0);
+
 pub trait Nomino {
     fn path(&self) -> &Path;
 
@@ -26,8 +28,14 @@ pub struct NominoBundle {
 impl NominoBundle {
     pub fn new(nomino: impl Nomino, color: Color, transform: Transform) -> Self {
         let collider = ColliderBundle {
+            collider_type: ColliderType::Sensor.into(),
             shape: nomino.collider().clone().into(),
             position: (transform.translation, transform.rotation).into(),
+            flags: ColliderFlags {
+                collision_groups: NOMINO_COLLIDER_GROUP,
+                ..default()
+            }
+            .into(),
             ..default()
         };
 

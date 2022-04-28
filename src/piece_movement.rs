@@ -54,7 +54,7 @@ fn piece_selection_handler(
             query_pipeline.intersections_with_point(
                 &collider_set,
                 &cursor_position.extend(0.).into(),
-                InteractionGroups::all(),
+                NOMINO_COLLIDER_GROUP,
                 None,
                 |handle| {
                     let id = handle.entity();
