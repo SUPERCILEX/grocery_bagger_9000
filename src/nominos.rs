@@ -8,7 +8,7 @@ use crate::nomino_consts::*;
 pub trait Nomino {
     fn path(&self) -> &Path;
 
-    fn vertices(&self) -> &'static [Point<Real>];
+    fn vertices(&self) -> &[Point<Real>];
 }
 
 #[derive(Component, Default)]
@@ -24,13 +24,21 @@ pub struct NominoBundle {
 }
 
 impl NominoBundle {
-    pub fn new(nomino: impl Nomino, draw_mode: DrawMode, transform: Transform) -> Self {
+    pub fn new(nomino: impl Nomino, color: Color, transform: Transform) -> Self {
         let collider = ColliderBundle {
             shape: ColliderShape::convex_hull(nomino.vertices())
                 .unwrap()
                 .into(),
             position: (transform.translation, transform.rotation).into(),
-            ..Default::default()
+            ..default()
+        };
+
+        let draw_mode = DrawMode::Outlined {
+            fill_mode: FillMode {
+                options: FillOptions::default().with_intersections(false),
+                color,
+            },
+            outline_mode: StrokeMode::new(Color::BLACK, 0.1),
         };
 
         Self {
@@ -57,7 +65,7 @@ macro_rules! nomino {
                     &[<$type:upper _ $shape:upper _PATH>]
                 }
 
-                fn vertices(&self) -> &'static [Point<Real>] {
+                fn vertices(&self) -> &[Point<Real>] {
                     &*[<$type:upper _ $shape:upper _VERTICES>]
                 }
             }

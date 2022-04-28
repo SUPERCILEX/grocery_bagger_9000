@@ -12,10 +12,10 @@ pub struct PieceMovementPlugin;
 
 impl Plugin for PieceMovementPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(piece_selection_handler)
-            .add_system(piece_rotation_handler)
-            .add_system(selected_piece_mover.before(piece_selection_handler))
-            .init_resource::<PieceSelection>();
+        app.init_resource::<PieceSelection>();
+        app.add_system(piece_selection_handler);
+        app.add_system(piece_rotation_handler);
+        app.add_system(selected_piece_mover.before(piece_selection_handler));
     }
 }
 

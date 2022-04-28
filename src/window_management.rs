@@ -1,24 +1,24 @@
 use bevy::{prelude::*, render::camera::WindowOrigin, window::WindowMode};
 
-pub struct WindowManager;
+use crate::window_utils::{PIXELS_PER_UNIT, TARGET_WIDTH_UNITS};
 
-const WIDTH_UNITS: u32 = 48;
+pub struct WindowManager;
 
 impl Plugin for WindowManager {
     fn build(&self, app: &mut App) {
-        #[cfg(target_arch = "wasm32")]
-        app.add_plugin(bevy_web_resizer::Plugin);
-
         app.insert_resource(WindowDescriptor {
             title: "Grocery Bagger 9000".to_string(),
-            width: 1000.,
-            height: 765.25,
-            ..Default::default()
-        })
-        .insert_resource(ClearColor(Color::WHITE))
-        .add_startup_system(setup_cameras)
-        .add_system(monitor_scaling)
-        .add_system(full_screen_toggle);
+            width: 1200.,
+            height: 675.,
+            ..default()
+        });
+        app.insert_resource(ClearColor(Color::WHITE));
+        app.add_startup_system(setup_cameras);
+        app.add_system(monitor_scaling);
+        app.add_system(full_screen_toggle);
+
+        #[cfg(target_arch = "wasm32")]
+        app.add_plugin(bevy_web_resizer::Plugin);
     }
 }
 
@@ -42,7 +42,12 @@ fn monitor_scaling(
     }
 
     let window_width = windows.get_primary().unwrap().width();
-    projection_2d.single_mut().scale = 1. / (window_width / (WIDTH_UNITS as f32));
+    let dips = window_width / PIXELS_PER_UNIT;
+    projection_2d.single_mut().scale = if dips >= TARGET_WIDTH_UNITS {
+        1. / PIXELS_PER_UNIT
+    } else {
+        1. / (window_width / TARGET_WIDTH_UNITS)
+    };
 }
 
 fn full_screen_toggle(mut windows: ResMut<Windows>, keyboard_input: Res<Input<KeyCode>>) {
