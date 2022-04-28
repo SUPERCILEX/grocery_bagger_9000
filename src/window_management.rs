@@ -6,6 +6,9 @@ const WIDTH_UNITS: u32 = 48;
 
 impl Plugin for WindowManager {
     fn build(&self, app: &mut App) {
+        #[cfg(target_arch = "wasm32")]
+        app.add_plugin(bevy_web_resizer::Plugin);
+
         app.insert_resource(WindowDescriptor {
             title: "Grocery Bagger 9000".to_string(),
             width: 1000.,

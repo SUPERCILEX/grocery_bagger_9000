@@ -1,11 +1,8 @@
 #![feature(let_chains)]
+#![feature(once_cell)]
 #![allow(clippy::too_many_arguments)]
 
-use bevy::{
-    app::App,
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    DefaultPlugins,
-};
+use bevy::{app::App, DefaultPlugins};
 use bevy_prototype_lyon::plugin::ShapePlugin;
 
 use crate::{gb9000::GroceryBagger9000Plugin, window_management::WindowManager};
@@ -30,6 +27,7 @@ fn main() {
 
     #[cfg(debug_assertions)]
     {
+        use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
         use bevy_screen_diags::ScreenDiagsPlugin;
 
         app.add_plugin(ScreenDiagsPlugin)

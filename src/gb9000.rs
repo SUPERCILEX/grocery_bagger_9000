@@ -2,10 +2,7 @@ use bevy::{ecs::system::EntityCommands, prelude::*};
 use bevy_prototype_lyon::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{
-    nominos::*,
-    piece_movement::PieceMovementPlugin,
-};
+use crate::{nominos::*, piece_movement::PieceMovementPlugin};
 
 pub struct GroceryBagger9000Plugin;
 
