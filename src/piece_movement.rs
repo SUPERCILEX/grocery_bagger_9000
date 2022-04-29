@@ -1,13 +1,11 @@
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
 use std::ops::Deref;
 
+use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
+
 use crate::{
-    bags::BAG_COLLIDER_GROUP,
-    nomino_consts::ROTATION_90,
-    nominos::*,
-    window_management::MainCamera,
-    window_utils::{compute_cursor_position, window_to_world_coords},
+    bags::BAG_COLLIDER_GROUP, nomino_consts::ROTATION_90, nominos::*,
+    window_management::MainCamera, window_utils::compute_cursor_position,
 };
 
 pub struct PieceMovementPlugin;
@@ -54,7 +52,7 @@ fn piece_selection_handler(
     collider_query: QueryPipelineColliderComponentsQuery,
     mut selected_piece: ResMut<PieceSelection>,
 ) {
-    if mouse_button_input.just_released(MouseButton::Left) {
+    if mouse_button_input.just_pressed(MouseButton::Left) {
         if let Some(piece) = &**selected_piece {
             // TODO check for
             //  1. collision with bag
@@ -125,28 +123,23 @@ fn piece_rotation_handler(
 
 fn selected_piece_mover(
     selected_piece: Res<PieceSelection>,
-    mut mouse_movements: EventReader<CursorMoved>,
     mut position: Query<
         (&mut Transform, &mut ColliderPositionComponent),
         With<PieceSelectedMarker>,
     >,
     windows: Res<Windows>,
-    camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
-    if let Some(selected_piece) = (*selected_piece).as_ref() {
-        let (camera, camera_transform) = camera.single();
+    if let Some(selected_piece) = (*selected_piece).as_ref() &&
+    let Some(cursor_position) = compute_cursor_position(windows, camera_query)
+    {
         let (mut position, mut physics_position) = position.single_mut();
-        for e in mouse_movements.iter() {
-            position.translation = (window_to_world_coords(
-                e.position,
-                windows.get(e.id).unwrap(),
-                camera,
-                camera_transform,
-            ) - (position.rotation * selected_piece.offset.extend(0.))
-                .truncate())
+
+        position.translation = (cursor_position
+            - (position.rotation * selected_piece.offset.extend(0.)).truncate())
             .round()
             .extend(0.);
-            *physics_position = (position.translation, position.rotation).into();
-        }
+
+        *physics_position = (position.translation, position.rotation).into();
     }
 }
