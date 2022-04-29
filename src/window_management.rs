@@ -54,7 +54,7 @@ fn monitor_scaling(
 }
 
 fn full_screen_toggle(mut windows: ResMut<Windows>, keyboard_input: Res<Input<KeyCode>>) {
-    if keyboard_input.just_released(KeyCode::F) {
+    if keyboard_input.just_pressed(KeyCode::F) {
         let window = windows.get_primary_mut().unwrap();
         window.set_mode(if window.mode() == WindowMode::Windowed {
             WindowMode::BorderlessFullscreen

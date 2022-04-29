@@ -109,7 +109,7 @@ fn piece_rotation_handler(
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mut pieces: Query<(&mut Transform, &mut ColliderPositionComponent), With<PieceSelectedMarker>>,
 ) {
-    if mouse_button_input.just_released(MouseButton::Right) &&
+    if mouse_button_input.just_pressed(MouseButton::Right) &&
     let Ok((mut piece, mut phys_piece)) = pieces.get_single_mut() &&
     let Some(cursor_position) = compute_cursor_position(windows, camera)
     {
