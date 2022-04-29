@@ -31,12 +31,11 @@ fn main() {
 
     #[cfg(debug_assertions)]
     {
-        use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+        use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
         use bevy_screen_diags::ScreenDiagsPlugin;
 
         app.add_plugin(ScreenDiagsPlugin);
         app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-        app.add_plugin(LogDiagnosticsPlugin::default());
     }
 
     app.run();
