@@ -18,7 +18,7 @@ impl Plugin for WindowManager {
         });
         app.insert_resource(ClearColor(Color::WHITE));
         app.add_startup_system(setup_cameras);
-        app.add_system_to_stage(CoreStage::PreUpdate, monitor_scaling);
+        app.add_system_to_stage(CoreStage::PreUpdate, window_scaling);
         app.add_system(full_screen_toggle);
 
         #[cfg(target_arch = "wasm32")]
@@ -37,7 +37,7 @@ fn setup_cameras(mut commands: Commands) {
     commands.spawn_bundle(UiCameraBundle::default());
 }
 
-fn monitor_scaling(
+fn window_scaling(
     mut projection_2d: Query<&mut OrthographicProjection, With<MainCamera>>,
     windows: Res<Windows>,
 ) {
