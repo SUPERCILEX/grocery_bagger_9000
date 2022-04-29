@@ -1,4 +1,8 @@
-use bevy::{prelude::*, render::camera::WindowOrigin, window::WindowMode};
+use bevy::{
+    prelude::*,
+    render::camera::WindowOrigin,
+    window::{WindowId, WindowMode, WindowResized},
+};
 
 const DEFAULT_WIDTH: f32 = 1200.;
 const DEFAULT_HEIGHT: f32 = 675.;
@@ -39,18 +43,16 @@ fn setup_cameras(mut commands: Commands) {
 
 fn window_scaling(
     mut projection_2d: Query<&mut OrthographicProjection, With<MainCamera>>,
-    windows: Res<Windows>,
+    mut resized_events: EventReader<WindowResized>,
 ) {
-    if !windows.is_changed() {
-        return;
+    if let Some(primary_window) = resized_events.iter().filter(|w| w.id.is_primary()).last() {
+        projection_2d.single_mut().scale =
+            if primary_window.width >= TARGET_WIDTH_UNITS * PIXELS_PER_UNIT {
+                1. / PIXELS_PER_UNIT
+            } else {
+                TARGET_WIDTH_UNITS / primary_window.width
+            };
     }
-
-    let window_width = windows.get_primary().unwrap().width();
-    projection_2d.single_mut().scale = if window_width >= TARGET_WIDTH_UNITS * PIXELS_PER_UNIT {
-        1. / PIXELS_PER_UNIT
-    } else {
-        TARGET_WIDTH_UNITS / window_width
-    };
 }
 
 fn full_screen_toggle(mut windows: ResMut<Windows>, keyboard_input: Res<Input<KeyCode>>) {
