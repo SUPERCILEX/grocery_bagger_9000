@@ -52,54 +52,56 @@ fn piece_selection_handler(
     collider_query: QueryPipelineColliderComponentsQuery,
     mut selected_piece: ResMut<PieceSelection>,
 ) {
-    if mouse_button_input.just_pressed(MouseButton::Left) {
-        if let Some(piece) = &**selected_piece {
-            // TODO check for
-            //  1. collision with bag
-            //  2. NOT collision with bag bounds
-            //  3. NOT collision with any other piece
-            let collider_set = QueryPipelineColliderComponentsSet(&collider_query);
-            let (pos, shape) = selected_shape.get(**piece).unwrap();
+    if !mouse_button_input.just_pressed(MouseButton::Left) {
+        return;
+    }
 
-            query_pipeline.intersections_with_shape(
-                &collider_set,
-                pos,
-                &***shape,
-                BAG_COLLIDER_GROUP,
-                None,
-                |handle| {
-                    dbg!(handle);
-                    true
-                },
-            );
+    if let Some(piece) = &**selected_piece {
+        // TODO check for
+        //  1. collision with bag
+        //  2. NOT collision with bag bounds
+        //  3. NOT collision with any other piece
+        let collider_set = QueryPipelineColliderComponentsSet(&collider_query);
+        let (pos, shape) = selected_shape.get(**piece).unwrap();
 
-            commands.entity(**piece).remove::<PieceSelectedMarker>();
-            *selected_piece = default();
-            return;
-        }
+        query_pipeline.intersections_with_shape(
+            &collider_set,
+            pos,
+            &***shape,
+            BAG_COLLIDER_GROUP,
+            None,
+            |handle| {
+                dbg!(handle);
+                true
+            },
+        );
 
-        if let Some(cursor_position) = compute_cursor_position(windows, camera) {
-            let collider_set = QueryPipelineColliderComponentsSet(&collider_query);
-            query_pipeline.intersections_with_point(
-                &collider_set,
-                &cursor_position.extend(0.).into(),
-                NOMINO_COLLIDER_GROUP,
-                None,
-                |handle| {
-                    let id = handle.entity();
+        commands.entity(**piece).remove::<PieceSelectedMarker>();
+        *selected_piece = default();
+        return;
+    }
 
-                    let transform = pieces.get(id).unwrap();
-                    let offset = (transform.rotation.inverse()
-                        * (cursor_position - transform.translation.truncate()).extend(0.))
-                    .truncate();
+    if let Some(cursor_position) = compute_cursor_position(windows, camera) {
+        let collider_set = QueryPipelineColliderComponentsSet(&collider_query);
+        query_pipeline.intersections_with_point(
+            &collider_set,
+            &cursor_position.extend(0.).into(),
+            NOMINO_COLLIDER_GROUP,
+            None,
+            |handle| {
+                let id = handle.entity();
 
-                    commands.entity(id).insert(PieceSelectedMarker);
-                    *selected_piece = PieceSelection(Some(SelectedPiece { id, offset }));
+                let transform = pieces.get(id).unwrap();
+                let offset = (transform.rotation.inverse()
+                    * (cursor_position - transform.translation.truncate()).extend(0.))
+                .truncate();
 
-                    false
-                },
-            );
-        }
+                commands.entity(id).insert(PieceSelectedMarker);
+                *selected_piece = PieceSelection(Some(SelectedPiece { id, offset }));
+
+                false
+            },
+        );
     }
 }
 
