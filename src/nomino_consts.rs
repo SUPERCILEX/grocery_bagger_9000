@@ -21,6 +21,8 @@ pub static TETROMINO_STRAIGHT_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     Path(b.build())
 });
 
+// TODO fix all colliders to not touch if the pieces are touching
+
 pub static TETROMINO_STRAIGHT_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
     ColliderShape::compound(vec![(
         Vec3::new(0.5, 2., 0.).into(),
@@ -94,11 +96,11 @@ pub static TETROMINO_L_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
     ColliderShape::compound(vec![
         (
             Vec3::new(0.5, 1.5, 0.).into(),
-            ColliderShape::cuboid(0.5, 1.5, 0.),
+            ColliderShape::cuboid(0.49, 1.49, 0.),
         ),
         (
-            Vec3::new(1.5, 0.5, 0.).into(),
-            ColliderShape::cuboid(0.5, 0.5, 0.),
+            Vec3::new(1.49, 0.5, 0.).into(),
+            ColliderShape::cuboid(0.5, 0.49, 0.),
         ),
     ])
 });

@@ -10,13 +10,7 @@ use bevy_rapier3d::prelude::*;
 
 pub const RADIUS: f32 = 3.;
 
-pub const BAG_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(1 << 1, 1 << 1);
-
-pub trait Bag {
-    fn path(&self) -> &Path;
-
-    fn collider(&self) -> &ColliderShape;
-}
+pub const BAG_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(0b10, 0b10);
 
 #[derive(Bundle)]
 pub struct BagBundle {
@@ -27,57 +21,19 @@ pub struct BagBundle {
 }
 
 impl BagBundle {
-    pub fn new(bag: impl Bag, color: Color, transform: Transform) -> Self {
-        let collider = ColliderBundle {
-            collider_type: ColliderType::Sensor.into(),
-            shape: bag.collider().clone().into(),
-            position: (transform.translation, transform.rotation).into(),
-            flags: ColliderFlags {
-                collision_groups: BAG_COLLIDER_GROUP,
-                ..default()
-            }
-            .into(),
-            ..default()
-        };
+    pub fn new(color: Color, transform: Transform) -> Self {
+        // TODO extract into constants
+        let mut b = Builder::with_capacity(4, 4);
 
-        let draw_mode = DrawMode::Outlined {
-            fill_mode: FillMode {
-                options: FillOptions::default().with_intersections(false),
-                color,
-            },
-            outline_mode: StrokeMode::new(Color::BLACK, 0.15),
-        };
-
-        Self {
-            shape: GeometryBuilder::build_as(bag.path(), draw_mode, transform),
-            collider,
-        }
-    }
-}
-
-pub struct Level1Bag {
-    path: Path,
-    collider: ColliderShape,
-}
-
-impl Default for Level1Bag {
-    fn default() -> Self {
-        let mut b = Builder::with_capacity(10, 11);
-
-        b.begin(Point::new(0., 0.));
-        b.line_to(Point::new(0., 6.));
-        b.line_to(Point::new(2., 6.));
-        b.line_to(Point::new(2., 4.));
-        b.line_to(Point::new(3., 4.));
-        b.line_to(Point::new(3., 5.));
-        b.line_to(Point::new(5., 5.));
-        b.line_to(Point::new(5., 6.));
-        b.line_to(Point::new(6., 6.));
+        b.begin(Point::new(0., 6.));
+        b.line_to(Point::new(0., 0.));
         b.line_to(Point::new(6., 0.));
-        b.close();
+        b.line_to(Point::new(6., 6.));
+        b.end(false);
 
         let path = Path(b.build());
 
+        // TODO make 1 big plus polyline for edges
         let collider = ColliderShape::compound(vec![
             (
                 Vec3::new(3., 2., 0.).into(),
@@ -97,16 +53,29 @@ impl Default for Level1Bag {
             ),
         ]);
 
-        Self { path, collider }
-    }
-}
+        let collider = ColliderBundle {
+            collider_type: ColliderType::Sensor.into(),
+            shape: collider.into(),
+            position: (transform.translation, transform.rotation).into(),
+            flags: ColliderFlags {
+                collision_groups: BAG_COLLIDER_GROUP,
+                ..default()
+            }
+            .into(),
+            ..default()
+        };
 
-impl Bag for Level1Bag {
-    fn path(&self) -> &Path {
-        &self.path
-    }
+        let draw_mode = DrawMode::Outlined {
+            fill_mode: FillMode {
+                options: FillOptions::default().with_intersections(false),
+                color,
+            },
+            outline_mode: StrokeMode::new(Color::BLACK, 0.15),
+        };
 
-    fn collider(&self) -> &ColliderShape {
-        &self.collider
+        Self {
+            shape: GeometryBuilder::build_as(&path, draw_mode, transform),
+            collider,
+        }
     }
 }

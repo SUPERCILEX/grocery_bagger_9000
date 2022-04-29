@@ -5,7 +5,7 @@ use paste::paste;
 
 use crate::nomino_consts::*;
 
-pub const NOMINO_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(1 << 0, 1 << 0);
+pub const NOMINO_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(0b1, 0b1);
 
 pub trait Nomino {
     fn path(&self) -> &Path;

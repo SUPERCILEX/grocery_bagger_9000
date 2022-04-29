@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use std::ops::Deref;
 
 use crate::{
+    bags::BAG_COLLIDER_GROUP,
     nomino_consts::ROTATION_90,
     nominos::*,
     window_management::MainCamera,
@@ -27,6 +29,14 @@ struct SelectedPiece {
     offset: Vec2,
 }
 
+impl Deref for SelectedPiece {
+    type Target = Entity;
+
+    fn deref(&self) -> &Self::Target {
+        &self.id
+    }
+}
+
 #[derive(Component)]
 struct PieceSelectedMarker;
 
@@ -36,15 +46,36 @@ fn piece_selection_handler(
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mouse_button_input: Res<Input<MouseButton>>,
     pieces: Query<&Transform, With<NominoMarker>>,
+    selected_shape: Query<
+        (&ColliderPositionComponent, &ColliderShapeComponent),
+        With<PieceSelectedMarker>,
+    >,
     query_pipeline: Res<QueryPipeline>,
     collider_query: QueryPipelineColliderComponentsQuery,
     mut selected_piece: ResMut<PieceSelection>,
 ) {
     if mouse_button_input.just_released(MouseButton::Left) {
-        if selected_piece.is_some() {
-            commands
-                .entity((*selected_piece).as_ref().unwrap().id)
-                .remove::<PieceSelectedMarker>();
+        if let Some(piece) = &**selected_piece {
+            // TODO check for
+            //  1. collision with bag
+            //  2. NOT collision with bag bounds
+            //  3. NOT collision with any other piece
+            let collider_set = QueryPipelineColliderComponentsSet(&collider_query);
+            let (pos, shape) = selected_shape.get(**piece).unwrap();
+
+            query_pipeline.intersections_with_shape(
+                &collider_set,
+                pos,
+                &***shape,
+                BAG_COLLIDER_GROUP,
+                None,
+                |handle| {
+                    dbg!(handle);
+                    true
+                },
+            );
+
+            commands.entity(**piece).remove::<PieceSelectedMarker>();
             *selected_piece = default();
             return;
         }

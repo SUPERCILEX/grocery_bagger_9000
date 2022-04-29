@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     bags,
-    bags::{BagBundle, Level1Bag},
+    bags::BagBundle,
     conveyor_belt,
     levels::CurrentLevel,
     nominos::{NominoBundle, TetrominoL},
@@ -49,13 +49,13 @@ fn init_level(
             let window_width = window.width() * scale;
             let window_height = window.height() * scale;
 
+            // TODO keep these and the pieces' coordinates up-to-date
             let centered_bag_coords = Vec3::new(
                 (window_width / 2. - bags::RADIUS).round(),
                 ((window_height - conveyor_belt::HEIGHT) / 2. - bags::RADIUS).round(),
                 0.,
             );
             parent.spawn_bundle(BagBundle::new(
-                Level1Bag::default(),
                 LEVEL_COLOR,
                 Transform::from_translation(centered_bag_coords),
             ));
@@ -70,6 +70,8 @@ fn init_level(
                 LEVEL_COLOR,
                 Transform::from_translation(l_position),
             ));
+
+            // TODO fill with pieces
         })
         .id();
     commands.insert_resource(Level1Initialized { root });
