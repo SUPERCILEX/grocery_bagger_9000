@@ -1,6 +1,7 @@
 #![feature(let_chains)]
 #![feature(once_cell)]
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::type_complexity)]
 
 use bevy::{app::App, DefaultPlugins};
 use bevy_prototype_lyon::plugin::ShapePlugin;
