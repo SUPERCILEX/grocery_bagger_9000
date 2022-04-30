@@ -1,7 +1,7 @@
 use bevy::{
     prelude::*,
     render::camera::WindowOrigin,
-    window::{WindowId, WindowMode, WindowResized},
+    window::{WindowMode, WindowResized},
 };
 
 const DEFAULT_WIDTH: f32 = 1200.;
@@ -33,9 +33,14 @@ impl Plugin for WindowManager {
 #[derive(Component)]
 pub struct MainCamera;
 
-fn setup_cameras(mut commands: Commands) {
+fn setup_cameras(mut commands: Commands, windows: Res<Windows>) {
     let mut camera_2d = OrthographicCameraBundle::new_2d();
     camera_2d.orthographic_projection.window_origin = WindowOrigin::BottomLeft;
+
+    scale_window(
+        &mut camera_2d.orthographic_projection,
+        windows.get_primary().unwrap().width(),
+    );
 
     commands.spawn_bundle(camera_2d).insert(MainCamera);
     commands.spawn_bundle(UiCameraBundle::default());
@@ -46,13 +51,16 @@ fn window_scaling(
     mut resized_events: EventReader<WindowResized>,
 ) {
     if let Some(primary_window) = resized_events.iter().filter(|w| w.id.is_primary()).last() {
-        projection_2d.single_mut().scale =
-            if primary_window.width >= TARGET_WIDTH_UNITS * PIXELS_PER_UNIT {
-                1. / PIXELS_PER_UNIT
-            } else {
-                TARGET_WIDTH_UNITS / primary_window.width
-            };
+        scale_window(&mut projection_2d.single_mut(), primary_window.width);
     }
+}
+
+fn scale_window(projection_2d: &mut OrthographicProjection, window_width: f32) {
+    projection_2d.scale = if window_width >= TARGET_WIDTH_UNITS * PIXELS_PER_UNIT {
+        1. / PIXELS_PER_UNIT
+    } else {
+        TARGET_WIDTH_UNITS / window_width
+    };
 }
 
 fn full_screen_toggle(mut windows: ResMut<Windows>, keyboard_input: Res<Input<KeyCode>>) {
