@@ -10,42 +10,36 @@ use bevy_prototype_lyon::{
 };
 use bevy_rapier3d::prelude::*;
 
-pub const RADIUS: f32 = 3.;
-
 pub const BAG_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(0b10, 0b10);
 pub const BAG_BOUNDARY_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(0b100, 0b100);
 
 static BAG_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 4);
 
-    b.begin(Point::new(0., 6.));
-    b.line_to(Point::new(0., 0.));
-    b.line_to(Point::new(6., 0.));
-    b.line_to(Point::new(6., 6.));
+    b.begin(Point::new(-3., 3.));
+    b.line_to(Point::new(-3., -3.));
+    b.line_to(Point::new(3., -3.));
+    b.line_to(Point::new(3., 3.));
     b.end(false);
 
     Path(b.build())
 });
 
-static MAIN_BAG_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
-    ColliderShape::compound(vec![(
-        Vec3::new(3., 3., 0.).into(),
-        ColliderShape::cuboid(3., 3., 0.),
-    )])
-});
+static MAIN_BAG_COLLIDER: SyncLazy<ColliderShape> =
+    SyncLazy::new(|| ColliderShape::cuboid(3., 3., 0.));
 
 static BOUNDARY_BAG_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
     ColliderShape::compound(vec![
         (
-            Vec3::new(-0.1, 3., 0.).into(),
+            Vec3::new(-3.1, 0., 0.).into(),
             ColliderShape::cuboid(0.1, 3., 0.),
         ),
         (
-            Vec3::new(3., -0.1, 0.).into(),
+            Vec3::new(0., -3.1, 0.).into(),
             ColliderShape::cuboid(3., 0.1, 0.),
         ),
         (
-            Vec3::new(6.1, 3., 0.).into(),
+            Vec3::new(3.1, 0., 0.).into(),
             ColliderShape::cuboid(0.1, 3., 0.),
         ),
     ])
@@ -104,5 +98,18 @@ impl<'w, 's, 'a> BagUtils for ChildBuilder<'w, 's, 'a> {
 
             parent.spawn_bundle(boundery_collider);
         });
+    }
+}
+
+pub trait BagSnapper<T> {
+    fn snap_to_grid(&self) -> T;
+}
+
+#[derive(Deref)]
+pub struct BagCoord(pub f32);
+
+impl BagSnapper<f32> for BagCoord {
+    fn snap_to_grid(&self) -> f32 {
+        self.round() + 0.5
     }
 }

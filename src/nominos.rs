@@ -58,13 +58,8 @@ impl NominoBundle {
 macro_rules! nomino {
     ($type:ident, $shape:ident) => {
         paste! {
+            #[derive(Default)]
             pub struct [<$type $shape>];
-
-            impl Default for [<$type $shape>] {
-                fn default() -> Self {
-                    Self
-                }
-            }
 
             impl Nomino for [<$type $shape>] {
                 fn path(&self) -> &Path {

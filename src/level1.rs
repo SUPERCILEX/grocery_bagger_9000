@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags,
-    bags::BagUtils,
+    bags::{BagCoord, BagSnapper, BagUtils},
     conveyor_belt,
     levels::CurrentLevel,
     nominos::{NominoBundle, TetrominoL},
@@ -51,8 +50,8 @@ fn init_level(
 
             // TODO keep these and the pieces' coordinates up-to-date
             let centered_bag_coords = Vec3::new(
-                (window_width / 2. - bags::RADIUS).round(),
-                ((window_height - conveyor_belt::HEIGHT) / 2. - bags::RADIUS).round(),
+                BagCoord(window_width / 2.).snap_to_grid(),
+                BagCoord((window_height - conveyor_belt::HEIGHT) / 2.).snap_to_grid(),
                 0.,
             );
             parent.spawn_bag(
