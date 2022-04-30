@@ -4,8 +4,11 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use crate::{
-    bags::BAG_COLLIDER_GROUP, nomino_consts::ROTATION_90, nominos::*,
-    window_management::MainCamera, window_utils::compute_cursor_position,
+    bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP},
+    nomino_consts::ROTATION_90,
+    nominos::*,
+    window_management::MainCamera,
+    window_utils::compute_cursor_position,
 };
 
 pub struct PieceMovementPlugin;
@@ -24,6 +27,7 @@ struct PieceSelection(Option<SelectedPiece>);
 
 struct SelectedPiece {
     id: Entity,
+    collider: ColliderHandle,
 }
 
 impl Deref for SelectedPiece {
@@ -42,7 +46,6 @@ fn piece_selection_handler(
     windows: Res<Windows>,
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mouse_button_input: Res<Input<MouseButton>>,
-    pieces: Query<&Transform, With<NominoMarker>>,
     selected_shape: Query<
         (&ColliderPositionComponent, &ColliderShapeComponent),
         With<PieceSelectedMarker>,
@@ -56,27 +59,39 @@ fn piece_selection_handler(
     }
 
     if let Some(piece) = &**selected_piece {
-        // TODO check for
-        //  1. collision with bag
-        //  2. NOT collision with bag bounds
-        //  3. NOT collision with any other piece
         let collider_set = QueryPipelineColliderComponentsSet(&collider_query);
         let (pos, shape) = selected_shape.get(**piece).unwrap();
 
-        query_pipeline.intersections_with_shape(
+        let intersects_with_bag = query_pipeline.intersection_with_shape(
             &collider_set,
             pos,
             &***shape,
             BAG_COLLIDER_GROUP,
             None,
-            |handle| {
-                dbg!(handle);
-                true
-            },
+        );
+        let overlaps_boundary = query_pipeline.intersection_with_shape(
+            &collider_set,
+            pos,
+            &***shape,
+            BAG_BOUNDARY_COLLIDER_GROUP,
+            None,
+        );
+        let overlaps_other_shapes = query_pipeline.intersection_with_shape(
+            &collider_set,
+            pos,
+            &***shape,
+            NOMINO_COLLIDER_GROUP,
+            Some(&(|handle| handle != piece.collider)),
         );
 
-        commands.entity(**piece).remove::<PieceSelectedMarker>();
-        *selected_piece = default();
+        if intersects_with_bag.is_some()
+            && overlaps_boundary.is_none()
+            && overlaps_other_shapes.is_none()
+        {
+            commands.entity(**piece).remove::<PieceSelectedMarker>();
+            *selected_piece = default();
+        }
+
         return;
     }
 
@@ -90,13 +105,11 @@ fn piece_selection_handler(
             |handle| {
                 let id = handle.entity();
 
-                let transform = pieces.get(id).unwrap();
-                let _offset = (transform.rotation.inverse()
-                    * (cursor_position - transform.translation.truncate()).extend(0.))
-                .truncate();
-
                 commands.entity(id).insert(PieceSelectedMarker);
-                *selected_piece = PieceSelection(Some(SelectedPiece { id }));
+                *selected_piece = PieceSelection(Some(SelectedPiece {
+                    id,
+                    collider: handle,
+                }));
 
                 false
             },
@@ -106,8 +119,6 @@ fn piece_selection_handler(
 
 fn piece_rotation_handler(
     mouse_button_input: Res<Input<MouseButton>>,
-    _windows: Res<Windows>,
-    _camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mut pieces: Query<(&mut Transform, &mut ColliderPositionComponent), With<PieceSelectedMarker>>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Right) &&
@@ -127,7 +138,8 @@ fn selected_piece_mover(
     camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
     if let Some(cursor_position) = compute_cursor_position(windows, camera_query) &&
-        let Ok((mut position, mut physics_position)) = position.get_single_mut(){
+    let Ok((mut position, mut physics_position)) = position.get_single_mut()
+    {
         position.translation = cursor_position.round().extend(0.);
 
         *physics_position = (position.translation, position.rotation).into();

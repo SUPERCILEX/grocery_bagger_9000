@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     bags,
-    bags::BagBundle,
+    bags::BagUtils,
     conveyor_belt,
     levels::CurrentLevel,
     nominos::{NominoBundle, TetrominoL},
@@ -55,10 +55,10 @@ fn init_level(
                 ((window_height - conveyor_belt::HEIGHT) / 2. - bags::RADIUS).round(),
                 0.,
             );
-            parent.spawn_bundle(BagBundle::new(
-                LEVEL_COLOR,
+            parent.spawn_bag(
+                Color::default(),
                 Transform::from_translation(centered_bag_coords),
-            ));
+            );
 
             // TODO: let the conveyor belt do this part for us
             let l_position = Vec3::new(
@@ -66,6 +66,11 @@ fn init_level(
                 window_height - conveyor_belt::HEIGHT,
                 0.,
             );
+            parent.spawn_bundle(NominoBundle::new(
+                TetrominoL::default(),
+                LEVEL_COLOR,
+                Transform::from_translation(l_position),
+            ));
             parent.spawn_bundle(NominoBundle::new(
                 TetrominoL::default(),
                 LEVEL_COLOR,
