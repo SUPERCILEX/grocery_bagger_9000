@@ -65,26 +65,16 @@ fn piece_selection_handler(
         let intersects_with_bag = query_pipeline
             .intersection_with_shape(&collider_set, pos, &***shape, BAG_COLLIDER_GROUP, None)
             .is_some();
-        let overlaps_boundary = query_pipeline
-            .intersection_with_shape(
-                &collider_set,
-                pos,
-                &***shape,
-                BAG_BOUNDARY_COLLIDER_GROUP,
-                None,
-            )
-            .is_some();
-        let overlaps_other_shapes = query_pipeline
-            .intersection_with_shape(
-                &collider_set,
-                pos,
-                &***shape,
-                NOMINO_COLLIDER_GROUP,
-                Some(&(|handle| handle != piece.collider)),
-            )
-            .is_some();
 
-        if intersects_with_bag && !overlaps_boundary && !overlaps_other_shapes {
+        if intersects_with_bag
+            && !straddles_bag_or_overlaps_pieces(
+                &query_pipeline,
+                piece.collider,
+                &collider_set,
+                pos,
+                shape,
+            )
+        {
             commands.entity(**piece).remove::<PieceSelectedMarker>();
             *selected_piece = default();
         }
@@ -147,25 +137,28 @@ fn selected_piece_mover(
     let Some(cursor_position) = compute_cursor_position(windows, camera_query)
     {
         let snapped_cursor_position = cursor_position.round().extend(0.);
-        let (rotation, collider_shape) = {
-            let position_query = piece_queries.p0();
-            let (position, _, collider_shape) = position_query.single();
-            (position.rotation, (*collider_shape).clone())
-        };
-        let overlaps_other_shapes = {
+
+        {
+            let (rotation, collider_shape) = {
+                let position_query = piece_queries.p0();
+                let (position, _, collider_shape) = position_query.single();
+                (position.rotation, (*collider_shape).clone())
+            };
+
             let collider_query = piece_queries.p1();
             let collider_set = QueryPipelineColliderComponentsSet(&collider_query);
-            query_pipeline.intersection_with_shape(
+
+            let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
+                &query_pipeline,
+                selected_piece.collider,
                 &collider_set,
                 &(snapped_cursor_position, rotation).into(),
-                &*collider_shape,
-                NOMINO_COLLIDER_GROUP,
-                Some(&(|handle| handle != selected_piece.collider)),
-            ).is_some()
-        };
+                &collider_shape,
+            );
 
-        if overlaps_other_shapes {
-            return;
+            if would_move_over_invalid_position {
+                return;
+            }
         }
 
         let mut position_query = piece_queries.p0();
@@ -174,4 +167,31 @@ fn selected_piece_mover(
         position.translation = snapped_cursor_position;
         *physics_position = (position.translation, position.rotation).into();
     }
+}
+
+fn straddles_bag_or_overlaps_pieces(
+    query_pipeline: &Res<QueryPipeline>,
+    selected_piece_collider: ColliderHandle,
+    collider_set: &QueryPipelineColliderComponentsSet,
+    pos: &ColliderPosition,
+    shape: &ColliderShape,
+) -> bool {
+    query_pipeline
+        .intersection_with_shape(
+            collider_set,
+            pos,
+            &**shape,
+            BAG_BOUNDARY_COLLIDER_GROUP,
+            None,
+        )
+        .or_else(|| {
+            query_pipeline.intersection_with_shape(
+                collider_set,
+                pos,
+                &**shape,
+                NOMINO_COLLIDER_GROUP,
+                Some(&(|handle| handle != selected_piece_collider)),
+            )
+        })
+        .is_some()
 }

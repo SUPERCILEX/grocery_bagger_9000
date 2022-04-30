@@ -31,16 +31,16 @@ static MAIN_BAG_COLLIDER: SyncLazy<ColliderShape> =
 static BOUNDARY_BAG_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
     ColliderShape::compound(vec![
         (
-            Vec3::new(-3.1, 0., 0.).into(),
-            ColliderShape::cuboid(0.1, 3., 0.),
+            Vec3::new(-3., 0., 0.).into(),
+            ColliderShape::cuboid(0.009, 3., 0.),
         ),
         (
-            Vec3::new(0., -3.1, 0.).into(),
-            ColliderShape::cuboid(3., 0.1, 0.),
+            Vec3::new(0., -3., 0.).into(),
+            ColliderShape::cuboid(3., 0.009, 0.),
         ),
         (
-            Vec3::new(3.1, 0., 0.).into(),
-            ColliderShape::cuboid(0.1, 3., 0.),
+            Vec3::new(3., 0., 0.).into(),
+            ColliderShape::cuboid(0.009, 3., 0.),
         ),
     ])
 });
