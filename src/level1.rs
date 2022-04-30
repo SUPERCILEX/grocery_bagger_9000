@@ -60,6 +60,7 @@ fn init_level(
                 Transform::from_translation(centered_bag_coords),
             ));
 
+            // TODO: let the conveyor belt do this part for us
             let l_position = Vec3::new(
                 window_width - conveyor_belt::LENGTH,
                 window_height - conveyor_belt::HEIGHT,

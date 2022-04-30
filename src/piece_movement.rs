@@ -24,7 +24,6 @@ struct PieceSelection(Option<SelectedPiece>);
 
 struct SelectedPiece {
     id: Entity,
-    offset: Vec2,
 }
 
 impl Deref for SelectedPiece {
@@ -92,12 +91,12 @@ fn piece_selection_handler(
                 let id = handle.entity();
 
                 let transform = pieces.get(id).unwrap();
-                let offset = (transform.rotation.inverse()
+                let _offset = (transform.rotation.inverse()
                     * (cursor_position - transform.translation.truncate()).extend(0.))
                 .truncate();
 
                 commands.entity(id).insert(PieceSelectedMarker);
-                *selected_piece = PieceSelection(Some(SelectedPiece { id, offset }));
+                *selected_piece = PieceSelection(Some(SelectedPiece { id }));
 
                 false
             },
@@ -107,24 +106,19 @@ fn piece_selection_handler(
 
 fn piece_rotation_handler(
     mouse_button_input: Res<Input<MouseButton>>,
-    windows: Res<Windows>,
-    camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
+    _windows: Res<Windows>,
+    _camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     mut pieces: Query<(&mut Transform, &mut ColliderPositionComponent), With<PieceSelectedMarker>>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Right) &&
-    let Ok((mut piece, mut phys_piece)) = pieces.get_single_mut() &&
-    let Some(cursor_position) = compute_cursor_position(windows, camera)
+    let Ok((mut piece, mut phys_piece)) = pieces.get_single_mut()
     {
-        piece.rotate_around(
-            cursor_position.extend(0.),
-            *ROTATION_90,
-        );
+        piece.rotation *= *ROTATION_90;
         *phys_piece = (piece.translation, piece.rotation).into();
     }
 }
 
 fn selected_piece_mover(
-    selected_piece: Res<PieceSelection>,
     mut position: Query<
         (&mut Transform, &mut ColliderPositionComponent),
         With<PieceSelectedMarker>,
@@ -132,15 +126,9 @@ fn selected_piece_mover(
     windows: Res<Windows>,
     camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
-    if let Some(selected_piece) = (*selected_piece).as_ref() &&
-    let Some(cursor_position) = compute_cursor_position(windows, camera_query)
-    {
-        let (mut position, mut physics_position) = position.single_mut();
-
-        position.translation = (cursor_position
-            - (position.rotation * selected_piece.offset.extend(0.)).truncate())
-            .round()
-            .extend(0.);
+    if let Some(cursor_position) = compute_cursor_position(windows, camera_query) &&
+        let Ok((mut position, mut physics_position)) = position.get_single_mut(){
+        position.translation = cursor_position.round().extend(0.);
 
         *physics_position = (position.translation, position.rotation).into();
     }
