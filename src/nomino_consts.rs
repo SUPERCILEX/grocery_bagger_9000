@@ -38,8 +38,12 @@ pub static TETROMINO_SQUARE_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     Path(b.build())
 });
 
-pub static TETROMINO_SQUARE_COLLIDER: SyncLazy<ColliderShape> =
-    SyncLazy::new(|| ColliderShape::cuboid(1., 1., 0.));
+pub static TETROMINO_SQUARE_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
+    ColliderShape::compound(vec![(
+        Vec3::new(0.5, 0.5, 0.).into(),
+        ColliderShape::cuboid(0.99, 0.99, 0.),
+    )])
+});
 
 pub static TETROMINO_T_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(8, 9);
