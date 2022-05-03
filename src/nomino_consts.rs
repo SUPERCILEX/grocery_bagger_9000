@@ -64,10 +64,10 @@ pub static TETROMINO_T_PATH: SyncLazy<Path> = SyncLazy::new(|| {
 
 pub static TETROMINO_T_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
     ColliderShape::compound(vec![
-        (Vec3::ZERO.into(), ColliderShape::cuboid(0.5, 1.5, 0.)),
+        (Vec3::ZERO.into(), ColliderShape::cuboid(0.49, 1.49, 0.)),
         (
-            Vec3::new(1., 0., 0.).into(),
-            ColliderShape::cuboid(0.5, 0.5, 0.),
+            Vec3::new(0.99, 0., 0.).into(),
+            ColliderShape::cuboid(0.5, 0.49, 0.),
         ),
     ])
 });
@@ -113,7 +113,8 @@ pub static TETROMINO_SKEW_PATH: SyncLazy<Path> = SyncLazy::new(|| {
 });
 
 pub static TETROMINO_SKEW_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
-    let sub_bar = ColliderShape::cuboid(0.5, 1., 0.);
+    // TODO add a teeny rectangle
+    let sub_bar = ColliderShape::cuboid(0.49, 0.99, 0.);
     ColliderShape::compound(vec![
         (Vec3::new(0., -0.5, 0.).into(), sub_bar.clone()),
         (Vec3::new(1., 0.5, 0.).into(), sub_bar),
