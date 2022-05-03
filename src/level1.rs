@@ -29,17 +29,17 @@ struct Level1Initialized {
 fn init_level(
     mut commands: Commands,
     current: Res<CurrentLevel>,
-    initialized: Option<Res<Level1Initialized>>,
+    mut initialization: Local<Option<Level1Initialized>>,
     windows: Res<Windows>,
     projection_2d: Query<&OrthographicProjection, With<MainCamera>>,
 ) {
     if current.level >= 1 {
-        if let Some(initialized) = initialized {
+        if let Some(initialized) = &*initialization {
             commands.entity(**initialized).despawn_recursive();
-            commands.remove_resource::<Level1Initialized>();
+            *initialization = None;
         }
         return;
-    } else if initialized.is_some() {
+    } else if initialization.is_some() {
         return;
     }
 
@@ -117,5 +117,5 @@ fn init_level(
             );
         })
         .id();
-    commands.insert_resource(Level1Initialized { root });
+    *initialization = Some(Level1Initialized { root });
 }
