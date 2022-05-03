@@ -5,7 +5,7 @@ use bevy_rapier3d::prelude::*;
 
 use crate::{
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP},
-    nomino_consts::ROTATION_90,
+    nomino_consts::DEG_90,
     nominos::*,
     window_management::MainCamera,
     window_utils::compute_cursor_position,
@@ -111,7 +111,7 @@ fn piece_rotation_handler(
     if mouse_button_input.just_pressed(MouseButton::Right) &&
     let Ok((mut piece, mut phys_piece)) = pieces.get_single_mut()
     {
-        piece.rotation *= *ROTATION_90;
+        piece.rotation *= *DEG_90;
         *phys_piece = (piece.translation, piece.rotation).into();
     }
 }

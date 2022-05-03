@@ -1,9 +1,11 @@
 use bevy::prelude::*;
 
+
 use crate::{
     bags::BagSpawner,
     conveyor_belt,
     levels::CurrentLevel,
+    nomino_consts::DEG_90,
     nominos::{NominoSpawner, TetrominoL, TetrominoSquare},
     window_management::MainCamera,
     window_utils::get_dips_window,
@@ -80,6 +82,36 @@ fn init_level(
                 TetrominoSquare::default(),
                 LEVEL_COLOR,
                 Transform::from_xyz(4., 0., 0.),
+            );
+            parent.spawn_nomino(
+                bag,
+                TetrominoL::default(),
+                LEVEL_COLOR,
+                Transform::from_xyz(1., 3., 0.).with_rotation(*DEG_90),
+            );
+            parent.spawn_nomino(
+                bag,
+                TetrominoL::default(),
+                LEVEL_COLOR,
+                Transform::from_xyz(2., 2., 0.).with_rotation((*DEG_90).inverse()),
+            );
+            parent.spawn_nomino(
+                bag,
+                TetrominoSquare::default(),
+                LEVEL_COLOR,
+                Transform::from_xyz(4., 2., 0.),
+            );
+            parent.spawn_nomino(
+                bag,
+                TetrominoSquare::default(),
+                LEVEL_COLOR,
+                Transform::from_xyz(0., 4., 0.),
+            );
+            parent.spawn_nomino(
+                bag,
+                TetrominoL::default(),
+                LEVEL_COLOR,
+                Transform::from_xyz(4., 4., 0.).with_rotation((*DEG_90).inverse()),
             );
         })
         .id();
