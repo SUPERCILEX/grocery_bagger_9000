@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags::{BagCoord, BagSnapper, BagUtils},
+    bags::BagSpawner,
     conveyor_belt,
     levels::CurrentLevel,
-    nominos::{NominoBundle, TetrominoL},
+    nominos::{NominoSpawner, TetrominoL, TetrominoSquare},
     window_management::MainCamera,
+    window_utils::get_dips_window,
 };
 
 const LEVEL_COLOR: Color = Color::ORANGE;
@@ -26,8 +27,8 @@ struct Level1Initialized {
 fn init_level(
     mut commands: Commands,
     current: Res<CurrentLevel>,
-    windows: Res<Windows>,
     initialized: Option<Res<Level1Initialized>>,
+    windows: Res<Windows>,
     projection_2d: Query<&OrthographicProjection, With<MainCamera>>,
 ) {
     if current.level >= 1 {
@@ -43,40 +44,43 @@ fn init_level(
     let root = commands
         .spawn_bundle(TransformBundle::default())
         .with_children(|parent| {
-            let scale = projection_2d.single().scale;
-            let window = windows.get_primary().unwrap();
-            let window_width = window.width() * scale;
-            let window_height = window.height() * scale;
+            let window = get_dips_window(windows.get_primary().unwrap(), projection_2d.single());
 
             // TODO keep these and the pieces' coordinates up-to-date
-            let centered_bag_coords = Vec3::new(
-                BagCoord(window_width / 2.).snap_to_grid(),
-                BagCoord((window_height - conveyor_belt::HEIGHT) / 2.).snap_to_grid(),
-                0.,
-            );
-            parent.spawn_bag(
-                Color::default(),
-                Transform::from_translation(centered_bag_coords),
-            );
+            let bag = parent.spawn_bag::<1>(Color::default(), &window)[0];
 
             // TODO: let the conveyor belt do this part for us
-            let l_position = Vec3::new(
-                window_width - conveyor_belt::LENGTH,
-                window_height - conveyor_belt::HEIGHT,
+            let l_position = Transform::from_xyz(
+                window.width - conveyor_belt::LENGTH,
+                window.height - conveyor_belt::HEIGHT,
                 0.,
             );
-            parent.spawn_bundle(NominoBundle::new(
+            parent.spawn_nomino(
+                l_position,
                 TetrominoL::default(),
                 LEVEL_COLOR,
-                Transform::from_translation(l_position),
-            ));
-            parent.spawn_bundle(NominoBundle::new(
-                TetrominoL::default(),
-                LEVEL_COLOR,
-                Transform::from_translation(l_position),
-            ));
+                Transform::from_translation(Vec3::ZERO),
+            );
 
             // TODO fill with pieces
+            parent.spawn_nomino(
+                bag,
+                TetrominoSquare::default(),
+                LEVEL_COLOR,
+                Transform::from_xyz(0., 0., 0.),
+            );
+            parent.spawn_nomino(
+                bag,
+                TetrominoSquare::default(),
+                LEVEL_COLOR,
+                Transform::from_xyz(2., 0., 0.),
+            );
+            parent.spawn_nomino(
+                bag,
+                TetrominoSquare::default(),
+                LEVEL_COLOR,
+                Transform::from_xyz(4., 0., 0.),
+            );
         })
         .id();
     commands.insert_resource(Level1Initialized { root });

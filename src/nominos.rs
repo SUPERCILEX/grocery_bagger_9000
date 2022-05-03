@@ -13,20 +13,37 @@ pub trait Nomino {
     fn collider(&self) -> &ColliderShape;
 }
 
-#[derive(Component, Default)]
-pub struct NominoMarker;
-
 #[derive(Bundle)]
-pub struct NominoBundle {
+struct NominoBundle {
     #[bundle]
     shape: ShapeBundle,
     #[bundle]
     collider: ColliderBundle,
-    _marker: NominoMarker,
 }
 
-impl NominoBundle {
-    pub fn new(nomino: impl Nomino, color: Color, transform: Transform) -> Self {
+pub trait NominoSpawner {
+    fn spawn_nomino(
+        &mut self,
+        bag: Transform,
+        nomino: impl Nomino,
+        color: Color,
+        transform: Transform,
+    );
+}
+
+impl<'w, 's, 'a> NominoSpawner for ChildBuilder<'w, 's, 'a> {
+    fn spawn_nomino(
+        &mut self,
+        base: Transform,
+        nomino: impl Nomino,
+        color: Color,
+        mut transform: Transform,
+    ) {
+        // Offset by 0.5 since every piece is centered on a block
+        transform.translation += base.translation + Vec3::new(0.5, 0.5, 0.);
+        transform.rotation *= base.rotation;
+        transform.scale *= base.scale;
+
         let collider = ColliderBundle {
             collider_type: ColliderType::Sensor.into(),
             shape: nomino.collider().clone().into(),
@@ -47,11 +64,10 @@ impl NominoBundle {
             outline_mode: StrokeMode::new(Color::BLACK, 0.1),
         };
 
-        Self {
+        self.spawn_bundle(NominoBundle {
             shape: GeometryBuilder::build_as(nomino.path(), draw_mode, transform),
             collider,
-            _marker: default(),
-        }
+        });
     }
 }
 

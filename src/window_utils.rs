@@ -2,6 +2,18 @@ use bevy::{prelude::*, render::camera::RenderTarget};
 
 use crate::window_management::MainCamera;
 
+pub struct DipsWindow {
+    pub width: f32,
+    pub height: f32,
+}
+
+pub fn get_dips_window(window: &Window, proj: &OrthographicProjection) -> DipsWindow {
+    DipsWindow {
+        width: window.width() * proj.scale,
+        height: window.height() * proj.scale,
+    }
+}
+
 pub fn compute_cursor_position(
     windows: Res<Windows>,
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,

@@ -29,10 +29,10 @@ pub static TETROMINO_STRAIGHT_COLLIDER: SyncLazy<ColliderShape> =
 pub static TETROMINO_SQUARE_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 5);
 
-    b.begin(Point::new(-1., -1.));
-    b.line_to(Point::new(-1., 1.));
-    b.line_to(Point::new(1., 1.));
-    b.line_to(Point::new(1., -1.));
+    b.begin(Point::new(-0.5, -0.5));
+    b.line_to(Point::new(-0.5, 1.5));
+    b.line_to(Point::new(1.5, 1.5));
+    b.line_to(Point::new(1.5, -0.5));
     b.close();
 
     Path(b.build())
