@@ -1,19 +1,22 @@
 use std::lazy::SyncLazy;
 
 use bevy::prelude::*;
-use bevy_prototype_lyon::{
-    entity::ShapeBundle,
-    prelude::{
-        tess::{math::Point, path::path::Builder},
-        *,
-    },
+use bevy_prototype_lyon::prelude::{
+    tess::{math::Point, path::path::Builder},
+    FillMode, *,
 };
 use bevy_rapier3d::prelude::*;
 
 use crate::{conveyor_belt, window_utils::DipsWindow};
 
-pub const BAG_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(0b10, 0b10);
-pub const BAG_BOUNDARY_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(0b100, 0b100);
+pub const BAG_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
+    memberships: 0b10,
+    filters: 0b10,
+};
+pub const BAG_BOUNDARY_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
+    memberships: 0b100,
+    filters: 0b100,
+};
 
 const RADIUS: f32 = 3.;
 
@@ -29,33 +32,28 @@ static BAG_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     Path(b.build())
 });
 
-static MAIN_BAG_COLLIDER: SyncLazy<ColliderShape> =
-    SyncLazy::new(|| ColliderShape::cuboid(RADIUS, RADIUS, 0.));
+static MAIN_BAG_COLLIDER: SyncLazy<Collider> =
+    SyncLazy::new(|| Collider::cuboid(RADIUS, RADIUS, 0.));
 
-static BOUNDARY_BAG_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
-    ColliderShape::compound(vec![
+static BOUNDARY_BAG_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
+    Collider::compound(vec![
         (
-            Vec3::new(-RADIUS, 0., 0.).into(),
-            ColliderShape::cuboid(0.009, RADIUS, 0.),
+            Vec3::new(-RADIUS, 0., 0.),
+            Quat::IDENTITY,
+            Collider::cuboid(0.009, RADIUS, 0.),
         ),
         (
-            Vec3::new(0., -RADIUS, 0.).into(),
-            ColliderShape::cuboid(RADIUS, 0.009, 0.),
+            Vec3::new(0., -RADIUS, 0.),
+            Quat::IDENTITY,
+            Collider::cuboid(RADIUS, 0.009, 0.),
         ),
         (
-            Vec3::new(RADIUS, 0., 0.).into(),
-            ColliderShape::cuboid(0.009, RADIUS, 0.),
+            Vec3::new(RADIUS, 0., 0.),
+            Quat::IDENTITY,
+            Collider::cuboid(0.009, RADIUS, 0.),
         ),
     ])
 });
-
-#[derive(Bundle)]
-struct BagBundle {
-    #[bundle]
-    shape: ShapeBundle,
-    #[bundle]
-    collider: ColliderBundle,
-}
 
 pub trait BagSpawner {
     fn spawn_bag<const N: usize>(&mut self, color: Color, window: &DipsWindow) -> [Transform; N];
@@ -93,18 +91,6 @@ fn compute_bag_coordinates<const N: usize>(window: &DipsWindow) -> [Transform; N
 }
 
 fn spawn_bag(commands: &mut ChildBuilder, color: Color, transform: Transform) {
-    let main_collider = ColliderBundle {
-        collider_type: ColliderType::Sensor.into(),
-        shape: MAIN_BAG_COLLIDER.clone().into(),
-        position: (transform.translation, transform.rotation).into(),
-        flags: ColliderFlags {
-            collision_groups: BAG_COLLIDER_GROUP,
-            ..default()
-        }
-        .into(),
-        ..default()
-    };
-
     let draw_mode = DrawMode::Outlined {
         fill_mode: FillMode {
             options: FillOptions::default().with_intersections(false),
@@ -114,24 +100,16 @@ fn spawn_bag(commands: &mut ChildBuilder, color: Color, transform: Transform) {
     };
 
     commands
-        .spawn_bundle(BagBundle {
-            shape: GeometryBuilder::build_as(&*BAG_PATH, draw_mode, transform),
-            collider: main_collider,
-        })
+        .spawn_bundle(GeometryBuilder::build_as(&*BAG_PATH, draw_mode, transform))
+        .insert(MAIN_BAG_COLLIDER.clone())
+        .insert(Sensor(true))
+        .insert(BAG_COLLIDER_GROUP)
         .with_children(|parent| {
-            let boundery_collider = ColliderBundle {
-                collider_type: ColliderType::Sensor.into(),
-                shape: BOUNDARY_BAG_COLLIDER.clone().into(),
-                position: (transform.translation, transform.rotation).into(),
-                flags: ColliderFlags {
-                    collision_groups: BAG_BOUNDARY_COLLIDER_GROUP,
-                    ..default()
-                }
-                .into(),
-                ..default()
-            };
-
-            parent.spawn_bundle(boundery_collider);
+            parent
+                .spawn()
+                .insert(BOUNDARY_BAG_COLLIDER.clone())
+                .insert(Sensor(true))
+                .insert(BAG_BOUNDARY_COLLIDER_GROUP);
         });
 }
 

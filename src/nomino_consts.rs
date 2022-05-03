@@ -24,8 +24,8 @@ pub static TETROMINO_STRAIGHT_PATH: SyncLazy<Path> = SyncLazy::new(|| {
 
 // TODO fix all colliders to not touch if the pieces are touching
 
-pub static TETROMINO_STRAIGHT_COLLIDER: SyncLazy<ColliderShape> =
-    SyncLazy::new(|| ColliderShape::cuboid(0.5, 2., 0.));
+pub static TETROMINO_STRAIGHT_COLLIDER: SyncLazy<Collider> =
+    SyncLazy::new(|| Collider::cuboid(0.5, 2., 0.));
 
 pub static TETROMINO_SQUARE_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 5);
@@ -39,10 +39,11 @@ pub static TETROMINO_SQUARE_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     Path(b.build())
 });
 
-pub static TETROMINO_SQUARE_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
-    ColliderShape::compound(vec![(
-        Vec3::new(0.5, 0.5, 0.).into(),
-        ColliderShape::cuboid(0.99, 0.99, 0.),
+pub static TETROMINO_SQUARE_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
+    Collider::compound(vec![(
+        Vec3::new(0.5, 0.5, 0.),
+        Quat::IDENTITY,
+        Collider::cuboid(0.99, 0.99, 0.),
     )])
 });
 
@@ -62,12 +63,13 @@ pub static TETROMINO_T_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     Path(b.build())
 });
 
-pub static TETROMINO_T_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
-    ColliderShape::compound(vec![
-        (Vec3::ZERO.into(), ColliderShape::cuboid(0.49, 1.49, 0.)),
+pub static TETROMINO_T_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
+    Collider::compound(vec![
+        (Vec3::ZERO, Quat::IDENTITY, Collider::cuboid(0.49, 1.49, 0.)),
         (
-            Vec3::new(0.99, 0., 0.).into(),
-            ColliderShape::cuboid(0.5, 0.49, 0.),
+            Vec3::new(0.99, 0., 0.),
+            Quat::IDENTITY,
+            Collider::cuboid(0.5, 0.49, 0.),
         ),
     ])
 });
@@ -86,12 +88,13 @@ pub static TETROMINO_L_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     Path(b.build())
 });
 
-pub static TETROMINO_L_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
-    ColliderShape::compound(vec![
-        (Vec3::ZERO.into(), ColliderShape::cuboid(0.49, 1.49, 0.)),
+pub static TETROMINO_L_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
+    Collider::compound(vec![
+        (Vec3::ZERO, Quat::IDENTITY, Collider::cuboid(0.49, 1.49, 0.)),
         (
-            Vec3::new(0.99, -1., 0.).into(),
-            ColliderShape::cuboid(0.5, 0.49, 0.),
+            Vec3::new(0.99, -1., 0.),
+            Quat::IDENTITY,
+            Collider::cuboid(0.5, 0.49, 0.),
         ),
     ])
 });
@@ -112,11 +115,11 @@ pub static TETROMINO_SKEW_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     Path(b.build())
 });
 
-pub static TETROMINO_SKEW_COLLIDER: SyncLazy<ColliderShape> = SyncLazy::new(|| {
+pub static TETROMINO_SKEW_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
     // TODO add a teeny rectangle
-    let sub_bar = ColliderShape::cuboid(0.49, 0.99, 0.);
-    ColliderShape::compound(vec![
-        (Vec3::new(0., -0.5, 0.).into(), sub_bar.clone()),
-        (Vec3::new(1., 0.5, 0.).into(), sub_bar),
+    let sub_bar = Collider::cuboid(0.49, 0.99, 0.);
+    Collider::compound(vec![
+        (Vec3::new(0., -0.5, 0.), Quat::IDENTITY, sub_bar.clone()),
+        (Vec3::new(1., 0.5, 0.), Quat::IDENTITY, sub_bar),
     ])
 });

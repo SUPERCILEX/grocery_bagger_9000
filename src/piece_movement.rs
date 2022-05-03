@@ -29,7 +29,6 @@ struct PieceSelection(Option<SelectedPiece>);
 
 struct SelectedPiece {
     id: Entity,
-    collider: ColliderHandle,
 }
 
 impl Deref for SelectedPiece {
@@ -40,10 +39,6 @@ impl Deref for SelectedPiece {
     }
 }
 
-// TODO get rid of this
-#[derive(Component)]
-struct PieceSelectedMarker;
-
 fn piece_selection_handler(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
@@ -52,42 +47,31 @@ fn piece_selection_handler(
     selectables: Query<(), With<Selectable>>,
     windows: Res<Windows>,
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
-    selected_shape: Query<
-        (&ColliderPositionComponent, &ColliderShapeComponent),
-        With<PieceSelectedMarker>,
-    >,
-    query_pipeline: Res<QueryPipeline>,
-    collider_query: QueryPipelineColliderComponentsQuery,
+    rapier_context: Res<RapierContext>,
+    selected_shape: Query<(&Transform, &Collider)>,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Left) {
         return;
     }
 
     if let Some(piece) = &**selected_piece {
-        let collider_set = QueryPipelineColliderComponentsSet(&collider_query);
-        let (pos, shape) = selected_shape.get(**piece).unwrap();
+        let (transform, collider) = selected_shape.get(**piece).unwrap();
 
-        let intersects_with_bag = query_pipeline.intersection_with_shape(
-            &collider_set,
-            pos,
-            &***shape,
-            BAG_COLLIDER_GROUP,
+        let intersects_with_bag = rapier_context.intersection_with_shape(
+            transform.translation,
+            transform.rotation,
+            collider,
+            BAG_COLLIDER_GROUP.into(),
             None,
         );
 
-        if let Some(bag_handle) = intersects_with_bag && !straddles_bag_or_overlaps_pieces(
-            &query_pipeline,
-            piece.collider,
-            &collider_set,
-            pos,
-            shape,
-        ) {
+        if let Some(bag) = intersects_with_bag
+            && !straddles_bag_or_overlaps_pieces(&rapier_context, *transform, collider, **piece) {
             let mut piece_commands = commands.entity(**piece);
-            piece_commands.remove::<PieceSelectedMarker>();
             piece_commands.remove::<Selectable>();
             placed_events.send(PiecePlaced {
                 piece: **piece,
-                bag: bag_handle.entity(),
+                bag,
             });
 
             *selected_piece = default();
@@ -97,21 +81,12 @@ fn piece_selection_handler(
     }
 
     if let Some(cursor_position) = compute_cursor_position(windows, camera) {
-        let collider_set = QueryPipelineColliderComponentsSet(&collider_query);
-        query_pipeline.intersections_with_point(
-            &collider_set,
-            &cursor_position.extend(0.).into(),
-            NOMINO_COLLIDER_GROUP,
-            Some(&(|handle| selectables.contains(handle.entity()))),
-            |handle| {
-                let id = handle.entity();
-
-                commands.entity(id).insert(PieceSelectedMarker);
-                *selected_piece = PieceSelection(Some(SelectedPiece {
-                    id,
-                    collider: handle,
-                }));
-
+        rapier_context.intersections_with_point(
+            cursor_position.extend(0.),
+            NOMINO_COLLIDER_GROUP.into(),
+            Some(&(|entity| selectables.contains(entity))),
+            |id| {
+                *selected_piece = PieceSelection(Some(SelectedPiece { id }));
                 false
             },
         );
@@ -120,91 +95,65 @@ fn piece_selection_handler(
 
 fn piece_rotation_handler(
     mouse_button_input: Res<Input<MouseButton>>,
-    mut pieces: Query<(&mut Transform, &mut ColliderPositionComponent), With<PieceSelectedMarker>>,
+    selected_piece: Res<PieceSelection>,
+    mut pieces: Query<&mut Transform>,
 ) {
-    if mouse_button_input.just_pressed(MouseButton::Right) &&
-    let Ok((mut piece, mut phys_piece)) = pieces.get_single_mut()
-    {
-        piece.rotation *= *DEG_90;
-        *phys_piece = (piece.translation, piece.rotation).into();
+    if mouse_button_input.just_pressed(MouseButton::Right) {
+        if let Some(piece) = &**selected_piece {
+            pieces.get_mut(**piece).unwrap().rotation *= *DEG_90;
+        }
     }
 }
 
 fn selected_piece_mover(
     selected_piece: Res<PieceSelection>,
-    mut piece_queries: ParamSet<(
-        Query<
-            (
-                &mut Transform,
-                &mut ColliderPositionComponent,
-                &ColliderShapeComponent,
-            ),
-            With<PieceSelectedMarker>,
-        >,
-        QueryPipelineColliderComponentsQuery,
-    )>,
-    query_pipeline: Res<QueryPipeline>,
+    mut pieces: Query<(&mut Transform, &Collider)>,
+    rapier_context: Res<RapierContext>,
     windows: Res<Windows>,
     camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
-    if let Some(selected_piece) = (*selected_piece).as_ref() &&
+    if let Some(piece) = &**selected_piece &&
     let Some(cursor_position) = compute_cursor_position(windows, camera_query)
     {
+        let (mut piece_transform, collider) = pieces.get_mut(**piece).unwrap();
         let snapped_cursor_position = cursor_position.round().extend(0.);
 
-        {
-            let (rotation, collider_shape) = {
-                let position_query = piece_queries.p0();
-                let (position, _, collider_shape) = position_query.single();
-                (position.rotation, (*collider_shape).clone())
-            };
+        let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
+            &rapier_context,
+            Transform::from_translation(snapped_cursor_position).with_rotation(piece_transform.rotation),
+            collider,
+            **piece,
+        );
 
-            let collider_query = piece_queries.p1();
-            let collider_set = QueryPipelineColliderComponentsSet(&collider_query);
-
-            let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
-                &query_pipeline,
-                selected_piece.collider,
-                &collider_set,
-                &(snapped_cursor_position, rotation).into(),
-                &collider_shape,
-            );
-
-            if would_move_over_invalid_position {
-                return;
-            }
+        if would_move_over_invalid_position {
+            return;
         }
 
-        let mut position_query = piece_queries.p0();
-        let (mut position, mut physics_position, ..) = position_query.single_mut();
-
-        position.translation = snapped_cursor_position;
-        *physics_position = (position.translation, position.rotation).into();
+        piece_transform.translation = snapped_cursor_position;
     }
 }
 
 fn straddles_bag_or_overlaps_pieces(
-    query_pipeline: &Res<QueryPipeline>,
-    selected_piece_collider: ColliderHandle,
-    collider_set: &QueryPipelineColliderComponentsSet,
-    pos: &ColliderPosition,
-    shape: &ColliderShape,
+    rapier_context: &Res<RapierContext>,
+    transform: Transform,
+    collider: &Collider,
+    self_id: Entity,
 ) -> bool {
-    query_pipeline
+    rapier_context
         .intersection_with_shape(
-            collider_set,
-            pos,
-            &**shape,
-            BAG_BOUNDARY_COLLIDER_GROUP,
+            transform.translation,
+            transform.rotation,
+            collider,
+            BAG_BOUNDARY_COLLIDER_GROUP.into(),
             None,
         )
         .or_else(|| {
-            query_pipeline.intersection_with_shape(
-                collider_set,
-                pos,
-                &**shape,
-                NOMINO_COLLIDER_GROUP,
-                Some(&(|handle| handle != selected_piece_collider)),
+            rapier_context.intersection_with_shape(
+                transform.translation,
+                transform.rotation,
+                collider,
+                NOMINO_COLLIDER_GROUP.into(),
+                Some(&(|entity| entity != self_id)),
             )
         })
         .is_some()

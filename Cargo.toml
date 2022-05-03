@@ -11,19 +11,18 @@ categories = ["games"]
 [dependencies]
 bevy = { version = "0.7.0", default-features = false }
 bevy_prototype_lyon = "0.5.0"
+bevy_rapier3d = { version = "0.13.1", default-features = false, features = ["dim3", "simd-nightly"] }
 bevy_screen_diags = { git = "https://github.com/SUPERCILEX/bevy_screen_diags" }
-log = { version = "0.4.16", features = ["release_max_level_off"] }
+log = { version = "0.4.17", features = ["release_max_level_off"] }
 paste = "1.0.7"
 tracing = { version = "0.1.34", features = ["release_max_level_off"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 bevy = { version = "0.7.0", default-features = false, features = ["bevy_render", "bevy_winit", "x11"] }
-bevy_rapier3d = { git = "https://github.com/devil-ira/bevy_rapier", branch = "update-to-bevy-0.7", default-features = false, features = ["dim3", "simd-nightly", "parallel"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 bevy = { version = "0.7.0", default-features = false, features = ["bevy_render"] }
 bevy-web-resizer = "2.0.0"
-bevy_rapier3d = { git = "https://github.com/devil-ira/bevy_rapier", branch = "update-to-bevy-0.7", default-features = false, features = ["dim3", "simd-nightly"] }
 console_error_panic_hook = "0.1.7"
 
 [profile.release]

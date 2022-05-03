@@ -1,24 +1,19 @@
 use bevy::{ecs::system::EntityCommands, prelude::*};
-use bevy_prototype_lyon::{entity::ShapeBundle, prelude::*};
+use bevy_prototype_lyon::prelude::{FillMode, *};
 use bevy_rapier3d::prelude::*;
 use paste::paste;
 
 use crate::nomino_consts::*;
 
-pub const NOMINO_COLLIDER_GROUP: InteractionGroups = InteractionGroups::new(0b1, 0b1);
+pub const NOMINO_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
+    memberships: 0b1,
+    filters: 0b1,
+};
 
 pub trait Nomino {
     fn path(&self) -> &Path;
 
-    fn collider(&self) -> &ColliderShape;
-}
-
-#[derive(Bundle)]
-struct NominoBundle {
-    #[bundle]
-    shape: ShapeBundle,
-    #[bundle]
-    collider: ColliderBundle,
+    fn collider(&self) -> &Collider;
 }
 
 pub trait NominoSpawner<'w, 's> {
@@ -44,18 +39,6 @@ impl<'w, 's, 'a> NominoSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
         transform.rotation *= base.rotation;
         transform.scale *= base.scale;
 
-        let collider = ColliderBundle {
-            collider_type: ColliderType::Sensor.into(),
-            shape: nomino.collider().clone().into(),
-            position: (transform.translation, transform.rotation).into(),
-            flags: ColliderFlags {
-                collision_groups: NOMINO_COLLIDER_GROUP,
-                ..default()
-            }
-            .into(),
-            ..default()
-        };
-
         let draw_mode = DrawMode::Outlined {
             fill_mode: FillMode {
                 options: FillOptions::default().with_intersections(false),
@@ -64,10 +47,15 @@ impl<'w, 's, 'a> NominoSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
             outline_mode: StrokeMode::new(Color::BLACK, 0.1),
         };
 
-        self.spawn_bundle(NominoBundle {
-            shape: GeometryBuilder::build_as(nomino.path(), draw_mode, transform),
-            collider,
-        })
+        let mut commands = self.spawn_bundle(GeometryBuilder::build_as(
+            nomino.path(),
+            draw_mode,
+            transform,
+        ));
+        commands.insert(nomino.collider().clone());
+        commands.insert(Sensor(true));
+        commands.insert(NOMINO_COLLIDER_GROUP);
+        commands
     }
 }
 
@@ -82,7 +70,7 @@ macro_rules! nomino {
                     &[<$type:upper _ $shape:upper _PATH>]
                 }
 
-                fn collider(&self) -> &ColliderShape {
+                fn collider(&self) -> &Collider {
                     &*[<$type:upper _ $shape:upper _COLLIDER>]
                 }
             }
