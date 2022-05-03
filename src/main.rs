@@ -6,10 +6,13 @@
 use bevy::{app::App, DefaultPlugins};
 use bevy_prototype_lyon::plugin::ShapePlugin;
 
-use crate::{gb9000::GroceryBagger9000Plugin, window_management::WindowManager};
+use crate::{
+    events::EventsPlugin, gb9000::GroceryBagger9000Plugin, window_management::WindowManager,
+};
 
 mod bags;
 mod conveyor_belt;
+mod events;
 mod gb9000;
 mod level1;
 mod levels;
@@ -27,6 +30,7 @@ fn main() {
 
     app.add_plugin(WindowManager);
     app.add_plugin(GroceryBagger9000Plugin);
+    app.add_plugin(EventsPlugin);
     app.add_plugins(DefaultPlugins);
     app.add_plugin(ShapePlugin);
 

@@ -5,6 +5,7 @@ use bevy_rapier3d::prelude::*;
 
 use crate::{
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP},
+    events::PiecePlaced,
     nomino_consts::DEG_90,
     nominos::*,
     window_management::MainCamera,
@@ -38,6 +39,7 @@ impl Deref for SelectedPiece {
     }
 }
 
+// TODO get rid of this
 #[derive(Component)]
 struct PieceSelectedMarker;
 
@@ -45,6 +47,7 @@ fn piece_selection_handler(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
     mut selected_piece: ResMut<PieceSelection>,
+    mut placed_events: EventWriter<PiecePlaced>,
     windows: Res<Windows>,
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     selected_shape: Query<
@@ -62,20 +65,28 @@ fn piece_selection_handler(
         let collider_set = QueryPipelineColliderComponentsSet(&collider_query);
         let (pos, shape) = selected_shape.get(**piece).unwrap();
 
-        let intersects_with_bag = query_pipeline
-            .intersection_with_shape(&collider_set, pos, &***shape, BAG_COLLIDER_GROUP, None)
-            .is_some();
+        let intersects_with_bag = query_pipeline.intersection_with_shape(
+            &collider_set,
+            pos,
+            &***shape,
+            BAG_COLLIDER_GROUP,
+            None,
+        );
 
-        if intersects_with_bag
-            && !straddles_bag_or_overlaps_pieces(
-                &query_pipeline,
-                piece.collider,
-                &collider_set,
-                pos,
-                shape,
-            )
-        {
-            commands.entity(**piece).remove::<PieceSelectedMarker>();
+        if let Some(bag_handle) = intersects_with_bag && !straddles_bag_or_overlaps_pieces(
+            &query_pipeline,
+            piece.collider,
+            &collider_set,
+            pos,
+            shape,
+        ) {
+            let mut piece_commands = commands.entity(**piece);
+            piece_commands.remove::<PieceSelectedMarker>();
+            placed_events.send(PiecePlaced {
+                piece: **piece,
+                bag: bag_handle.entity(),
+            });
+
             *selected_piece = default();
         }
 

@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 
-
 use crate::{
     bags::BagSpawner,
     conveyor_belt,
