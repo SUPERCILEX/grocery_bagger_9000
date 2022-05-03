@@ -6,6 +6,7 @@ use bevy_rapier3d::prelude::*;
 use crate::{
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP},
     events::PiecePlaced,
+    markers::Selectable,
     nomino_consts::DEG_90,
     nominos::*,
     window_management::MainCamera,
@@ -48,6 +49,7 @@ fn piece_selection_handler(
     mouse_button_input: Res<Input<MouseButton>>,
     mut selected_piece: ResMut<PieceSelection>,
     mut placed_events: EventWriter<PiecePlaced>,
+    selectables: Query<(), With<Selectable>>,
     windows: Res<Windows>,
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     selected_shape: Query<
@@ -82,6 +84,7 @@ fn piece_selection_handler(
         ) {
             let mut piece_commands = commands.entity(**piece);
             piece_commands.remove::<PieceSelectedMarker>();
+            piece_commands.remove::<Selectable>();
             placed_events.send(PiecePlaced {
                 piece: **piece,
                 bag: bag_handle.entity(),
@@ -99,7 +102,7 @@ fn piece_selection_handler(
             &collider_set,
             &cursor_position.extend(0.).into(),
             NOMINO_COLLIDER_GROUP,
-            None,
+            Some(&(|handle| selectables.contains(handle.entity()))),
             |handle| {
                 let id = handle.entity();
 

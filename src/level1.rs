@@ -4,6 +4,7 @@ use crate::{
     bags::BagSpawner,
     conveyor_belt,
     levels::CurrentLevel,
+    markers::Selectable,
     nomino_consts::DEG_90,
     nominos::{NominoSpawner, TetrominoL, TetrominoSquare},
     window_management::MainCamera,
@@ -56,12 +57,14 @@ fn init_level(
                 window.height - conveyor_belt::HEIGHT,
                 0.,
             );
-            parent.spawn_nomino(
-                l_position,
-                TetrominoL::default(),
-                LEVEL_COLOR,
-                Transform::from_translation(Vec3::ZERO),
-            );
+            parent
+                .spawn_nomino(
+                    l_position,
+                    TetrominoL::default(),
+                    LEVEL_COLOR,
+                    Transform::from_translation(Vec3::ZERO),
+                )
+                .insert(Selectable);
 
             // TODO fill with pieces
             parent.spawn_nomino(

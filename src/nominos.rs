@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::system::EntityCommands, prelude::*};
 use bevy_prototype_lyon::{entity::ShapeBundle, prelude::*};
 use bevy_rapier3d::prelude::*;
 use paste::paste;
@@ -21,24 +21,24 @@ struct NominoBundle {
     collider: ColliderBundle,
 }
 
-pub trait NominoSpawner {
+pub trait NominoSpawner<'w, 's> {
     fn spawn_nomino(
         &mut self,
         bag: Transform,
         nomino: impl Nomino,
         color: Color,
         transform: Transform,
-    );
+    ) -> EntityCommands<'w, 's, '_>;
 }
 
-impl<'w, 's, 'a> NominoSpawner for ChildBuilder<'w, 's, 'a> {
+impl<'w, 's, 'a> NominoSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
     fn spawn_nomino(
         &mut self,
         base: Transform,
         nomino: impl Nomino,
         color: Color,
         mut transform: Transform,
-    ) {
+    ) -> EntityCommands<'w, 's, '_> {
         // Offset by 0.5 since every piece is centered on a block
         transform.translation += base.translation + Vec3::new(0.5, 0.5, 0.);
         transform.rotation *= base.rotation;
@@ -67,7 +67,7 @@ impl<'w, 's, 'a> NominoSpawner for ChildBuilder<'w, 's, 'a> {
         self.spawn_bundle(NominoBundle {
             shape: GeometryBuilder::build_as(nomino.path(), draw_mode, transform),
             collider,
-        });
+        })
     }
 }
 

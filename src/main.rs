@@ -16,6 +16,7 @@ mod events;
 mod gb9000;
 mod level1;
 mod levels;
+mod markers;
 mod nomino_consts;
 mod nominos;
 mod piece_movement;
