@@ -67,71 +67,32 @@ fn init_level(
                 )
                 .insert(Selectable);
 
+            macro_rules! spawn {
+                ($nomino:expr, $transform:expr) => {{
+                    parent
+                        .spawn_nomino(bag_position, $nomino, LEVEL_COLOR, $transform)
+                        .id()
+                }};
+            }
+
             let pieces = [
-                parent
-                    .spawn_nomino(
-                        bag_position,
-                        TetrominoSquare::default(),
-                        LEVEL_COLOR,
-                        Transform::from_xyz(0., 0., 0.),
-                    )
-                    .id(),
-                parent
-                    .spawn_nomino(
-                        bag_position,
-                        TetrominoSquare::default(),
-                        LEVEL_COLOR,
-                        Transform::from_xyz(2., 0., 0.),
-                    )
-                    .id(),
-                parent
-                    .spawn_nomino(
-                        bag_position,
-                        TetrominoSquare::default(),
-                        LEVEL_COLOR,
-                        Transform::from_xyz(4., 0., 0.),
-                    )
-                    .id(),
-                parent
-                    .spawn_nomino(
-                        bag_position,
-                        TetrominoL::default(),
-                        LEVEL_COLOR,
-                        Transform::from_xyz(1., 3., 0.).with_rotation(*DEG_90),
-                    )
-                    .id(),
-                parent
-                    .spawn_nomino(
-                        bag_position,
-                        TetrominoL::default(),
-                        LEVEL_COLOR,
-                        Transform::from_xyz(2., 2., 0.).with_rotation((*DEG_90).inverse()),
-                    )
-                    .id(),
-                parent
-                    .spawn_nomino(
-                        bag_position,
-                        TetrominoSquare::default(),
-                        LEVEL_COLOR,
-                        Transform::from_xyz(4., 2., 0.),
-                    )
-                    .id(),
-                parent
-                    .spawn_nomino(
-                        bag_position,
-                        TetrominoSquare::default(),
-                        LEVEL_COLOR,
-                        Transform::from_xyz(0., 4., 0.),
-                    )
-                    .id(),
-                parent
-                    .spawn_nomino(
-                        bag_position,
-                        TetrominoL::default(),
-                        LEVEL_COLOR,
-                        Transform::from_xyz(4., 4., 0.).with_rotation((*DEG_90).inverse()),
-                    )
-                    .id(),
+                spawn!(TetrominoSquare, Transform::from_xyz(0., 0., 0.)),
+                spawn!(TetrominoSquare, Transform::from_xyz(2., 0., 0.)),
+                spawn!(TetrominoSquare, Transform::from_xyz(4., 0., 0.)),
+                spawn!(
+                    TetrominoL,
+                    Transform::from_xyz(1., 3., 0.).with_rotation(*DEG_90)
+                ),
+                spawn!(
+                    TetrominoL,
+                    Transform::from_xyz(2., 2., 0.).with_rotation((*DEG_90).inverse())
+                ),
+                spawn!(TetrominoSquare, Transform::from_xyz(4., 2., 0.)),
+                spawn!(TetrominoSquare, Transform::from_xyz(0., 4., 0.)),
+                spawn!(
+                    TetrominoL,
+                    Transform::from_xyz(4., 4., 0.).with_rotation((*DEG_90).inverse())
+                ),
             ];
 
             for piece in pieces {
