@@ -115,7 +115,12 @@ fn piece_rotation_handler(
 ) {
     if mouse_button_input.just_pressed(MouseButton::Right) {
         if let Some(piece) = &**selected_piece {
-            pieces.get_mut(**piece).unwrap().rotation *= *DEG_90;
+            let rotation = &mut pieces.get_mut(**piece).unwrap().rotation;
+            if rotation.x.is_normal() || rotation.y.is_normal() {
+                *rotation *= (*DEG_90).inverse();
+            } else {
+                *rotation *= *DEG_90;
+            }
         }
     }
 }
