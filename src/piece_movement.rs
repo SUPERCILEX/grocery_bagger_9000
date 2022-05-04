@@ -66,7 +66,8 @@ fn piece_selection_handler(
         );
 
         if let Some(bag) = intersects_with_bag
-            && !straddles_bag_or_overlaps_pieces(&rapier_context, *transform, collider, **piece) {
+            && !straddles_bag_or_overlaps_pieces(&rapier_context, *transform, collider, **piece)
+            && !piece_is_floating(&rapier_context, *transform, collider, **piece) {
             let mut piece_commands = commands.entity(**piece);
             piece_commands.remove::<Selectable>();
             placed_events.send(PiecePlaced {
@@ -157,4 +158,23 @@ fn straddles_bag_or_overlaps_pieces(
             )
         })
         .is_some()
+}
+
+fn piece_is_floating(
+    rapier_context: &Res<RapierContext>,
+    transform: Transform,
+    collider: &Collider,
+    self_id: Entity,
+) -> bool {
+    // Check that the piece isn't floating by seeing if moving it down one unit
+    // intersects with another piece.
+    rapier_context
+        .intersection_with_shape(
+            transform.translation - Vec3::new(0., 1., 0.),
+            transform.rotation,
+            collider,
+            NOMINO_COLLIDER_GROUP.into(),
+            Some(&(|entity| entity != self_id)),
+        )
+        .is_none()
 }
