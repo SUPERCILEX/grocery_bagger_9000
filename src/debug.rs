@@ -1,5 +1,6 @@
-use bevy::prelude::*;
+use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 use bevy_egui::{egui, EguiContext, EguiPlugin};
+use bevy_screen_diags::ScreenDiagsPlugin;
 
 use crate::{levels::CurrentLevel, markers::Selectable, nomino_consts::DEG_MIRRORED, nominos::*};
 
@@ -10,6 +11,9 @@ impl Plugin for DebugPlugin {
         app.add_plugin(EguiPlugin);
         app.init_resource::<DebugOptions>();
         app.add_system(debug_options);
+
+        app.add_plugin(ScreenDiagsPlugin);
+        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
     }
 }
 

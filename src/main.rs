@@ -37,14 +37,7 @@ fn main() {
     app.add_plugin(ShapePlugin);
 
     #[cfg(feature = "debug")]
-    {
-        use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
-        use bevy_screen_diags::ScreenDiagsPlugin;
-
-        app.add_plugin(debug::DebugPlugin);
-        app.add_plugin(ScreenDiagsPlugin);
-        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-    }
+    app.add_plugin(debug::DebugPlugin);
 
     app.run();
 }
