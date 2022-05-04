@@ -6,6 +6,7 @@ use bevy_prototype_lyon::prelude::{
     FillMode, *,
 };
 use bevy_rapier3d::prelude::*;
+use smallvec::SmallVec;
 
 use crate::{conveyor_belt, window_utils::DipsWindow};
 
@@ -17,8 +18,12 @@ pub const BAG_BOUNDARY_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
     memberships: 0b100,
     filters: 0b100,
 };
+pub const BAG_LID_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
+    memberships: 0b1000,
+    filters: 0b1000,
+};
 
-const RADIUS: f32 = 3.;
+pub const RADIUS: f32 = 3.;
 
 static BAG_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 4);
@@ -55,22 +60,37 @@ static BOUNDARY_BAG_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
     ])
 });
 
+static LID_BAG_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
+    Collider::compound(vec![(
+        Vec3::new(0., RADIUS + 0.5, 0.),
+        Quat::IDENTITY,
+        Collider::cuboid(RADIUS, 0.49, 0.),
+    )])
+});
+
+#[derive(Component, Deref, DerefMut)]
+pub struct BagPieces(pub SmallVec<[Entity; 9]>);
+
 pub trait BagSpawner {
-    fn spawn_bag<const N: usize>(&mut self, color: Color, window: &DipsWindow) -> [Transform; N];
+    fn spawn_bag<const N: usize>(
+        &mut self,
+        color: Color,
+        window: &DipsWindow,
+    ) -> [(Transform, Entity); N];
 }
 
 impl<'w, 's, 'a> BagSpawner for ChildBuilder<'w, 's, 'a> {
-    fn spawn_bag<const N: usize>(&mut self, color: Color, window: &DipsWindow) -> [Transform; N] {
-        let mut transforms = compute_bag_coordinates::<N>(window);
-        for transform in transforms {
-            spawn_bag(self, color, transform);
-        }
-
-        // Adjust bag coordinates such that the canvas is centered on the bottom left corner
-        for transform in &mut transforms {
+    fn spawn_bag<const N: usize>(
+        &mut self,
+        color: Color,
+        window: &DipsWindow,
+    ) -> [(Transform, Entity); N] {
+        compute_bag_coordinates::<N>(window).map(|mut transform| {
+            let commands = spawn_bag(self, color, transform);
+            // Adjust bag coordinates such that the canvas is centered on the bottom left corner
             transform.translation -= Vec3::new(RADIUS, RADIUS, 0.);
-        }
-        transforms
+            (transform, commands)
+        })
     }
 }
 
@@ -90,7 +110,7 @@ fn compute_bag_coordinates<const N: usize>(window: &DipsWindow) -> [Transform; N
     positions
 }
 
-fn spawn_bag(commands: &mut ChildBuilder, color: Color, transform: Transform) {
+fn spawn_bag(commands: &mut ChildBuilder, color: Color, transform: Transform) -> Entity {
     let draw_mode = DrawMode::Outlined {
         fill_mode: FillMode {
             options: FillOptions::default().with_intersections(false),
@@ -104,13 +124,22 @@ fn spawn_bag(commands: &mut ChildBuilder, color: Color, transform: Transform) {
         .insert(MAIN_BAG_COLLIDER.clone())
         .insert(Sensor(true))
         .insert(BAG_COLLIDER_GROUP)
+        .insert(RigidBody::Fixed)
+        .insert(BagPieces(SmallVec::default()))
         .with_children(|parent| {
             parent
                 .spawn()
                 .insert(BOUNDARY_BAG_COLLIDER.clone())
                 .insert(Sensor(true))
                 .insert(BAG_BOUNDARY_COLLIDER_GROUP);
-        });
+
+            parent
+                .spawn()
+                .insert(LID_BAG_COLLIDER.clone())
+                .insert(Sensor(true))
+                .insert(BAG_LID_COLLIDER_GROUP);
+        })
+        .id()
 }
 
 pub trait BagSnapper<T> {

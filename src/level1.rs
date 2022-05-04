@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::{
     bags::BagSpawner,
     conveyor_belt,
+    events::PiecePlaced,
     levels::CurrentLevel,
     markers::Selectable,
     nomino_consts::DEG_90,
@@ -30,6 +31,7 @@ fn init_level(
     mut commands: Commands,
     current: Res<CurrentLevel>,
     mut initialization: Local<Option<Level1Initialized>>,
+    mut placed_pieces: EventWriter<PiecePlaced>,
     windows: Res<Windows>,
     projection_2d: Query<&OrthographicProjection, With<MainCamera>>,
 ) {
@@ -49,7 +51,7 @@ fn init_level(
             let window = get_dips_window(windows.get_primary().unwrap(), projection_2d.single());
 
             // TODO keep these and the pieces' coordinates up-to-date
-            let bag = parent.spawn_bag::<1>(Color::default(), &window)[0];
+            let (bag_position, bag_id) = parent.spawn_bag::<1>(Color::default(), &window)[0];
 
             // TODO: let the conveyor belt do this part for us
             let l_position = Transform::from_xyz(
@@ -66,54 +68,76 @@ fn init_level(
                 )
                 .insert(Selectable);
 
-            parent.spawn_nomino(
-                bag,
-                TetrominoSquare::default(),
-                LEVEL_COLOR,
-                Transform::from_xyz(0., 0., 0.),
-            );
-            parent.spawn_nomino(
-                bag,
-                TetrominoSquare::default(),
-                LEVEL_COLOR,
-                Transform::from_xyz(2., 0., 0.),
-            );
-            parent.spawn_nomino(
-                bag,
-                TetrominoSquare::default(),
-                LEVEL_COLOR,
-                Transform::from_xyz(4., 0., 0.),
-            );
-            parent.spawn_nomino(
-                bag,
-                TetrominoL::default(),
-                LEVEL_COLOR,
-                Transform::from_xyz(1., 3., 0.).with_rotation(*DEG_90),
-            );
-            parent.spawn_nomino(
-                bag,
-                TetrominoL::default(),
-                LEVEL_COLOR,
-                Transform::from_xyz(2., 2., 0.).with_rotation((*DEG_90).inverse()),
-            );
-            parent.spawn_nomino(
-                bag,
-                TetrominoSquare::default(),
-                LEVEL_COLOR,
-                Transform::from_xyz(4., 2., 0.),
-            );
-            parent.spawn_nomino(
-                bag,
-                TetrominoSquare::default(),
-                LEVEL_COLOR,
-                Transform::from_xyz(0., 4., 0.),
-            );
-            parent.spawn_nomino(
-                bag,
-                TetrominoL::default(),
-                LEVEL_COLOR,
-                Transform::from_xyz(4., 4., 0.).with_rotation((*DEG_90).inverse()),
-            );
+            let pieces = [
+                parent
+                    .spawn_nomino(
+                        bag_position,
+                        TetrominoSquare::default(),
+                        LEVEL_COLOR,
+                        Transform::from_xyz(0., 0., 0.),
+                    )
+                    .id(),
+                parent
+                    .spawn_nomino(
+                        bag_position,
+                        TetrominoSquare::default(),
+                        LEVEL_COLOR,
+                        Transform::from_xyz(2., 0., 0.),
+                    )
+                    .id(),
+                parent
+                    .spawn_nomino(
+                        bag_position,
+                        TetrominoSquare::default(),
+                        LEVEL_COLOR,
+                        Transform::from_xyz(4., 0., 0.),
+                    )
+                    .id(),
+                parent
+                    .spawn_nomino(
+                        bag_position,
+                        TetrominoL::default(),
+                        LEVEL_COLOR,
+                        Transform::from_xyz(1., 3., 0.).with_rotation(*DEG_90),
+                    )
+                    .id(),
+                parent
+                    .spawn_nomino(
+                        bag_position,
+                        TetrominoL::default(),
+                        LEVEL_COLOR,
+                        Transform::from_xyz(2., 2., 0.).with_rotation((*DEG_90).inverse()),
+                    )
+                    .id(),
+                parent
+                    .spawn_nomino(
+                        bag_position,
+                        TetrominoSquare::default(),
+                        LEVEL_COLOR,
+                        Transform::from_xyz(4., 2., 0.),
+                    )
+                    .id(),
+                parent
+                    .spawn_nomino(
+                        bag_position,
+                        TetrominoSquare::default(),
+                        LEVEL_COLOR,
+                        Transform::from_xyz(0., 4., 0.),
+                    )
+                    .id(),
+                parent
+                    .spawn_nomino(
+                        bag_position,
+                        TetrominoL::default(),
+                        LEVEL_COLOR,
+                        Transform::from_xyz(4., 4., 0.).with_rotation((*DEG_90).inverse()),
+                    )
+                    .id(),
+            ];
+
+            for piece in pieces {
+                placed_pieces.send(PiecePlaced { piece, bag: bag_id })
+            }
         })
         .id();
     *initialization = Some(Level1Initialized { root });

@@ -1331,6 +1331,7 @@ dependencies = [
  "console_error_panic_hook",
  "log",
  "paste",
+ "smallvec",
  "tracing",
 ]
 
