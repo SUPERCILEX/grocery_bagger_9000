@@ -11,6 +11,8 @@ use crate::{gb9000::GroceryBagger9000Plugin, window_management::WindowManager};
 mod bag_replacement;
 mod bags;
 mod conveyor_belt;
+#[cfg(feature = "debug")]
+mod debug;
 mod events;
 mod gb9000;
 mod level1;
@@ -34,11 +36,12 @@ fn main() {
     app.add_plugins(DefaultPlugins);
     app.add_plugin(ShapePlugin);
 
-    #[cfg(debug_assertions)]
+    #[cfg(feature = "debug")]
     {
         use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
         use bevy_screen_diags::ScreenDiagsPlugin;
 
+        app.add_plugin(debug::DebugPlugin);
         app.add_plugin(ScreenDiagsPlugin);
         app.add_plugin(FrameTimeDiagnosticsPlugin::default());
     }

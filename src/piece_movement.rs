@@ -49,6 +49,7 @@ fn piece_selection_handler(
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     rapier_context: Res<RapierContext>,
     selected_shape: Query<(&Transform, &Collider)>,
+    #[cfg(feature = "debug")] debug_options: Res<crate::debug::DebugOptions>,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Left) {
         return;
@@ -56,6 +57,12 @@ fn piece_selection_handler(
 
     if let Some(piece) = &**selected_piece {
         let (transform, collider) = selected_shape.get(**piece).unwrap();
+
+        #[cfg(feature = "debug")]
+        if debug_options.unrestricted_pieces {
+            *selected_piece = default();
+            return;
+        }
 
         let intersects_with_bag = rapier_context.intersection_with_shape(
             transform.translation,
@@ -85,7 +92,14 @@ fn piece_selection_handler(
         rapier_context.intersections_with_point(
             cursor_position.extend(0.),
             NOMINO_COLLIDER_GROUP.into(),
-            Some(&(|entity| selectables.contains(entity))),
+            Some(&|entity| {
+                #[cfg(feature = "debug")]
+                if debug_options.unrestricted_pieces {
+                    return true;
+                }
+
+                selectables.contains(entity)
+            }),
             |id| {
                 *selected_piece = PieceSelection(Some(SelectedPiece { id }));
                 false
@@ -154,7 +168,7 @@ fn straddles_bag_or_overlaps_pieces(
                 transform.rotation,
                 collider,
                 NOMINO_COLLIDER_GROUP.into(),
-                Some(&(|entity| entity != self_id)),
+                Some(&|entity| entity != self_id),
             )
         })
         .is_some()
@@ -174,7 +188,7 @@ fn piece_is_floating(
             transform.rotation,
             collider,
             NOMINO_COLLIDER_GROUP.into(),
-            Some(&(|entity| entity != self_id)),
+            Some(&|entity| entity != self_id),
         )
         .is_none()
 }

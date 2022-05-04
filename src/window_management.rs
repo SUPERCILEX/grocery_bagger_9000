@@ -43,6 +43,7 @@ fn setup_cameras(mut commands: Commands, windows: Res<Windows>) {
     );
 
     commands.spawn_bundle(camera_2d).insert(MainCamera);
+    #[cfg(feature = "debug")]
     commands.spawn_bundle(UiCameraBundle::default());
 }
 

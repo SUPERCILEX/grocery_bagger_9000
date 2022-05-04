@@ -37,7 +37,7 @@ fn replace_full_bags(
                     transform.rotation,
                     collider,
                     BAG_LID_COLLIDER_GROUP.into(),
-                    Some(&(|entity| **lid_collider_bag.get(entity).unwrap() == *bag)),
+                    Some(&|entity| **lid_collider_bag.get(entity).unwrap() == *bag),
                 )
                 .is_some();
             if bag_overflowing {
