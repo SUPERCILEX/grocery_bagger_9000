@@ -49,11 +49,13 @@ fn debug_options(
     mut debug_options: ResMut<DebugOptions>,
     mut nomino_to_spawn: Local<NominoType>,
     mut commands: Commands,
-    current_level: Res<CurrentLevel>,
+    mut current_level: ResMut<CurrentLevel>,
 ) {
     egui::Window::new("Debug options")
         .open(&mut true)
         .show(egui_context.ctx_mut(), |ui| {
+            ui.add(egui::DragValue::new(&mut current_level.level).speed(0.025));
+
             ui.checkbox(
                 &mut debug_options.unrestricted_pieces,
                 "Allow unrestricted piece movement",
