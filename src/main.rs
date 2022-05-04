@@ -19,6 +19,7 @@ mod markers;
 mod nomino_consts;
 mod nominos;
 mod piece_movement;
+mod scoring;
 mod window_management;
 mod window_utils;
 
