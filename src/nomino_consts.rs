@@ -13,19 +13,22 @@ pub static DEG_180: SyncLazy<Quat> = SyncLazy::new(|| Quat::from_rotation_z(-PI)
 pub static TETROMINO_STRAIGHT_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 5);
 
-    b.begin(Point::new(-0.5, -2.));
-    b.line_to(Point::new(-0.5, 2.));
-    b.line_to(Point::new(0.5, 2.));
-    b.line_to(Point::new(0.5, -2.));
+    b.begin(Point::new(-0.5, -2.5));
+    b.line_to(Point::new(-0.5, 1.5));
+    b.line_to(Point::new(0.5, 1.5));
+    b.line_to(Point::new(0.5, -2.5));
     b.close();
 
     Path(b.build())
 });
 
-// TODO fix all colliders to not touch if the pieces are touching
-
-pub static TETROMINO_STRAIGHT_COLLIDER: SyncLazy<Collider> =
-    SyncLazy::new(|| Collider::cuboid(0.5, 2., 0.));
+pub static TETROMINO_STRAIGHT_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
+    Collider::compound(vec![(
+        Vec3::new(0., -0.5, 0.),
+        Quat::IDENTITY,
+        Collider::cuboid(0.49, 1.99, 0.),
+    )])
+});
 
 pub static TETROMINO_SQUARE_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 5);
@@ -116,10 +119,14 @@ pub static TETROMINO_SKEW_PATH: SyncLazy<Path> = SyncLazy::new(|| {
 });
 
 pub static TETROMINO_SKEW_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
-    // TODO add a teeny rectangle
     let sub_bar = Collider::cuboid(0.49, 0.99, 0.);
     Collider::compound(vec![
         (Vec3::new(0., -0.5, 0.), Quat::IDENTITY, sub_bar.clone()),
         (Vec3::new(1., 0.5, 0.), Quat::IDENTITY, sub_bar),
+        (
+            Vec3::new(0.5, 0., 0.),
+            Quat::IDENTITY,
+            Collider::cuboid(0.1, 0.49, 0.),
+        ),
     ])
 });

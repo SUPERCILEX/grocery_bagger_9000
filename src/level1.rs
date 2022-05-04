@@ -66,7 +66,6 @@ fn init_level(
                 )
                 .insert(Selectable);
 
-            // TODO fill with pieces
             parent.spawn_nomino(
                 bag,
                 TetrominoSquare::default(),
