@@ -10,6 +10,7 @@ use crate::{gb9000::GroceryBagger9000Plugin, window_management::WindowManager};
 
 mod bag_replacement;
 mod bags;
+mod colors;
 mod conveyor_belt;
 #[cfg(feature = "debug")]
 mod debug;

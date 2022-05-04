@@ -2,7 +2,10 @@ use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 use bevy_egui::{egui, EguiContext, EguiPlugin};
 use bevy_screen_diags::ScreenDiagsPlugin;
 
-use crate::{levels::CurrentLevel, markers::Selectable, nomino_consts::DEG_MIRRORED, nominos::*};
+use crate::{
+    colors::NominoColor, levels::CurrentLevel, markers::Selectable, nomino_consts::DEG_MIRRORED,
+    nominos::*,
+};
 
 pub struct DebugPlugin;
 
@@ -99,7 +102,12 @@ fn debug_options(
 
                                 ($nomino:expr, $transform:expr) => {{
                                     parent
-                                        .spawn_nomino(position, $nomino, Color::BLACK, $transform)
+                                        .spawn_nomino(
+                                            position,
+                                            $nomino,
+                                            NominoColor::Debug,
+                                            $transform,
+                                        )
                                         .insert(Selectable)
                                 }};
                             }

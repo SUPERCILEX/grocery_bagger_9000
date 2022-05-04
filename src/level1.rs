@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     bags::BagSpawner,
+    colors::NominoColor,
     conveyor_belt,
     events::PiecePlaced,
     levels::CurrentLevel,
@@ -12,7 +13,7 @@ use crate::{
     window_utils::get_dips_window,
 };
 
-const LEVEL_COLOR: Color = Color::ORANGE;
+const LEVEL_COLOR: NominoColor = NominoColor::Orange;
 
 pub struct Level1Plugin;
 
