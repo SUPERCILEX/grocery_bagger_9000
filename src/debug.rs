@@ -58,7 +58,10 @@ fn debug_options(
     egui::Window::new("Debug options")
         .open(&mut true)
         .show(egui_context.ctx_mut(), |ui| {
-            ui.add(egui::DragValue::new(&mut current_level.level).speed(0.025));
+            ui.horizontal(|ui| {
+                ui.label("Level");
+                ui.add(egui::DragValue::new(&mut current_level.level).speed(0.025));
+            });
 
             ui.checkbox(
                 &mut debug_options.unrestricted_pieces,
