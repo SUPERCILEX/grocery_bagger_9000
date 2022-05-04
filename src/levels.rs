@@ -15,4 +15,5 @@ impl Plugin for LevelsPlugin {
 pub struct CurrentLevel {
     // TODO add state enum such as PLAYING, LEVEL_ENDED
     pub level: u16,
+    pub root: Option<Entity>,
 }

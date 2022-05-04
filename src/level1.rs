@@ -29,19 +29,18 @@ struct Level1Initialized {
 
 fn init_level(
     mut commands: Commands,
-    current: Res<CurrentLevel>,
-    mut initialization: Local<Option<Level1Initialized>>,
+    mut current: ResMut<CurrentLevel>,
     mut placed_pieces: EventWriter<PiecePlaced>,
     windows: Res<Windows>,
     projection_2d: Query<&OrthographicProjection, With<MainCamera>>,
 ) {
     if current.level >= 1 {
-        if let Some(initialized) = &*initialization {
-            commands.entity(**initialized).despawn_recursive();
-            *initialization = None;
+        if let Some(initialized) = current.root {
+            commands.entity(initialized).despawn_recursive();
+            current.root = None;
         }
         return;
-    } else if initialization.is_some() {
+    } else if current.root.is_some() {
         return;
     }
 
@@ -140,5 +139,5 @@ fn init_level(
             }
         })
         .id();
-    *initialization = Some(Level1Initialized { root });
+    current.root = Some(root);
 }

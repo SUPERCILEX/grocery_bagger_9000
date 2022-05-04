@@ -8,7 +8,7 @@ use bevy_prototype_lyon::prelude::{
 use bevy_rapier3d::prelude::*;
 
 pub static DEG_90: SyncLazy<Quat> = SyncLazy::new(|| Quat::from_rotation_z(-PI / 2.));
-pub static DEG_180: SyncLazy<Quat> = SyncLazy::new(|| Quat::from_rotation_z(-PI));
+pub static DEG_MIRRORED: SyncLazy<Quat> = SyncLazy::new(|| Quat::from_rotation_y(PI));
 
 pub static TETROMINO_STRAIGHT_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 5);
