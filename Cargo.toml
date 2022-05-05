@@ -12,7 +12,7 @@ categories = ["games"]
 bevy = { version = "0.7.0", default-features = false }
 bevy_egui = "0.14.0"
 bevy_prototype_lyon = "0.5.0"
-bevy_rapier3d = { version = "0.13.1", default-features = false, features = ["dim3", "simd-nightly"] }
+bevy_rapier3d = { version = "0.13.2", default-features = false, features = ["dim3", "simd-nightly"] }
 bevy_screen_diags = { git = "https://github.com/SUPERCILEX/bevy_screen_diags", optional = true }
 log = { version = "0.4.17", features = ["release_max_level_off"] }
 paste = "1.0.7"
