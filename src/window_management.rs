@@ -2,6 +2,7 @@ use bevy::{
     prelude::*,
     render::camera::WindowOrigin,
     window::{WindowMode, WindowResized},
+    winit::{UpdateMode, WinitSettings},
 };
 
 const DEFAULT_WIDTH: f32 = 1200.;
@@ -19,6 +20,10 @@ impl Plugin for WindowManager {
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT,
             ..default()
+        });
+        app.insert_resource(WinitSettings {
+            focused_mode: UpdateMode::Continuous,
+            ..WinitSettings::desktop_app()
         });
         app.insert_resource(ClearColor(Color::WHITE));
         app.add_startup_system(setup_cameras);
