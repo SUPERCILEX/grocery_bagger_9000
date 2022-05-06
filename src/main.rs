@@ -1,5 +1,6 @@
 #![feature(let_chains)]
 #![feature(once_cell)]
+#![feature(option_result_contains)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
 
@@ -12,11 +13,15 @@ mod bag_replacement;
 mod bags;
 mod colors;
 mod conveyor_belt;
+mod conveyor_belt_movement;
 #[cfg(feature = "debug")]
 mod debug;
-mod events;
 mod gb9000;
 mod level1;
+mod level2;
+mod level3;
+mod level4;
+mod level5;
 mod levels;
 mod markers;
 mod nomino_consts;

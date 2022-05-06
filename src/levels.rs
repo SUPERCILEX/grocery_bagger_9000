@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 
-use crate::level1::Level1Plugin;
+use crate::{
+    level1::Level1Plugin, level2::Level2Plugin, level3::Level3Plugin, level4::Level4Plugin,
+    level5::Level5Plugin,
+};
 
 pub struct LevelsPlugin;
 
@@ -11,6 +14,10 @@ impl Plugin for LevelsPlugin {
         app.add_event::<LevelUnloaded>();
 
         app.add_plugin(Level1Plugin);
+        app.add_plugin(Level2Plugin);
+        app.add_plugin(Level3Plugin);
+        app.add_plugin(Level4Plugin);
+        app.add_plugin(Level5Plugin);
 
         app.add_system_to_stage(CoreStage::First, level_change_handler);
     }
