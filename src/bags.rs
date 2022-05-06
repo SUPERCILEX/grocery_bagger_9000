@@ -8,7 +8,7 @@ use bevy_prototype_lyon::prelude::{
 use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
-use crate::{conveyor_belt, window_utils::DipsWindow};
+use crate::{conveyor_belt, window_management::DipsWindow};
 
 pub const BAG_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
     memberships: 0b10,

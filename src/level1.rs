@@ -32,8 +32,7 @@ fn init_level(
     mut commands: Commands,
     mut current: ResMut<CurrentLevel>,
     mut placed_pieces: EventWriter<PiecePlaced>,
-    windows: Res<Windows>,
-    projection_2d: Query<&OrthographicProjection, With<MainCamera>>,
+    dips_window: Res<DipsWindow>,
 ) {
     if current.level >= 1 {
         if let Some(initialized) = current.root {
@@ -48,10 +47,8 @@ fn init_level(
     let root = commands
         .spawn_bundle(TransformBundle::default())
         .with_children(|parent| {
-            let window = get_dips_window(windows.get_primary().unwrap(), projection_2d.single());
-
             // TODO keep these and the pieces' coordinates up-to-date
-            let (bag_position, bag_id) = parent.spawn_bag::<1>(Color::default(), &window)[0];
+            let (bag_position, bag_id) = parent.spawn_bag::<1>(Color::default(), &dips_window)[0];
 
             // TODO: let the conveyor belt do this part for us
             let l_position = Transform::from_xyz(

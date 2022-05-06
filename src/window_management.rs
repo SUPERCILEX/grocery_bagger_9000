@@ -26,7 +26,10 @@ impl Plugin for WindowManager {
             ..WinitSettings::desktop_app()
         });
         app.insert_resource(ClearColor(Color::WHITE));
-        app.add_startup_system(setup_cameras);
+
+        app.init_resource::<DipsWindow>();
+
+        app.add_startup_system(setup);
         app.add_system_to_stage(CoreStage::PreUpdate, window_scaling);
         app.add_system(full_screen_toggle);
 
@@ -38,13 +41,22 @@ impl Plugin for WindowManager {
 #[derive(Component)]
 pub struct MainCamera;
 
-fn setup_cameras(mut commands: Commands, windows: Res<Windows>) {
+#[derive(Default)]
+pub struct DipsWindow {
+    pub width: f32,
+    pub height: f32,
+}
+
+fn setup(mut commands: Commands, windows: Res<Windows>, mut dips_window: ResMut<DipsWindow>) {
     let mut camera_2d = OrthographicCameraBundle::new_2d();
     camera_2d.orthographic_projection.window_origin = WindowOrigin::BottomLeft;
 
+    let primary_window = windows.get_primary().unwrap();
     scale_window(
         &mut camera_2d.orthographic_projection,
-        windows.get_primary().unwrap().width(),
+        &mut dips_window,
+        primary_window.width(),
+        primary_window.height(),
     );
 
     commands.spawn_bundle(camera_2d).insert(MainCamera);
@@ -55,18 +67,33 @@ fn setup_cameras(mut commands: Commands, windows: Res<Windows>) {
 fn window_scaling(
     mut projection_2d: Query<&mut OrthographicProjection, With<MainCamera>>,
     mut resized_events: EventReader<WindowResized>,
+    mut dips_window: ResMut<DipsWindow>,
 ) {
     if let Some(primary_window) = resized_events.iter().filter(|w| w.id.is_primary()).last() {
-        scale_window(&mut projection_2d.single_mut(), primary_window.width);
+        let mut proj = projection_2d.single_mut();
+        scale_window(
+            &mut proj,
+            &mut dips_window,
+            primary_window.width,
+            primary_window.height,
+        );
     }
 }
 
-fn scale_window(projection_2d: &mut OrthographicProjection, window_width: f32) {
-    projection_2d.scale = if window_width >= TARGET_WIDTH_UNITS * PIXELS_PER_UNIT {
+fn scale_window(
+    proj: &mut OrthographicProjection,
+    dips_window: &mut DipsWindow,
+    window_width: f32,
+    window_height: f32,
+) {
+    proj.scale = if window_width >= TARGET_WIDTH_UNITS * PIXELS_PER_UNIT {
         1. / PIXELS_PER_UNIT
     } else {
         TARGET_WIDTH_UNITS / window_width
     };
+
+    dips_window.width = window_width * proj.scale;
+    dips_window.height = window_height * proj.scale;
 }
 
 fn full_screen_toggle(mut windows: ResMut<Windows>, keyboard_input: Res<Input<KeyCode>>) {
