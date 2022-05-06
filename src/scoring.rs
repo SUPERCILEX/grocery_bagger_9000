@@ -29,8 +29,8 @@ fn score_bags(
                 NOMINO_COLLIDER_GROUP.into(),
                 None,
                 |entity| {
-                    let color = colors.get(entity).unwrap();
-                    the_color_to_block_map_we_were_talking_about[color.id()] += 1;
+                    let color = *colors.get(entity).unwrap();
+                    the_color_to_block_map_we_were_talking_about[color] += 1;
                     dbg!(the_color_to_block_map_we_were_talking_about);
                     // TODO do something knowing there's an intersection
                     false

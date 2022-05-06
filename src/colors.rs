@@ -1,3 +1,5 @@
+use std::ops::{Index, IndexMut};
+
 use bevy::prelude::*;
 
 #[derive(Copy, Clone, Component)]
@@ -20,5 +22,19 @@ impl NominoColor {
 
     pub fn id(&self) -> usize {
         *self as usize
+    }
+}
+
+impl<T> Index<NominoColor> for [T] {
+    type Output = T;
+
+    fn index(&self, index: NominoColor) -> &Self::Output {
+        &self[index.id()]
+    }
+}
+
+impl<T> IndexMut<NominoColor> for [T] {
+    fn index_mut(&mut self, index: NominoColor) -> &mut Self::Output {
+        &mut self[index.id()]
     }
 }
