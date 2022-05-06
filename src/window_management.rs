@@ -10,6 +10,7 @@ const DEFAULT_HEIGHT: f32 = 675.;
 
 const PIXELS_PER_UNIT: f32 = 30.;
 const TARGET_WIDTH_UNITS: f32 = 48.;
+const TARGET_HEIGHT_UNITS: f32 = 16.;
 
 pub struct WindowManager;
 
@@ -86,10 +87,15 @@ fn scale_window(
     window_width: f32,
     window_height: f32,
 ) {
-    proj.scale = if window_width >= TARGET_WIDTH_UNITS * PIXELS_PER_UNIT {
+    let meets_width_requirement = window_width >= TARGET_WIDTH_UNITS * PIXELS_PER_UNIT;
+    let meets_height_requirement = window_height >= TARGET_HEIGHT_UNITS * PIXELS_PER_UNIT;
+    proj.scale = if meets_width_requirement && meets_height_requirement {
         1. / PIXELS_PER_UNIT
     } else {
-        TARGET_WIDTH_UNITS / window_width
+        f32::max(
+            TARGET_WIDTH_UNITS / window_width,
+            TARGET_HEIGHT_UNITS / window_height,
+        )
     };
 
     dips_window.width = window_width * proj.scale;
