@@ -4,7 +4,11 @@ use bevy::prelude::*;
 
 #[derive(Copy, Clone, Component)]
 pub enum NominoColor {
+    Red,
     Orange,
+    Blue,
+    Green,
+    Pink,
     _Last,
     Debug,
 }
@@ -14,7 +18,11 @@ impl NominoColor {
 
     pub fn render(&self) -> Color {
         match self {
+            NominoColor::Red => Color::RED,
             NominoColor::Orange => Color::ORANGE,
+            NominoColor::Blue => Color::CYAN,
+            NominoColor::Green => Color::GREEN,
+            NominoColor::Pink => Color::FUCHSIA,
             NominoColor::Debug => Color::BLACK,
             NominoColor::_Last => unreachable!(),
         }
