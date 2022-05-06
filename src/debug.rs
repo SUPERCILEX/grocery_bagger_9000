@@ -113,16 +113,22 @@ fn debug_options(
                             }
 
                             match *nomino_to_spawn {
-                                NominoType::Straight => spawn!(TetrominoStraight),
-                                NominoType::Square => spawn!(TetrominoSquare),
-                                NominoType::T => spawn!(TetrominoT),
-                                NominoType::L => spawn!(TetrominoL),
+                                NominoType::Straight => spawn!(Nomino::TetrominoStraight),
+                                NominoType::Square => spawn!(Nomino::TetrominoSquare),
+                                NominoType::T => spawn!(Nomino::TetrominoT),
+                                NominoType::L => spawn!(Nomino::TetrominoL),
                                 NominoType::L2 => {
-                                    spawn!(TetrominoL, Transform::from_rotation(*DEG_MIRRORED))
+                                    spawn!(
+                                        Nomino::TetrominoL,
+                                        Transform::from_rotation(*DEG_MIRRORED)
+                                    )
                                 }
-                                NominoType::Skew => spawn!(TetrominoSkew),
+                                NominoType::Skew => spawn!(Nomino::TetrominoSkew),
                                 NominoType::Skew2 => {
-                                    spawn!(TetrominoSkew, Transform::from_rotation(*DEG_MIRRORED))
+                                    spawn!(
+                                        Nomino::TetrominoSkew,
+                                        Transform::from_rotation(*DEG_MIRRORED)
+                                    )
                                 }
                             };
                         });
