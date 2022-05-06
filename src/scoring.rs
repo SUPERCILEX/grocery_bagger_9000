@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::{bags, colors::NominoColor, events::PiecePlaced, nominos::NOMINO_COLLIDER_GROUP};
+use crate::{
+    bags, colors::NominoColor, nominos::NOMINO_COLLIDER_GROUP, piece_movement::PiecePlaced,
+};
 
 pub struct ScoringPlugin;
 
@@ -31,7 +33,6 @@ fn score_bags(
                 |entity| {
                     let color = *colors.get(entity).unwrap();
                     the_color_to_block_map_we_were_talking_about[color] += 1;
-                    dbg!(the_color_to_block_map_we_were_talking_about);
                     // TODO do something knowing there's an intersection
                     false
                 },
@@ -40,7 +41,7 @@ fn score_bags(
     }
 }
 
-fn score_blocks(something: u32) -> u32 {
+fn score_blocks(_something: u32) -> u32 {
     1
 }
 

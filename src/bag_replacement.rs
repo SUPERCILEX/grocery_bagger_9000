@@ -4,8 +4,8 @@ use bevy_rapier3d::prelude::*;
 use crate::{
     bags,
     bags::{BagPieces, BAG_LID_COLLIDER_GROUP},
-    events::PiecePlaced,
     nominos::NOMINO_COLLIDER_GROUP,
+    piece_movement::PiecePlaced,
 };
 
 pub struct BagReplacementPlugin;
