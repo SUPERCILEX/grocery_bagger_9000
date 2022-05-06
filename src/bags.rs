@@ -69,7 +69,7 @@ static LID_BAG_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
 });
 
 #[derive(Component, Deref, DerefMut)]
-pub struct BagPieces(pub SmallVec<[Entity; 9]>);
+pub struct BagPieces(pub SmallVec<[Entity; conveyor_belt::MAX_NUM_PIECES]>);
 
 pub trait BagSpawner {
     fn spawn_bag<const N: usize>(

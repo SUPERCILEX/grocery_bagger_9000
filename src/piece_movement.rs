@@ -50,6 +50,7 @@ fn piece_selection_handler(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
     mut selected_piece: ResMut<SelectedPiece>,
+    mut picked_up_events: EventWriter<PiecePickedUp>,
     mut placed_events: EventWriter<PiecePlaced>,
     selectables: Query<(), With<Selectable>>,
     windows: Res<Windows>,
@@ -82,13 +83,12 @@ fn piece_selection_handler(
         if let Some(bag) = intersects_with_bag
             && !straddles_bag_or_overlaps_pieces(&rapier_context, *transform, collider, *piece)
             && !piece_is_floating(&rapier_context, *transform, collider, *piece) {
-            let mut piece_commands = commands.entity(*piece);
-            piece_commands.remove::<Selectable>();
+            commands.entity(*piece).remove::<Selectable>();
+
             placed_events.send(PiecePlaced {
                 piece: *piece,
                 bag,
             });
-
             *selected_piece = default();
         }
 
@@ -109,6 +109,7 @@ fn piece_selection_handler(
             }),
             |id| {
                 *selected_piece = SelectedPiece(Some(id));
+                picked_up_events.send(PiecePickedUp(id));
                 false
             },
         );
