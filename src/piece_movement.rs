@@ -192,7 +192,7 @@ fn piece_is_floating(
             transform.translation - Vec3::new(0., 1., 0.),
             transform.rotation,
             collider,
-            NOMINO_COLLIDER_GROUP.into(),
+            CollisionGroups::new(0b101, 0b101).into(),
             Some(&|entity| entity != self_id),
         )
         .is_none()
