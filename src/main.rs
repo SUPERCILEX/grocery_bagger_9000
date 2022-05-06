@@ -23,7 +23,6 @@ mod level3;
 mod level4;
 mod level5;
 mod levels;
-mod markers;
 mod nomino_consts;
 mod nominos;
 mod piece_movement;

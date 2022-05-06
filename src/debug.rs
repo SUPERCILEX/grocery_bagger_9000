@@ -3,8 +3,8 @@ use bevy_egui::{egui, EguiContext, EguiPlugin};
 use bevy_screen_diags::ScreenDiagsPlugin;
 
 use crate::{
-    colors::NominoColor, levels::CurrentLevel, markers::Selectable, nomino_consts::DEG_MIRRORED,
-    nominos::*,
+    colors::NominoColor, levels::CurrentLevel, nomino_consts::DEG_MIRRORED, nominos::*,
+    piece_movement::Selectable,
 };
 
 pub struct DebugPlugin;

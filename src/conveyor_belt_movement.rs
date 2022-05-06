@@ -4,9 +4,8 @@ use crate::{
     conveyor_belt,
     conveyor_belt::ConveyorBeltInstance,
     levels::{CurrentLevel, LevelLoaded, LevelUnloaded},
-    markers::Selectable,
     nominos::NominoSpawner,
-    piece_movement::PiecePickedUp,
+    piece_movement::{PiecePickedUp, Selectable},
     window_management::DipsWindow,
 };
 

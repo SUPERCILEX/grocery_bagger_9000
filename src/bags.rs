@@ -86,10 +86,10 @@ impl<'w, 's, 'a> BagSpawner for ChildBuilder<'w, 's, 'a> {
         window: &DipsWindow,
     ) -> [(Transform, Entity); N] {
         compute_bag_coordinates::<N>(window).map(|mut transform| {
-            let commands = spawn_bag(self, color, transform);
+            let id = spawn_bag(self, color, transform);
             // Adjust bag coordinates such that the canvas is centered on the bottom left corner
             transform.translation -= Vec3::new(RADIUS, RADIUS, 0.);
-            (transform, commands)
+            (transform, id)
         })
     }
 }

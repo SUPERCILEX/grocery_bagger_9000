@@ -4,7 +4,6 @@ use bevy_rapier3d::prelude::*;
 use crate::{
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP},
     levels::LevelUnloaded,
-    markers::Selectable,
     nomino_consts::DEG_90,
     nominos::*,
     window_management::MainCamera,
@@ -25,6 +24,9 @@ impl Plugin for PieceMovementPlugin {
         app.add_system(selected_piece_mover.before(piece_selection_handler));
     }
 }
+
+#[derive(Component)]
+pub struct Selectable;
 
 pub struct PiecePlaced {
     pub piece: Entity,
