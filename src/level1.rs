@@ -19,28 +19,18 @@ pub struct Level1Plugin;
 
 impl Plugin for Level1Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(init_level);
+        app.add_system_to_stage(CoreStage::PreUpdate, init_level);
     }
-}
-
-#[derive(Deref)]
-struct Level1Initialized {
-    root: Entity,
 }
 
 fn init_level(
     mut commands: Commands,
     mut current: ResMut<CurrentLevel>,
+    mut level_initialized: EventWriter<LevelLoaded>,
     mut placed_pieces: EventWriter<PiecePlaced>,
     dips_window: Res<DipsWindow>,
 ) {
-    if current.level >= 1 {
-        if let Some(initialized) = current.root {
-            commands.entity(initialized).despawn_recursive();
-            current.root = None;
-        }
-        return;
-    } else if current.root.is_some() {
+    if current.level != 0 || current.root.is_some() {
         return;
     }
 
@@ -99,4 +89,5 @@ fn init_level(
         })
         .id();
     current.root = Some(root);
+    level_initialized.send(LevelLoaded(root));
 }
