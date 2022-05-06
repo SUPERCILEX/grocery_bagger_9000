@@ -125,7 +125,7 @@ fn piece_rotation_handler(
         if let Some(piece) = &**selected_piece {
             let rotation = &mut pieces.get_mut(*piece).unwrap().rotation;
             if rotation.x.is_normal() || rotation.y.is_normal() {
-                *rotation *= (*DEG_90).inverse();
+                *rotation *= DEG_90.inverse();
             } else {
                 *rotation *= *DEG_90;
             }

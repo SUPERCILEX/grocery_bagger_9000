@@ -63,13 +63,13 @@ fn init_level(
                 ),
                 spawn!(
                     Nomino::TetrominoL,
-                    Transform::from_xyz(2., 2., 0.).with_rotation((*DEG_90).inverse())
+                    Transform::from_xyz(2., 2., 0.).with_rotation(DEG_90.inverse())
                 ),
                 spawn!(Nomino::TetrominoSquare, Transform::from_xyz(4., 2., 0.)),
                 spawn!(Nomino::TetrominoSquare, Transform::from_xyz(0., 4., 0.)),
                 spawn!(
                     Nomino::TetrominoL,
-                    Transform::from_xyz(4., 4., 0.).with_rotation((*DEG_90).inverse())
+                    Transform::from_xyz(4., 4., 0.).with_rotation(DEG_90.inverse())
                 ),
             ];
 

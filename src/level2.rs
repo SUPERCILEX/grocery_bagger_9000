@@ -5,6 +5,7 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltInstance, Piece, PresetPiecesConveyorBelt},
     levels::{CurrentLevel, LevelLoaded},
+    nomino_consts::{DEG_90, DEG_MIRRORED},
     nominos::{Nomino, NominoSpawner},
     piece_movement::PiecePlaced,
     window_management::DipsWindow,
@@ -59,11 +60,25 @@ fn init_level(
                 }};
             }
 
-            // TODO add the other pieces
-            let pieces = [spawn!(
-                Nomino::TetrominoSquare,
-                Transform::from_xyz(0., 0., 0.)
-            )];
+            let pieces = [
+                spawn!(Nomino::TetrominoL, Transform::from_xyz(0., 1., 0.)),
+                spawn!(
+                    Nomino::TetrominoT,
+                    Transform::from_xyz(3., 0., 0.).with_rotation(DEG_90.inverse())
+                ),
+                spawn!(Nomino::TetrominoStraight, Transform::from_xyz(5., 2., 0.)),
+                spawn!(Nomino::TetrominoSquare, Transform::from_xyz(1., 1., 0.)),
+                spawn!(
+                    Nomino::TetrominoL,
+                    Transform::from_xyz(1., 3., 0.).with_rotation(DEG_90.inverse())
+                ),
+                spawn!(Nomino::TetrominoSquare, Transform::from_xyz(0., 4., 0.)),
+                spawn!(
+                    Nomino::TetrominoSkew,
+                    Transform::from_xyz(4., 2., 0.).with_rotation(*DEG_MIRRORED)
+                ),
+                spawn!(Nomino::TetrominoSkew, Transform::from_xyz(4., 4., 0.)),
+            ];
 
             for piece in pieces {
                 placed_pieces.send(PiecePlaced { piece, bag: bag_id })
