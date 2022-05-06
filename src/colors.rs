@@ -23,7 +23,7 @@ impl NominoColor {
             NominoColor::Blue => Color::CYAN,
             NominoColor::Green => Color::GREEN,
             NominoColor::Pink => Color::FUCHSIA,
-            NominoColor::Debug => Color::BLACK,
+            NominoColor::Debug => Color::WHITE,
             NominoColor::_Last => unreachable!(),
         }
     }
