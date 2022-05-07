@@ -652,6 +652,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_tweening"
+version = "0.4.0"
+source = "git+https://github.com/SUPERCILEX/bevy_tweening?branch=loop#ce1d68fb75c17a24d92430e4041857ef89797732"
+dependencies = [
+ "bevy",
+ "interpolation",
+]
+
+[[package]]
 name = "bevy_ui"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1393,6 +1402,7 @@ dependencies = [
  "bevy_prototype_lyon",
  "bevy_rapier3d",
  "bevy_screen_diags",
+ "bevy_tweening",
  "console_error_panic_hook",
  "log",
  "smallvec",
@@ -1497,6 +1507,12 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
 ]
+
+[[package]]
+name = "interpolation"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3b7357d2bbc5ee92f8e899ab645233e43d21407573cceb37fed8bc3dede2c02"
 
 [[package]]
 name = "jni-sys"

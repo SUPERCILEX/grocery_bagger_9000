@@ -9,6 +9,7 @@ use bevy_prototype_lyon::plugin::ShapePlugin;
 
 use crate::{gb9000::GroceryBagger9000Plugin, window_management::WindowManager};
 
+mod animations;
 mod bag_replacement;
 mod bags;
 mod colors;

@@ -2,6 +2,8 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use crate::{
+    animations,
+    animations::{AnimationBundle, Original},
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP},
     levels::LevelUnloaded,
     nomino_consts::DEG_90,
@@ -20,7 +22,9 @@ impl Plugin for PieceMovementPlugin {
 
         app.add_system_to_stage(CoreStage::PreUpdate, reset_selected_piece);
         app.add_system(piece_selection_handler);
-        app.add_system(piece_rotation_handler);
+        app.add_system(
+            piece_rotation_handler.after(bevy_tweening::component_animator_system::<Transform>),
+        );
         app.add_system(selected_piece_mover.before(piece_selection_handler));
     }
 }
@@ -58,7 +62,7 @@ fn piece_selection_handler(
     windows: Res<Windows>,
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     rapier_context: Res<RapierContext>,
-    selected_shape: Query<(&Transform, &Collider)>,
+    mut selected_shape: Query<(&mut Transform, &Collider, Option<&Original<Transform>>)>,
     #[cfg(feature = "debug")] debug_options: Res<crate::debug::DebugOptions>,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Left) {
@@ -66,7 +70,13 @@ fn piece_selection_handler(
     }
 
     if let Some(piece) = &**selected_piece {
-        let (transform, collider) = selected_shape.get(*piece).unwrap();
+        let (mut transform, collider, original) = selected_shape.get_mut(*piece).unwrap();
+        if let Some(original) = original {
+            transform.rotation = original.rotation;
+            commands
+                .entity(*piece)
+                .remove_bundle::<AnimationBundle<Transform>>();
+        }
 
         #[cfg(feature = "debug")]
         if debug_options.unrestricted_pieces {
@@ -92,6 +102,8 @@ fn piece_selection_handler(
                 bag,
             });
             *selected_piece = default();
+        } else {
+            commands.entity(*piece).insert_bundle(animations::error_shake(*transform));
         }
 
         return;
@@ -119,18 +131,29 @@ fn piece_selection_handler(
 }
 
 fn piece_rotation_handler(
+    mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
     selected_piece: Res<SelectedPiece>,
-    mut pieces: Query<&mut Transform>,
+    mut pieces: Query<(&mut Transform, Option<&Original<Transform>>)>,
 ) {
-    if mouse_button_input.just_pressed(MouseButton::Right) {
-        if let Some(piece) = &**selected_piece {
-            let rotation = &mut pieces.get_mut(*piece).unwrap().rotation;
-            if rotation.x.is_normal() || rotation.y.is_normal() {
-                *rotation *= DEG_90.inverse();
-            } else {
-                *rotation *= *DEG_90;
-            }
+    if !(mouse_button_input.just_pressed(MouseButton::Right)) {
+        return;
+    }
+
+    if let Some(piece) = &**selected_piece {
+        let (transform, original) = &mut pieces.get_mut(*piece).unwrap();
+        if let Some(original) = original {
+            transform.rotation = original.rotation;
+            commands
+                .entity(*piece)
+                .remove_bundle::<AnimationBundle<Transform>>();
+        }
+
+        let rotation = &mut transform.rotation;
+        if rotation.x.is_normal() || rotation.y.is_normal() {
+            *rotation *= DEG_90.inverse();
+        } else {
+            *rotation *= *DEG_90;
         }
     }
 }
