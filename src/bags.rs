@@ -25,6 +25,7 @@ pub const BAG_LID_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
 
 pub const RADIUS: f32 = 3.;
 pub const BAG_OFFSET: f32 = 2.5;
+const BAG_SPACING: f32 = 2.;
 
 static BAG_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 4);
@@ -77,7 +78,7 @@ pub trait BagSpawner {
         &mut self,
         color: Color,
         window: &DipsWindow,
-    ) -> [(Transform, Entity); N];
+    ) -> SmallVec<[(Transform, Entity); 3]>;
 }
 
 impl<'w, 's, 'a> BagSpawner for ChildBuilder<'w, 's, 'a> {
@@ -85,30 +86,39 @@ impl<'w, 's, 'a> BagSpawner for ChildBuilder<'w, 's, 'a> {
         &mut self,
         color: Color,
         window: &DipsWindow,
-    ) -> [(Transform, Entity); N] {
-        compute_bag_coordinates::<N>(window).map(|mut transform| {
-            let id = spawn_bag(self, color, transform);
+    ) -> SmallVec<[(Transform, Entity); 3]> {
+        let mut bag_positions = compute_bag_coordinates(window, N);
+        let mut spawned_bags = SmallVec::new();
+        for position in &mut bag_positions {
+            let mut position = Transform::from_translation(*position);
+            let id = spawn_bag(self, color, position);
+
             // Adjust bag coordinates such that the canvas is centered on the bottom left corner
-            transform.translation -= Vec3::new(RADIUS, RADIUS, 0.);
-            (transform, id)
-        })
+            position.translation -= Vec3::new(RADIUS, RADIUS, 0.);
+
+            spawned_bags.push((position, id))
+        }
+        spawned_bags
     }
 }
 
-fn compute_bag_coordinates<const N: usize>(window: &DipsWindow) -> [Transform; N] {
-    assert!(N > 0);
+pub fn compute_bag_coordinates(window: &DipsWindow, num_bags: usize) -> SmallVec<[Vec3; 3]> {
+    debug_assert!(num_bags != 0);
 
-    let mut positions = [default(); N];
-    if N == 1 {
-        positions[0] = Transform::from_xyz(
-            BagCoord(window.width / 2.).snap_to_grid(),
+    let space_needed = 2. * RADIUS * num_bags as f32 + (num_bags - 1) as f32 * BAG_SPACING;
+    let starting_position = (window.width - space_needed) / 2. + RADIUS;
+    debug_assert!(starting_position >= 0. && starting_position <= window.width);
+
+    let mut bags = SmallVec::new();
+    for bag in 0..num_bags {
+        bags.push(Vec3::new(
+            BagCoord(starting_position + (2. * RADIUS * bag as f32 + bag as f32 * BAG_SPACING))
+                .snap_to_grid(),
             BagCoord((window.height - conveyor_belt::HEIGHT) / 2.).snap_to_grid(),
             0.,
-        );
-    } else {
-        todo!("Figure out how to compute positions for multiple bags. Ideally doesn't need an if statement.")
+        ))
     }
-    positions
+    bags
 }
 
 fn spawn_bag(commands: &mut ChildBuilder, color: Color, transform: Transform) -> Entity {

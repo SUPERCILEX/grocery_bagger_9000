@@ -5,6 +5,8 @@ use bevy::{
     winit::{UpdateMode, WinitSettings},
 };
 
+use crate::bags::{compute_bag_coordinates, BagPieces};
+
 const DEFAULT_WIDTH: f32 = 1200.;
 const DEFAULT_HEIGHT: f32 = 675.;
 
@@ -33,6 +35,7 @@ impl Plugin for WindowManager {
         app.add_startup_system(setup);
         app.add_system_to_stage(CoreStage::PreUpdate, window_scaling);
         app.add_system(full_screen_toggle);
+        app.add_system(center_bags);
 
         #[cfg(target_arch = "wasm32")]
         app.add_plugin(bevy_web_resizer::Plugin);
@@ -110,5 +113,30 @@ fn full_screen_toggle(mut windows: ResMut<Windows>, keyboard_input: Res<Input<Ke
         } else {
             WindowMode::Windowed
         });
+    }
+}
+
+fn center_bags(
+    mut resized_events: EventReader<WindowResized>,
+    dips_window: Res<DipsWindow>,
+    mut positions: Query<&mut Transform>,
+    bags: Query<(Entity, &BagPieces)>,
+) {
+    if resized_events.iter().count() == 0 {
+        return;
+    }
+
+    let bag_count = bags.iter().count();
+    let bag_positions = compute_bag_coordinates(&dips_window, bag_count);
+
+    for (index, (bag_id, bag_pieces)) in bags.iter().enumerate() {
+        let mut bag_position = positions.get_mut(bag_id).unwrap();
+        let old_position = bag_position.translation;
+        bag_position.translation = bag_positions[index];
+        let diff = bag_position.translation - old_position;
+
+        for piece in &**bag_pieces {
+            positions.get_mut(*piece).unwrap().translation += diff;
+        }
     }
 }
