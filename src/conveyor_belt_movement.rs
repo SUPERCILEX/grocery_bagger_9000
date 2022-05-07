@@ -15,11 +15,25 @@ impl Plugin for ConveyorBeltMovementPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ConveyorBeltInstance>();
         app.init_resource::<BeltPieceIds>();
+        app.init_resource::<ConveyorBeltOptions>();
 
         app.add_system_to_stage(CoreStage::PreUpdate, reset_conveyor_belt);
         app.add_system(init_pieces);
         app.add_system(replace_pieces.after(init_pieces));
         app.add_system_to_stage(CoreStage::PostUpdate, move_pieces);
+        app.add_system_to_stage(CoreStage::PostUpdate, update_piece_selectability);
+    }
+}
+
+pub struct ConveyorBeltOptions {
+    pub num_pieces_selectable: u8,
+}
+
+impl Default for ConveyorBeltOptions {
+    fn default() -> Self {
+        Self {
+            num_pieces_selectable: 3,
+        }
     }
 }
 
@@ -30,9 +44,11 @@ fn reset_conveyor_belt(
     current_level: Res<CurrentLevel>,
     mut level_unloaded: EventReader<LevelUnloaded>,
     mut conveyor_belt: ResMut<ConveyorBeltInstance>,
+    mut belt_pieces: ResMut<BeltPieceIds>,
 ) {
     if level_unloaded.iter().count() > 0 && current_level.root.is_none() {
         **conveyor_belt = None;
+        *belt_pieces = default();
     }
 }
 
@@ -41,6 +57,7 @@ fn init_pieces(
     mut level_initialized: EventReader<LevelLoaded>,
     mut conveyor_belt: ResMut<ConveyorBeltInstance>,
     mut belt_pieces: ResMut<BeltPieceIds>,
+    belt_options: Res<ConveyorBeltOptions>,
     dips_window: Res<DipsWindow>,
 ) {
     // TODO these ANDs should be flipped, but CLion completely destroys the code if you do that
@@ -70,7 +87,7 @@ fn init_pieces(
                             )
                                 .with_rotation(piece.rotation),
                         );
-                        if index < 3 {
+                        if index < belt_options.num_pieces_selectable.into() {
                             spawned.insert(Selectable);
                         }
 
@@ -89,6 +106,7 @@ fn replace_pieces(
     mut conveyor_belt: ResMut<ConveyorBeltInstance>,
     mut belt_pieces: ResMut<BeltPieceIds>,
     mut picked_up_pieces: EventReader<PiecePickedUp>,
+    belt_options: Res<ConveyorBeltOptions>,
     dips_window: Res<DipsWindow>,
 ) {
     for piece_id in picked_up_pieces.iter() {
@@ -97,7 +115,7 @@ fn replace_pieces(
             for i in picked_up_position..conveyor_belt::MAX_NUM_PIECES - 1 {
                 belt_pieces[i] = belt_pieces[i + 1];
 
-                if i < 3 &&
+                if i < belt_options.num_pieces_selectable.into() &&
                 let Some(id) = belt_pieces[i]
                 {
                     commands.entity(id).insert(Selectable);
@@ -163,6 +181,26 @@ fn move_pieces(
                 );
         } else {
             break;
+        }
+    }
+}
+
+fn update_piece_selectability(
+    mut commands: Commands,
+    belt_pieces: Res<BeltPieceIds>,
+    belt_options: Res<ConveyorBeltOptions>,
+) {
+    if !belt_options.is_changed() {
+        return;
+    }
+
+    for (index, piece) in belt_pieces.iter().enumerate() {
+        if let Some(piece) = piece {
+            if index < belt_options.num_pieces_selectable.into() {
+                commands.entity(*piece).insert(Selectable);
+            } else {
+                commands.entity(*piece).remove::<Selectable>();
+            }
         }
     }
 }

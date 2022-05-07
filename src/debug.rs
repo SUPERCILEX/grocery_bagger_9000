@@ -3,8 +3,8 @@ use bevy_egui::{egui, EguiContext, EguiPlugin};
 use bevy_screen_diags::ScreenDiagsPlugin;
 
 use crate::{
-    colors::NominoColor, levels::CurrentLevel, nomino_consts::DEG_MIRRORED, nominos::*,
-    piece_movement::Selectable,
+    colors::NominoColor, conveyor_belt_movement::ConveyorBeltOptions, levels::CurrentLevel,
+    nomino_consts::DEG_MIRRORED, nominos::*, piece_movement::Selectable,
 };
 
 pub struct DebugPlugin;
@@ -68,6 +68,7 @@ fn debug_options(
     mut nomino_to_spawn: Local<NominoType>,
     mut commands: Commands,
     mut current_level: ResMut<CurrentLevel>,
+    mut conveyor_belt_options: ResMut<ConveyorBeltOptions>,
 ) {
     let debug_options = &mut *debug_options;
     egui::Window::new("Debug options")
@@ -83,6 +84,16 @@ fn debug_options(
                 "Allow unrestricted piece movement",
             );
 
+            ui.horizontal(|ui| {
+                ui.label("Number of selectable conveyor belt pieces");
+                ui.add(
+                    egui::DragValue::new(&mut conveyor_belt_options.num_pieces_selectable)
+                        .speed(0.025)
+                        .clamp_range(0..=9),
+                );
+            });
+
+            ui.separator();
             ui.horizontal(|ui| {
                 if ui.button("Spawn").clicked() {
                     if let Some(root) = current_level.root {
