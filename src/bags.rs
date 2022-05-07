@@ -24,6 +24,7 @@ pub const BAG_LID_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
 };
 
 pub const RADIUS: f32 = 3.;
+pub const BAG_OFFSET: f32 = 2.5;
 
 static BAG_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 4);
