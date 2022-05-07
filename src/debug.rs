@@ -13,16 +13,27 @@ impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(EguiPlugin);
         app.init_resource::<DebugOptions>();
+
         app.add_system(debug_options);
+        app.add_system(open_debug_menu);
 
         app.add_plugin(ScreenDiagsPlugin);
         app.add_plugin(FrameTimeDiagnosticsPlugin::default());
     }
 }
 
-#[derive(Default)]
 pub struct DebugOptions {
     pub unrestricted_pieces: bool,
+    open: bool,
+}
+
+impl Default for DebugOptions {
+    fn default() -> Self {
+        Self {
+            unrestricted_pieces: false,
+            open: true,
+        }
+    }
 }
 
 #[derive(Default, PartialEq)]
@@ -58,8 +69,9 @@ fn debug_options(
     mut commands: Commands,
     mut current_level: ResMut<CurrentLevel>,
 ) {
+    let debug_options = &mut *debug_options;
     egui::Window::new("Debug options")
-        .open(&mut true)
+        .open(&mut debug_options.open)
         .show(egui_context.ctx_mut(), |ui| {
             ui.horizontal(|ui| {
                 ui.label("Level");
@@ -136,4 +148,10 @@ fn debug_options(
                 }
             });
         });
+}
+
+fn open_debug_menu(keys: Res<Input<KeyCode>>, mut debug_options: ResMut<DebugOptions>) {
+    if keys.just_pressed(KeyCode::Semicolon) {
+        debug_options.open = true;
+    }
 }
