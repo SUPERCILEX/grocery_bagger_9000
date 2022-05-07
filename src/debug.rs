@@ -3,8 +3,8 @@ use bevy_egui::{egui, EguiContext, EguiPlugin};
 use bevy_screen_diags::ScreenDiagsPlugin;
 
 use crate::{
-    colors::NominoColor, conveyor_belt_movement::ConveyorBeltOptions, levels::CurrentLevel,
-    nomino_consts::DEG_MIRRORED, nominos::*, piece_movement::Selectable,
+    animations::GameSpeed, colors::NominoColor, conveyor_belt_movement::ConveyorBeltOptions,
+    levels::CurrentLevel, nomino_consts::DEG_MIRRORED, nominos::*, piece_movement::Selectable,
 };
 
 pub struct DebugPlugin;
@@ -69,6 +69,7 @@ fn debug_options(
     mut commands: Commands,
     mut current_level: ResMut<CurrentLevel>,
     mut conveyor_belt_options: ResMut<ConveyorBeltOptions>,
+    mut game_speed: ResMut<GameSpeed>,
 ) {
     let debug_options = &mut *debug_options;
     egui::Window::new("Debug options")
@@ -77,6 +78,15 @@ fn debug_options(
             ui.horizontal(|ui| {
                 ui.label("Level");
                 ui.add(egui::DragValue::new(&mut current_level.level).speed(0.025));
+            });
+
+            ui.horizontal(|ui| {
+                ui.label("Game speed");
+                ui.add(
+                    egui::DragValue::new(&mut **game_speed)
+                        .speed(0.01)
+                        .clamp_range(0.01..=100.),
+                );
             });
 
             ui.checkbox(

@@ -7,7 +7,24 @@ pub struct AnimationPlugin;
 
 impl Plugin for AnimationPlugin {
     fn build(&self, app: &mut App) {
+        app.init_resource::<GameSpeed>();
+
         app.add_system_to_stage(CoreStage::PostUpdate, cleanup_animations::<Transform>);
+    }
+}
+
+#[derive(Deref, DerefMut)]
+pub struct GameSpeed(f32);
+
+impl Default for GameSpeed {
+    fn default() -> Self {
+        Self(1.)
+    }
+}
+
+impl GameSpeed {
+    fn error_shake_animation_speed(&self) -> Duration {
+        Duration::from_millis((25. * self.0) as u64)
     }
 }
 
@@ -20,14 +37,16 @@ pub struct AnimationBundle<T: Component> {
     original: Original<T>,
 }
 
-pub fn error_shake(current: Transform) -> AnimationBundle<Transform> {
+pub fn error_shake(current: Transform, speed: &GameSpeed) -> AnimationBundle<Transform> {
     let wiggle = Quat::from_rotation_z(PI / 16.);
+    let duration = speed.error_shake_animation_speed();
+
     AnimationBundle {
         animator: Animator::new(Sequence::new([
             Tween::new(
                 EaseMethod::Linear,
                 TweeningType::Once,
-                Duration::from_millis(25),
+                duration,
                 TransformRotationLens {
                     start: current.rotation,
                     end: current.rotation * wiggle.inverse(),
@@ -36,7 +55,7 @@ pub fn error_shake(current: Transform) -> AnimationBundle<Transform> {
             Tween::new(
                 EaseMethod::Linear,
                 TweeningType::PingPongTimes(3),
-                Duration::from_millis(50),
+                duration * 2,
                 TransformRotationLens {
                     start: current.rotation * wiggle.inverse(),
                     end: current.rotation * wiggle,
@@ -45,7 +64,7 @@ pub fn error_shake(current: Transform) -> AnimationBundle<Transform> {
             Tween::new(
                 EaseMethod::Linear,
                 TweeningType::Once,
-                Duration::from_millis(25),
+                duration,
                 TransformRotationLens {
                     start: current.rotation * wiggle,
                     end: current.rotation,

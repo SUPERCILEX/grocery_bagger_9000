@@ -3,7 +3,7 @@ use bevy_rapier3d::prelude::*;
 
 use crate::{
     animations,
-    animations::{AnimationBundle, Original},
+    animations::{AnimationBundle, GameSpeed, Original},
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP},
     levels::LevelUnloaded,
     nomino_consts::DEG_90,
@@ -59,6 +59,7 @@ fn piece_selection_handler(
     mut picked_up_events: EventWriter<PiecePickedUp>,
     mut placed_events: EventWriter<PiecePlaced>,
     selectables: Query<(), With<Selectable>>,
+    game_speed: Res<GameSpeed>,
     windows: Res<Windows>,
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     rapier_context: Res<RapierContext>,
@@ -103,7 +104,7 @@ fn piece_selection_handler(
             });
             *selected_piece = default();
         } else {
-            commands.entity(*piece).insert_bundle(animations::error_shake(*transform));
+            commands.entity(*piece).insert_bundle(animations::error_shake(*transform, &game_speed));
         }
 
         return;
