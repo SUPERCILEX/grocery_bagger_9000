@@ -2,8 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use crate::{
-    bags, bags::BAG_OFFSET, colors::NominoColor, nominos::NOMINO_COLLIDER_GROUP,
-    piece_movement::PiecePlaced,
+    bags, colors::NominoColor, nominos::NOMINO_COLLIDER_GROUP, piece_movement::PiecePlaced,
 };
 
 pub struct ScoringPlugin;
@@ -21,7 +20,7 @@ fn score_bags(
     rapier_context: Res<RapierContext>,
 ) {
     for PiecePlaced { bag, .. } in piece_placements.iter() {
-        let mut bag_coords = *bags.get(*bag).unwrap();
+        let bag_coords = *bags.get(*bag).unwrap();
 
         let block_origin =
             bag_coords.translation + Vec3::new(-bags::BAG_OFFSET, -bags::BAG_OFFSET, 0.);
@@ -54,7 +53,7 @@ fn score_bags(
     }
 }
 
-fn score_blocks(something: u32) -> u32 {
+fn score_blocks(_something: u32) -> u32 {
     1
 }
 
