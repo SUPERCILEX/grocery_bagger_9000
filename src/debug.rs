@@ -83,26 +83,8 @@ fn debug_options(
                 "Allow unrestricted piece movement",
             );
 
-            ui.group(|ui| {
-                egui::ComboBox::from_label("Nomino to spawn")
-                    .selected_text(nomino_to_spawn.name())
-                    .show_ui(ui, |ui| {
-                        macro_rules! option {
-                            ($nomino:expr) => {
-                                ui.selectable_value(&mut *nomino_to_spawn, $nomino, $nomino.name());
-                            };
-                        }
-
-                        option!(NominoType::Straight);
-                        option!(NominoType::Square);
-                        option!(NominoType::T);
-                        option!(NominoType::L);
-                        option!(NominoType::L2);
-                        option!(NominoType::Skew);
-                        option!(NominoType::Skew2);
-                    });
-
-                if ui.button("Spawn nomino").clicked() {
+            ui.horizontal(|ui| {
+                if ui.button("Spawn").clicked() {
                     if let Some(root) = current_level.root {
                         commands.entity(root).with_children(|parent| {
                             let position = Transform::from_xyz(3., 3., 0.);
@@ -146,6 +128,24 @@ fn debug_options(
                         });
                     }
                 }
+
+                egui::ComboBox::from_id_source("Nomino to spawn")
+                    .selected_text(nomino_to_spawn.name())
+                    .show_ui(ui, |ui| {
+                        macro_rules! option {
+                            ($nomino:expr) => {
+                                ui.selectable_value(&mut *nomino_to_spawn, $nomino, $nomino.name());
+                            };
+                        }
+
+                        option!(NominoType::Straight);
+                        option!(NominoType::Square);
+                        option!(NominoType::T);
+                        option!(NominoType::L);
+                        option!(NominoType::L2);
+                        option!(NominoType::Skew);
+                        option!(NominoType::Skew2);
+                    });
             });
         });
 }
