@@ -44,5 +44,56 @@ fn main() {
     #[cfg(feature = "debug")]
     app.add_plugin(debug::DebugPlugin);
 
+    #[cfg(feature = "dump")]
+    {
+        use std::{fs, fs::File, io::Write, process::Command};
+
+        use bevy::render::{render_graph::RenderGraph, RenderApp, RenderStage};
+        use bevy_mod_debugdump::{render_graph::render_graph_dot, schedule_graph::*};
+
+        app.update();
+
+        File::create("schedule.dot")
+            .unwrap()
+            .write_all(schedule_graph_dot(&app).as_bytes())
+            .unwrap();
+        File::create("render.dot")
+            .unwrap()
+            .write_all({
+                let render_app = app.get_sub_app(RenderApp).unwrap();
+                let render_graph = render_app.world.get_resource::<RenderGraph>().unwrap();
+
+                render_graph_dot(&*render_graph).as_bytes()
+            })
+            .unwrap();
+        File::create("render_schedule.dot")
+            .unwrap()
+            .write_all(
+                schedule_graph_dot_sub_app_styled(
+                    &app,
+                    RenderApp,
+                    &[&RenderStage::Extract],
+                    &ScheduleGraphStyle::default(),
+                )
+                .as_bytes(),
+            )
+            .unwrap();
+
+        for f in ["schedule", "render", "render_schedule"] {
+            let svg = Command::new("sh")
+                .arg("-c")
+                .arg(format!("cat {f}.dot | dot -Tsvg"))
+                .output()
+                .unwrap();
+
+            File::create(format!("{f}.svg"))
+                .unwrap()
+                .write_all(&svg.stdout)
+                .unwrap();
+            fs::remove_file(format!("{f}.dot")).unwrap();
+        }
+    }
+
+    #[cfg(not(feature = "dump"))]
     app.run();
 }
