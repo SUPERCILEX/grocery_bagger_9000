@@ -205,26 +205,38 @@ dependencies = [
 
 [[package]]
 name = "bevy-inspector-egui"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef81226066444db328efa098c54ed30b6fb01fa19bde9a72a47566134ea5968e"
+checksum = "a758d0cf2b972292038bebef85005986c94a6545e36d73495937eb53216186f0"
 dependencies = [
  "bevy",
  "bevy-inspector-egui-derive",
- "bevy_egui 0.13.0",
+ "bevy_egui",
  "image",
+ "nalgebra",
  "pretty-type-name",
 ]
 
 [[package]]
 name = "bevy-inspector-egui-derive"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c00770400215f599ca98d2f85fe15ae164117b252de8779c06bdef03ee8af92f"
+checksum = "34652d3e6733bcb48375c05b0ad0a71f0222045cf73011a9e6bb003546bf629b"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "bevy-inspector-egui-rapier"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99c1a09051c00fecc97388de44fb2dbdba2cbe77a59c222848da0a064d953af6"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "bevy_rapier3d",
 ]
 
 [[package]]
@@ -271,7 +283,7 @@ dependencies = [
  "crossbeam-channel",
  "downcast-rs",
  "js-sys",
- "ndk-glue",
+ "ndk-glue 0.5.2",
  "parking_lot 0.11.2",
  "rand",
  "serde",
@@ -379,28 +391,15 @@ dependencies = [
 
 [[package]]
 name = "bevy_egui"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9e78332493e8d2ee07046c3fe07f026dfc4509f86756a739a59cfa5af29c65b"
-dependencies = [
- "arboard",
- "bevy",
- "bytemuck",
- "egui 0.17.0",
- "thread_local",
- "webbrowser",
- "wgpu",
- "winit",
-]
-
-[[package]]
-name = "bevy_egui"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27dc596053c0aa4b5ec698d8d7ef524f6cc457db7ac7d42c330f32d80720bff6"
 dependencies = [
+ "arboard",
  "bevy",
- "egui 0.18.1",
+ "egui",
+ "thread_local",
+ "webbrowser",
 ]
 
 [[package]]
@@ -457,7 +456,7 @@ dependencies = [
  "bevy_utils",
  "bevy_window",
  "bevy_winit",
- "ndk-glue",
+ "ndk-glue 0.5.2",
 ]
 
 [[package]]
@@ -1269,23 +1268,12 @@ checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
 
 [[package]]
 name = "egui"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a3cd1d47e12f7a17912595241622e373aa652a4e0fa90b3f9278f90a64aedf7"
-dependencies = [
- "ahash",
- "epaint 0.17.0",
- "nohash-hasher",
-]
-
-[[package]]
-name = "egui"
 version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb095a8b9feb9b7ff8f00b6776dffcef059538a3f4a91238e03c900e9c9ad9a2"
 dependencies = [
  "ahash",
- "epaint 0.18.1",
+ "epaint",
  "nohash-hasher",
 ]
 
@@ -1294,15 +1282,6 @@ name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
-
-[[package]]
-name = "emath"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a977a80456be58a2c2d48e69c1d0baadef46cecef5a0c98df141c468da006f12"
-dependencies = [
- "bytemuck",
-]
 
 [[package]]
 name = "emath"
@@ -1325,20 +1304,6 @@ dependencies = [
 
 [[package]]
 name = "epaint"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "033292846059f08e03a71e1b5db2ee6ab7c9622c3b48da21f4bd13258ebee2db"
-dependencies = [
- "ab_glyph",
- "ahash",
- "atomic_refcell",
- "bytemuck",
- "emath 0.17.0",
- "nohash-hasher",
-]
-
-[[package]]
-name = "epaint"
 version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c29567088888e8ac3e8f61bbb2ddc820207ebb8d69eefde5bcefa06d65e4e89"
@@ -1347,7 +1312,7 @@ dependencies = [
  "ahash",
  "atomic_refcell",
  "bytemuck",
- "emath 0.18.0",
+ "emath",
  "nohash-hasher",
  "parking_lot 0.12.0",
 ]
@@ -1585,8 +1550,9 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
+ "bevy-inspector-egui-rapier",
  "bevy-web-resizer",
- "bevy_egui 0.14.0",
+ "bevy_egui",
  "bevy_mod_debugdump",
  "bevy_prototype_lyon",
  "bevy_rapier3d",
@@ -1948,25 +1914,14 @@ checksum = "e53debba6bda7a793e5f99b8dacf19e626084f525f7829104ba9898f367d85ff"
 
 [[package]]
 name = "mio"
-version = "0.8.2"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52da4364ffb0e4fe33a9841a98a3f3014fb964045ce4f7a45a398243c8d6b0c9"
+checksum = "713d550d9b44d89174e066b7a6217ae06234c10cb47819a88290d2b353c31799"
 dependencies = [
  "libc",
  "log",
- "miow",
- "ntapi",
  "wasi 0.11.0+wasi-snapshot-preview1",
- "winapi",
-]
-
-[[package]]
-name = "miow"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9f1c5b025cda876f66ef43a113f91ebc9f4ccef34843000e0adf6ebbab84e21"
-dependencies = [
- "winapi",
+ "windows-sys",
 ]
 
 [[package]]
@@ -2025,7 +1980,20 @@ checksum = "96d868f654c72e75f8687572699cdabe755f03effbb62542768e995d5b8d699d"
 dependencies = [
  "bitflags",
  "jni-sys",
- "ndk-sys",
+ "ndk-sys 0.2.2",
+ "num_enum",
+ "thiserror",
+]
+
+[[package]]
+name = "ndk"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2032c77e030ddee34a6787a64166008da93f6a352b629261d0fee232b8742dd4"
+dependencies = [
+ "bitflags",
+ "jni-sys",
+ "ndk-sys 0.3.0",
  "num_enum",
  "thiserror",
 ]
@@ -2046,10 +2014,25 @@ dependencies = [
  "lazy_static",
  "libc",
  "log",
- "ndk",
+ "ndk 0.5.0",
  "ndk-context",
  "ndk-macro",
- "ndk-sys",
+ "ndk-sys 0.2.2",
+]
+
+[[package]]
+name = "ndk-glue"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d0c4a7b83860226e6b4183edac21851f05d5a51756e97a1144b7f5a6b63e65f"
+dependencies = [
+ "lazy_static",
+ "libc",
+ "log",
+ "ndk 0.6.0",
+ "ndk-context",
+ "ndk-macro",
+ "ndk-sys 0.3.0",
 ]
 
 [[package]]
@@ -2070,6 +2053,15 @@ name = "ndk-sys"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1bcdd74c20ad5d95aacd60ef9ba40fdf77f767051040541df557b7a9b2a2121"
+
+[[package]]
+name = "ndk-sys"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e5a6ae77c8ee183dcbbba6150e2e6b9f3f4196a7666c02a715a95692ec1fa97"
+dependencies = [
+ "jni-sys",
+]
 
 [[package]]
 name = "nix"
@@ -2098,15 +2090,6 @@ checksum = "a8903e5a29a317527874d0402f867152a3d21c908bb0b933e416c65e301d4c36"
 dependencies = [
  "memchr",
  "minimal-lexical",
-]
-
-[[package]]
-name = "ntapi"
-version = "0.3.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c28774a7fd2fbb4f0babd8237ce554b73af68021b5f695a3cebd6c59bac0980f"
-dependencies = [
- "winapi",
 ]
 
 [[package]]
@@ -3201,12 +3184,12 @@ dependencies = [
 
 [[package]]
 name = "webbrowser"
-version = "0.6.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9c28b6b6a78440b02647358625e3febc90724126480b9da6a967b5f674b3554"
+checksum = "fc6a3cffdb686fbb24d9fb8f03a213803277ed2300f11026a3afe1f108dc021b"
 dependencies = [
  "jni",
- "ndk-glue",
+ "ndk-glue 0.6.2",
  "url",
  "web-sys",
  "widestring",
@@ -3426,9 +3409,9 @@ dependencies = [
  "libc",
  "log",
  "mio",
- "ndk",
- "ndk-glue",
- "ndk-sys",
+ "ndk 0.5.0",
+ "ndk-glue 0.5.2",
+ "ndk-sys 0.2.2",
  "objc",
  "parking_lot 0.11.2",
  "percent-encoding",

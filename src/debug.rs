@@ -1,6 +1,7 @@
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 use bevy_egui::{egui, EguiContext, EguiPlugin};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
+use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_screen_diags::ScreenDiagsPlugin;
 
 use crate::{
@@ -16,9 +17,11 @@ impl Plugin for DebugPlugin {
         app.insert_resource(WorldInspectorParams {
             enabled: false,
             highlight_changes: true,
+            despawnable_entities: true,
             ..default()
         });
         app.add_plugin(WorldInspectorPlugin::new());
+        app.add_plugin(InspectableRapierPlugin);
         app.init_resource::<DebugOptions>();
 
         app.add_system(debug_options);
