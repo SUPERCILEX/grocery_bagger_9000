@@ -2,43 +2,10 @@ use bevy::{ecs::system::EntityCommands, prelude::*};
 use bevy_prototype_lyon::prelude::{FillMode, *};
 use bevy_rapier3d::prelude::*;
 
-use crate::{colors::NominoColor, nomino_consts::*};
-
-pub const NOMINO_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
-    memberships: 0b1,
-    filters: 0b1,
+use crate::{
+    colors::NominoColor,
+    nominos::{Nomino, NOMINO_COLLIDER_GROUP},
 };
-
-#[derive(Copy, Clone)]
-pub enum Nomino {
-    TetrominoStraight,
-    TetrominoSquare,
-    TetrominoT,
-    TetrominoL,
-    TetrominoSkew,
-}
-
-impl Nomino {
-    fn path(&self) -> &Path {
-        match self {
-            Nomino::TetrominoStraight => &TETROMINO_STRAIGHT_PATH,
-            Nomino::TetrominoSquare => &TETROMINO_SQUARE_PATH,
-            Nomino::TetrominoT => &TETROMINO_T_PATH,
-            Nomino::TetrominoL => &TETROMINO_L_PATH,
-            Nomino::TetrominoSkew => &TETROMINO_SKEW_PATH,
-        }
-    }
-
-    fn collider(&self) -> &Collider {
-        match self {
-            Nomino::TetrominoStraight => &TETROMINO_STRAIGHT_COLLIDER,
-            Nomino::TetrominoSquare => &TETROMINO_SQUARE_COLLIDER,
-            Nomino::TetrominoT => &TETROMINO_T_COLLIDER,
-            Nomino::TetrominoL => &TETROMINO_L_COLLIDER,
-            Nomino::TetrominoSkew => &TETROMINO_SKEW_COLLIDER,
-        }
-    }
-}
 
 pub trait NominoSpawner<'w, 's> {
     fn spawn_nomino(

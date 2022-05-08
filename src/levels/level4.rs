@@ -5,16 +5,15 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltInstance, Piece, PresetPiecesConveyorBelt},
     levels::{CurrentLevel, LevelLoaded},
-    nomino_consts::{DEG_180, DEG_MIRRORED},
-    nominos::Nomino,
+    nominos::{Nomino, DEG_180, DEG_MIRRORED},
     window_management::DipsWindow,
 };
 
-const LEVEL_COLOR: NominoColor = NominoColor::Pink;
+const LEVEL_COLOR: NominoColor = NominoColor::Red;
 
-pub struct Level5Plugin;
+pub struct Level4Plugin;
 
-impl Plugin for Level5Plugin {
+impl Plugin for Level4Plugin {
     fn build(&self, app: &mut App) {
         app.add_system_to_stage(CoreStage::PreUpdate, init_level);
     }
@@ -27,7 +26,7 @@ fn init_level(
     mut conveyor_belt: ResMut<ConveyorBeltInstance>,
     dips_window: Res<DipsWindow>,
 ) {
-    if current.level != 4 || current.root.is_some() {
+    if current.level != 3 || current.root.is_some() {
         return;
     }
 
@@ -39,51 +38,6 @@ fn init_level(
 
             **conveyor_belt = Some(Box::new(PresetPiecesConveyorBelt::new([
                 Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_MIRRORED * *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_MIRRORED * *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoSkew,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoT,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoT,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoSquare,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
                     nomino: Nomino::TetrominoSquare,
                     color: LEVEL_COLOR,
                     rotation: Quat::IDENTITY,
@@ -99,24 +53,19 @@ fn init_level(
                     rotation: *DEG_MIRRORED,
                 },
                 Piece {
-                    nomino: Nomino::TetrominoT,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_MIRRORED * *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_MIRRORED * *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoT,
+                    nomino: Nomino::TetrominoSkew,
                     color: LEVEL_COLOR,
                     rotation: Quat::IDENTITY,
+                },
+                Piece {
+                    nomino: Nomino::TetrominoL,
+                    color: LEVEL_COLOR,
+                    rotation: *DEG_MIRRORED * *DEG_180,
+                },
+                Piece {
+                    nomino: Nomino::TetrominoL,
+                    color: LEVEL_COLOR,
+                    rotation: *DEG_MIRRORED * *DEG_180,
                 },
                 Piece {
                     nomino: Nomino::TetrominoSkew,
@@ -125,6 +74,11 @@ fn init_level(
                 },
                 Piece {
                     nomino: Nomino::TetrominoT,
+                    color: LEVEL_COLOR,
+                    rotation: Quat::IDENTITY,
+                },
+                Piece {
+                    nomino: Nomino::TetrominoStraight,
                     color: LEVEL_COLOR,
                     rotation: Quat::IDENTITY,
                 },

@@ -10,24 +10,14 @@ use bevy_prototype_lyon::plugin::ShapePlugin;
 use crate::{gb9000::GroceryBagger9000Plugin, window_management::WindowManager};
 
 mod animations;
-mod bag_replacement;
 mod bags;
 mod colors;
 mod conveyor_belt;
-mod conveyor_belt_movement;
 #[cfg(feature = "debug")]
 mod debug;
 mod gb9000;
-mod level1;
-mod level2;
-mod level3;
-mod level4;
-mod level5;
 mod levels;
-mod nomino_consts;
 mod nominos;
-mod piece_movement;
-mod scoring;
 mod window_management;
 mod window_utils;
 

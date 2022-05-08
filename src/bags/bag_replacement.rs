@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use smallvec::SmallVec;
 
 use crate::{
     bags,
-    bags::{BagPieces, BAG_LID_COLLIDER_GROUP},
-    nominos::NOMINO_COLLIDER_GROUP,
-    piece_movement::PiecePlaced,
+    bags::BAG_LID_COLLIDER_GROUP,
+    conveyor_belt,
+    nominos::{PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
 
 pub struct BagReplacementPlugin;
@@ -15,6 +16,9 @@ impl Plugin for BagReplacementPlugin {
         app.add_system_to_stage(CoreStage::PostUpdate, replace_full_bags);
     }
 }
+
+#[derive(Component, Deref, DerefMut)]
+pub struct BagPieces(pub SmallVec<[Entity; conveyor_belt::MAX_NUM_PIECES]>);
 
 fn replace_full_bags(
     mut commands: Commands,

@@ -1,11 +1,12 @@
 use bevy::prelude::*;
 
 use crate::{
-    conveyor_belt,
-    conveyor_belt::ConveyorBeltInstance,
+    conveyor_belt::{
+        consts::{HEIGHT, LENGTH, MAX_NUM_PIECES, PIECE_WIDTH},
+        ConveyorBeltInstance, ConveyorBeltOptions,
+    },
     levels::{CurrentLevel, LevelLoaded, LevelUnloaded},
-    nominos::NominoSpawner,
-    piece_movement::{PiecePickedUp, Selectable},
+    nominos::{NominoSpawner, PiecePickedUp, Selectable},
     window_management::DipsWindow,
 };
 
@@ -13,9 +14,7 @@ pub struct ConveyorBeltMovementPlugin;
 
 impl Plugin for ConveyorBeltMovementPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<ConveyorBeltInstance>();
         app.init_resource::<BeltPieceIds>();
-        app.init_resource::<ConveyorBeltOptions>();
 
         app.add_system_to_stage(CoreStage::PreUpdate, reset_conveyor_belt);
         app.add_system(init_pieces);
@@ -25,20 +24,8 @@ impl Plugin for ConveyorBeltMovementPlugin {
     }
 }
 
-pub struct ConveyorBeltOptions {
-    pub num_pieces_selectable: u8,
-}
-
-impl Default for ConveyorBeltOptions {
-    fn default() -> Self {
-        Self {
-            num_pieces_selectable: 3,
-        }
-    }
-}
-
 #[derive(Default, Deref, DerefMut)]
-struct BeltPieceIds([Option<Entity>; conveyor_belt::MAX_NUM_PIECES]);
+struct BeltPieceIds([Option<Entity>; MAX_NUM_PIECES]);
 
 fn reset_conveyor_belt(
     current_level: Res<CurrentLevel>,
@@ -60,14 +47,14 @@ fn init_pieces(
     belt_options: Res<ConveyorBeltOptions>,
     dips_window: Res<DipsWindow>,
 ) {
-    // TODO these ANDs should be flipped, but CLion completely destroys the code if you do that
-    //  and rustfmt is still too stupid to understand let chains.
+    // TODO these ANDs should be flipped, but CLion completely destroys the code if
+    //  you do that and rustfmt is still too stupid to understand let chains.
     if let Some(conveyor_belt) = &mut **conveyor_belt &&
     let Some(initialized_level) = level_initialized.iter().last()
     {
         let base = Transform::from_xyz(
-            dips_window.width - conveyor_belt::LENGTH,
-            dips_window.height - conveyor_belt::HEIGHT,
+            dips_window.width - LENGTH,
+            dips_window.height - HEIGHT,
             0.,
         );
 
@@ -81,8 +68,8 @@ fn init_pieces(
                             piece.nomino,
                             piece.color,
                             Transform::from_xyz(
-                                index as f32 * conveyor_belt::PIECE_WIDTH,
-                                conveyor_belt::PIECE_WIDTH,
+                                index as f32 * PIECE_WIDTH,
+                                PIECE_WIDTH,
                                 0.,
                             )
                                 .with_rotation(piece.rotation),
@@ -112,7 +99,7 @@ fn replace_pieces(
     for piece_id in picked_up_pieces.iter() {
         let picked_up_position = belt_pieces.iter().position(|id| id.contains(&**piece_id));
         if let Some(picked_up_position) = picked_up_position {
-            for i in picked_up_position..conveyor_belt::MAX_NUM_PIECES - 1 {
+            for i in picked_up_position..MAX_NUM_PIECES - 1 {
                 belt_pieces[i] = belt_pieces[i + 1];
 
                 if i < belt_options.num_pieces_selectable.into() &&
@@ -126,8 +113,8 @@ fn replace_pieces(
             let Some(piece) = conveyor_belt.next()
             {
                 let base = Transform::from_xyz(
-                    dips_window.width - conveyor_belt::LENGTH,
-                    dips_window.height - conveyor_belt::HEIGHT,
+                    dips_window.width - LENGTH,
+                    dips_window.height - HEIGHT,
                     0.,
                 );
 
@@ -139,18 +126,18 @@ fn replace_pieces(
                             piece.nomino,
                             piece.color,
                             Transform::from_xyz(
-                                (conveyor_belt::MAX_NUM_PIECES - 1) as f32
-                                    * conveyor_belt::PIECE_WIDTH,
-                                conveyor_belt::PIECE_WIDTH,
+                                (MAX_NUM_PIECES - 1) as f32
+                                    * PIECE_WIDTH,
+                                PIECE_WIDTH,
                                 0.,
                             )
                                 .with_rotation(piece.rotation),
                         );
 
-                        belt_pieces[conveyor_belt::MAX_NUM_PIECES - 1] = Some(spawned.id());
+                        belt_pieces[MAX_NUM_PIECES - 1] = Some(spawned.id());
                     });
             } else {
-                belt_pieces[conveyor_belt::MAX_NUM_PIECES - 1] = None;
+                belt_pieces[MAX_NUM_PIECES - 1] = None;
             }
         }
     }
@@ -165,20 +152,11 @@ fn move_pieces(
         return;
     }
 
-    let base = Vec3::new(
-        dips_window.width - conveyor_belt::LENGTH,
-        dips_window.height - conveyor_belt::HEIGHT,
-        0.,
-    );
+    let base = Vec3::new(dips_window.width - LENGTH, dips_window.height - HEIGHT, 0.);
     for (index, piece) in belt_pieces.iter().enumerate() {
         if let Some(piece) = piece {
             let mut position = positions.get_mut(*piece).unwrap();
-            position.translation = base
-                + Vec3::new(
-                    index as f32 * conveyor_belt::PIECE_WIDTH,
-                    conveyor_belt::PIECE_WIDTH,
-                    0.,
-                );
+            position.translation = base + Vec3::new(index as f32 * PIECE_WIDTH, PIECE_WIDTH, 0.);
         } else {
             break;
         }

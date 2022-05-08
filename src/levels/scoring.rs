@@ -2,7 +2,9 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 use crate::{
-    bags, colors::NominoColor, nominos::NOMINO_COLLIDER_GROUP, piece_movement::PiecePlaced,
+    bags,
+    colors::NominoColor,
+    nominos::{PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
 
 pub struct ScoringPlugin;

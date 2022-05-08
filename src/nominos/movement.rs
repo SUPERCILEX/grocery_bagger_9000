@@ -6,7 +6,6 @@ use crate::{
     animations::{AnimationBundle, GameSpeed, Original},
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP},
     levels::LevelUnloaded,
-    nomino_consts::DEG_90,
     nominos::*,
     window_management::MainCamera,
     window_utils::compute_cursor_position,

@@ -5,8 +5,8 @@ use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_screen_diags::ScreenDiagsPlugin;
 
 use crate::{
-    animations::GameSpeed, colors::NominoColor, conveyor_belt_movement::ConveyorBeltOptions,
-    levels::CurrentLevel, nomino_consts::DEG_MIRRORED, nominos::*, piece_movement::Selectable,
+    animations::GameSpeed, colors::NominoColor, conveyor_belt::ConveyorBeltOptions,
+    levels::CurrentLevel, nominos::*,
 };
 
 pub struct DebugPlugin;

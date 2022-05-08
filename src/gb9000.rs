@@ -3,9 +3,8 @@ use bevy_rapier3d::prelude::*;
 use bevy_tweening::TweeningPlugin;
 
 use crate::{
-    animations::AnimationPlugin, bag_replacement::BagReplacementPlugin,
-    conveyor_belt_movement::ConveyorBeltMovementPlugin, levels::LevelsPlugin,
-    piece_movement::PieceMovementPlugin, scoring::ScoringPlugin,
+    animations::AnimationPlugin, bags::BagsPlugin, conveyor_belt::ConveyorBeltPlugin,
+    levels::LevelsPlugin, nominos::PiecesPlugin,
 };
 
 pub struct GroceryBagger9000Plugin;
@@ -13,10 +12,9 @@ pub struct GroceryBagger9000Plugin;
 impl Plugin for GroceryBagger9000Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(LevelsPlugin);
-        app.add_plugin(PieceMovementPlugin);
-        app.add_plugin(BagReplacementPlugin);
-        app.add_plugin(ConveyorBeltMovementPlugin);
-        app.add_plugin(ScoringPlugin);
+        app.add_plugin(PiecesPlugin);
+        app.add_plugin(BagsPlugin);
+        app.add_plugin(ConveyorBeltPlugin);
         app.add_plugin(AnimationPlugin);
 
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
