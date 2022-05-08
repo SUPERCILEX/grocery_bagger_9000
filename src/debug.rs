@@ -1,5 +1,6 @@
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 use bevy_egui::{egui, EguiContext, EguiPlugin};
+use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_screen_diags::ScreenDiagsPlugin;
 
 use crate::{
@@ -12,6 +13,12 @@ pub struct DebugPlugin;
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(EguiPlugin);
+        app.insert_resource(WorldInspectorParams {
+            enabled: false,
+            highlight_changes: true,
+            ..default()
+        });
+        app.add_plugin(WorldInspectorPlugin::new());
         app.init_resource::<DebugOptions>();
 
         app.add_system(debug_options);
@@ -65,6 +72,7 @@ impl NominoType {
 fn debug_options(
     mut egui_context: ResMut<EguiContext>,
     mut debug_options: ResMut<DebugOptions>,
+    mut inspector: ResMut<WorldInspectorParams>,
     mut nomino_to_spawn: Local<NominoType>,
     mut commands: Commands,
     mut current_level: ResMut<CurrentLevel>,
@@ -168,6 +176,10 @@ fn debug_options(
                         option!(NominoType::Skew2);
                     });
             });
+
+            if ui.button("Open inspector").clicked() {
+                inspector.enabled = true;
+            }
         });
 }
 
