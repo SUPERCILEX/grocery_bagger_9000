@@ -9,8 +9,9 @@ pub enum NominoColor {
     Blue,
     Green,
     Pink,
-    _Last,
+    #[cfg(feature = "debug")]
     Debug,
+    _Last,
 }
 
 impl NominoColor {
@@ -23,6 +24,7 @@ impl NominoColor {
             NominoColor::Blue => Color::CYAN,
             NominoColor::Green => Color::GREEN,
             NominoColor::Pink => Color::FUCHSIA,
+            #[cfg(feature = "debug")]
             NominoColor::Debug => Color::WHITE,
             NominoColor::_Last => unreachable!(),
         }
