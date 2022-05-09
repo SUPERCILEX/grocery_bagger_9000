@@ -11,6 +11,8 @@ use crate::{
 
 pub struct ScoringPlugin;
 
+const BLOCK_POINT_VALUE: u32 = 25;
+
 impl Plugin for ScoringPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_to_stage(CoreStage::PostUpdate, score_bags);
@@ -55,7 +57,15 @@ fn score_bags(
         // dbg!(bag_matrix);
         // dbg!(block_count);
         let num_holes = count_holes(&bag_matrix, block_count);
-        dbg!(num_holes);
+        let hole_penalty = num_holes * BLOCK_POINT_VALUE;
+        // dbg!(num_holes);
+        let color_score = calculate_color_score(color_block_count_map, block_count);
+        dbg!(color_score);
+        // dbg!(color_score);
+        let mult = calculate_bag_fill_multiplier(block_count);
+        dbg!(mult);
+        let total_bag_score = mult * (color_score - hole_penalty);
+        dbg!(total_bag_score);
     }
 }
 
@@ -118,7 +128,42 @@ fn touch_neighbor(
     }
 }
 
-fn calculate_score() {}
+fn calculate_color_score(color_map: [u8; NominoColor::COUNT], block_count: u32) -> u32 {
+    let mut ranked_colors = Vec::from(color_map);
+    ranked_colors.sort();
+    ranked_colors.reverse();
+    let mut color_score: u32 = 0;
+    let mut total_blocks: usize = 0;
+    for x in 0..ranked_colors.len() {
+        let current_color_count: u32 = ranked_colors[x].into();
+        if current_color_count == 0 {
+            break;
+        }
+        total_blocks += current_color_count as usize;
+        let perfect_bag_bonus = x == 0 && current_color_count == 36;
+        let mut raw_points = current_color_count * BLOCK_POINT_VALUE;
+        if perfect_bag_bonus {
+            raw_points += 100;
+        }
+        let adjusted_points = raw_points * (1 + 1 / (1 + (x as u32)));
+        dbg!(adjusted_points);
+        color_score += adjusted_points;
+    }
+    if total_blocks == BAG_CAPACITY {
+        color_score += 100;
+    }
+    return color_score;
+}
+
+fn calculate_bag_fill_multiplier(block_count: u32) -> u32 {
+    match block_count as usize {
+        0..=19 => return 1,
+        20..=32 => return 2,
+        33..=BAG_CAPACITY => return 5,
+        _ => println!("You shouldn't be here!"), //should be impossible
+    }
+    return 0;
+}
 
 fn score_blocks(num: u32) -> u32 {
     1
