@@ -24,6 +24,7 @@ pub const RADIUS: f32 = 3.;
 // TODO remove should probably use BagCoord
 pub const BAG_OFFSET: f32 = 2.5;
 pub const BAG_SPACING: f32 = 2.;
+pub const BAG_CAPACITY: usize = 36;
 
 pub static BAG_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 4);

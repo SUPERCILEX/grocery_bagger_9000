@@ -1,8 +1,10 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use std::collections::{HashSet, VecDeque};
 
 use crate::{
     bags,
+    bags::BAG_CAPACITY,
     colors::NominoColor,
     nominos::{PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
@@ -49,13 +51,76 @@ fn score_bags(
             }
         }
         // Entire bag has been counted. Time to do stuff with the totals.
-        dbg!(color_block_count_map);
-        dbg!(bag_matrix);
-        dbg!(block_count);
+        // dbg!(color_block_count_map);
+        // dbg!(bag_matrix);
+        // dbg!(block_count);
+        let num_holes = count_holes(&bag_matrix, block_count);
+        dbg!(num_holes);
     }
 }
 
-fn score_blocks(_something: u32) -> u32 {
+fn count_holes(matrix: &[[bool; 6]; 6], block_count: u32) -> u32 {
+    return (BAG_CAPACITY as u32) - block_count - (get_connected_empties(matrix).len() as u32);
+}
+
+// generates a vector containing the coordinates of all the empty spaces in the
+// bag that are connected to an empty space on the top row.
+fn get_connected_empties(matrix: &[[bool; 6]; 6]) -> Vec<(usize, usize)> {
+    let mut connected_to_top: Vec<(usize, usize)> = Vec::new();
+    let mut touched: HashSet<(usize, usize)> = HashSet::with_capacity(BAG_CAPACITY);
+    let mut frontier: VecDeque<(usize, usize)> = VecDeque::with_capacity(BAG_CAPACITY);
+    for i in 0..6 {
+        if !matrix[5][i] {
+            // empty space
+            connected_to_top.push((5, i));
+            frontier.push_back((4, i));
+        }
+        touched.insert((5, i));
+        touched.insert((4, i));
+    }
+    while let Some(block) = frontier.pop_front() {
+        if !matrix[block.0][block.1] {
+            // empty space in bag, and connected to the top
+            // store connected node
+            connected_to_top.push(block);
+            // add any neighbors that are within the legal range
+            // to our frontier
+            if block.0 > 0 {
+                let below = (block.0 - 1, block.1);
+                touch_neighbor(below, &mut frontier, &mut touched);
+            }
+            if block.0 < 4 {
+                // already explored matrix[5][x]
+                let above = (block.0 + 1, block.1);
+                touch_neighbor(above, &mut frontier, &mut touched);
+            }
+            if block.1 > 0 {
+                let left = (block.0, block.1 - 1);
+                touch_neighbor(left, &mut frontier, &mut touched);
+            }
+            if block.1 < 5 {
+                let right = (block.0, block.1 + 1);
+                touch_neighbor(right, &mut frontier, &mut touched);
+            }
+        }
+    }
+    return connected_to_top;
+}
+
+fn touch_neighbor(
+    neighbor: (usize, usize),
+    frontier: &mut VecDeque<(usize, usize)>,
+    touched: &mut HashSet<(usize, usize)>,
+) {
+    if !touched.contains(&neighbor) {
+        frontier.push_back(neighbor);
+        touched.insert(neighbor);
+    }
+}
+
+fn calculate_score() {}
+
+fn score_blocks(num: u32) -> u32 {
     1
 }
 
