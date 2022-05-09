@@ -158,8 +158,8 @@ fn calculate_color_score(color_map: [u8; NominoColor::COUNT], block_count: u32) 
 fn calculate_bag_fill_multiplier(block_count: u32) -> u32 {
     match block_count as usize {
         0..=19 => return 1,
-        20..=32 => return 2,
-        33..=BAG_CAPACITY => return 5,
+        20..=27 => return 2,
+        28..=BAG_CAPACITY => return 5,
         _ => println!("You shouldn't be here!"), //should be impossible
     }
     return 0;
