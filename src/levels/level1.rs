@@ -40,7 +40,7 @@ fn init_level(
                 rotation: Quat::IDENTITY,
             }])));
 
-            let bag_id = parent.spawn_bag::<1>(Color::default(), &dips_window)[0];
+            let bag_id = parent.spawn_bag::<1>(&dips_window)[0];
             (parent.parent_entity(), bag_id)
         })
         .out;

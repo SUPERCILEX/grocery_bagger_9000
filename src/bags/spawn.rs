@@ -8,37 +8,27 @@ use crate::{
     window_management::DipsWindow,
 };
 
+const BAG_COLOR: Color = Color::rgb(0xE6 as f32 / 255., 0xE6 as f32 / 255., 0xE6 as f32 / 255.);
+
 pub trait BagSpawner {
-    fn spawn_bag<const N: usize>(
-        &mut self,
-        color: Color,
-        window: &DipsWindow,
-    ) -> SmallVec<[Entity; 3]>;
+    fn spawn_bag<const N: usize>(&mut self, window: &DipsWindow) -> SmallVec<[Entity; 3]>;
 }
 
 impl<'w, 's, 'a> BagSpawner for ChildBuilder<'w, 's, 'a> {
-    fn spawn_bag<const N: usize>(
-        &mut self,
-        color: Color,
-        window: &DipsWindow,
-    ) -> SmallVec<[Entity; 3]> {
+    fn spawn_bag<const N: usize>(&mut self, window: &DipsWindow) -> SmallVec<[Entity; 3]> {
         let mut spawned_bags = SmallVec::new();
         for position in compute_bag_coordinates(window, N) {
-            spawned_bags.push(spawn_bag(
-                self,
-                color,
-                Transform::from_translation(position),
-            ))
+            spawned_bags.push(spawn_bag(self, Transform::from_translation(position)))
         }
         spawned_bags
     }
 }
 
-fn spawn_bag(commands: &mut ChildBuilder, color: Color, transform: Transform) -> Entity {
+fn spawn_bag(commands: &mut ChildBuilder, transform: Transform) -> Entity {
     let draw_mode = DrawMode::Outlined {
         fill_mode: FillMode {
             options: FillOptions::default().with_intersections(false),
-            color,
+            color: BAG_COLOR,
         },
         outline_mode: StrokeMode::new(Color::BLACK, 0.15),
     };

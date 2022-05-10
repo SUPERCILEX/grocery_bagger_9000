@@ -33,7 +33,7 @@ fn init_level(
     let root = commands
         .spawn_bundle(TransformBundle::default())
         .with_children(|parent| {
-            parent.spawn_bag::<1>(Color::default(), &dips_window);
+            parent.spawn_bag::<1>(&dips_window);
 
             **conveyor_belt = Some(Box::new(PresetPiecesConveyorBelt::new([
                 Piece {

@@ -5,10 +5,10 @@ use level2::Level2Plugin;
 use level3::Level3Plugin;
 use level4::Level4Plugin;
 use level5::Level5Plugin;
+use level6::Level6Plugin;
 use scoring::ScoringPlugin;
 use transitions::LevelTransitionPlugin;
 pub use transitions::{CurrentLevel, LevelLoaded, LevelUnloaded};
-use crate::levels::level6::Level6Plugin;
 
 mod level1;
 mod level2;
@@ -36,6 +36,5 @@ impl Plugin for LevelsPlugin {
         app.add_plugin(Level4Plugin);
         app.add_plugin(Level5Plugin);
         app.add_plugin(Level6Plugin);
-        
     }
 }
