@@ -18,6 +18,14 @@ pub const NOMINO_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
     filters: 0b1,
 };
 
+pub const TETROMINOS: [Nomino; 5] = [
+    Nomino::TetrominoStraight,
+    Nomino::TetrominoSquare,
+    Nomino::TetrominoT,
+    Nomino::TetrominoL,
+    Nomino::TetrominoSkew,
+];
+
 pub struct PiecesPlugin;
 
 impl Plugin for PiecesPlugin {
@@ -26,13 +34,14 @@ impl Plugin for PiecesPlugin {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum Nomino {
     TetrominoStraight,
     TetrominoSquare,
     TetrominoT,
     TetrominoL,
     TetrominoSkew,
+    _Last,
 }
 
 impl Nomino {
@@ -43,6 +52,7 @@ impl Nomino {
             Nomino::TetrominoT => &TETROMINO_T_PATH,
             Nomino::TetrominoL => &TETROMINO_L_PATH,
             Nomino::TetrominoSkew => &TETROMINO_SKEW_PATH,
+            Nomino::_Last => panic!("you shouldn't be here!"),
         }
     }
 
@@ -53,6 +63,7 @@ impl Nomino {
             Nomino::TetrominoT => &TETROMINO_T_COLLIDER,
             Nomino::TetrominoL => &TETROMINO_L_COLLIDER,
             Nomino::TetrominoSkew => &TETROMINO_SKEW_COLLIDER,
+            Nomino::_Last => panic!("you shouldn't be here!"),
         }
     }
 }
