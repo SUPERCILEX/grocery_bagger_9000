@@ -7,6 +7,7 @@ use crate::{
         consts::{BAG_SPACING, RADIUS},
     },
     conveyor_belt,
+    nominos::PiecePlaced,
     window_management::DipsWindow,
 };
 
@@ -14,6 +15,7 @@ pub struct BagPositioningPlugin;
 
 impl Plugin for BagPositioningPlugin {
     fn build(&self, app: &mut App) {
+        app.add_system(transfer_piece_ownership);
         app.add_system(center_bags);
     }
 }
@@ -48,6 +50,24 @@ pub fn compute_bag_coordinates(window: &DipsWindow, num_bags: usize) -> SmallVec
         ))
     }
     bags
+}
+
+fn transfer_piece_ownership(
+    mut commands: Commands,
+    mut piece_placements: EventReader<PiecePlaced>,
+    mut positions: Query<&mut Transform>,
+    parents: Query<&Parent>,
+) {
+    for PiecePlaced { piece, bag } in piece_placements.iter() {
+        if parents.get(*piece).map(|p| **p).contains(bag) {
+            continue;
+        }
+
+        let bag_position = positions.get(*bag).unwrap().translation;
+        positions.get_mut(*piece).unwrap().translation -= bag_position;
+
+        commands.entity(*bag).add_child(*piece);
+    }
 }
 
 fn center_bags(

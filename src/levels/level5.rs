@@ -33,7 +33,6 @@ fn init_level(
     let root = commands
         .spawn_bundle(TransformBundle::default())
         .with_children(|parent| {
-            // TODO keep these and the pieces' coordinates up-to-date
             parent.spawn_bag::<1>(Color::default(), &dips_window);
 
             **conveyor_belt = Some(Box::new(PresetPiecesConveyorBelt::new([
