@@ -67,7 +67,7 @@ pub fn error_shake(current: Transform, speed: &GameSpeed) -> AnimationBundle<Tra
                 },
             )
             .with_speed(**speed)
-            .with_completed_event(true, 0),
+            .with_completed_event(true, u64::MAX),
         ])),
         original: Original(current),
     }
