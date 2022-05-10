@@ -1,10 +1,11 @@
-use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
 use std::collections::{HashSet, VecDeque};
+
+use bevy::{math::const_vec3, prelude::*};
+use bevy_rapier3d::prelude::*;
 
 use crate::{
     bags,
-    bags::BAG_CAPACITY,
+    bags::{BAG_CAPACITY, BAG_ORIGIN},
     colors::NominoColor,
     nominos::{PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
@@ -28,8 +29,7 @@ fn score_bags(
     for PiecePlaced { bag, .. } in piece_placements.iter() {
         let bag_coords = *bags.get(*bag).unwrap();
 
-        let block_origin =
-            bag_coords.translation + Vec3::new(-bags::BAG_OFFSET, -bags::BAG_OFFSET, 0.);
+        let block_origin = bag_coords.translation - BAG_ORIGIN + const_vec3!([0.5, 0.5, 0.]);
 
         let mut color_block_count_map = [0u8; NominoColor::COUNT];
         let mut bag_matrix = [[false; 6]; 6];

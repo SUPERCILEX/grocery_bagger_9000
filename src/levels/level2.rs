@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags::BagSpawner,
+    bags::{BagSpawner, BAG_ORIGIN},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltInstance, Piece, PresetPiecesConveyorBelt},
     levels::{CurrentLevel, LevelLoaded},
@@ -31,12 +31,9 @@ fn init_level(
         return;
     }
 
-    let root = commands
+    let (root, bag) = commands
         .spawn_bundle(TransformBundle::default())
         .with_children(|parent| {
-            // TODO keep these and the pieces' coordinates up-to-date
-            let (bag_position, bag_id) = parent.spawn_bag::<1>(Color::default(), &dips_window)[0];
-
             **conveyor_belt = Some(Box::new(PresetPiecesConveyorBelt::new([
                 Piece {
                     nomino: Nomino::TetrominoStraight,
@@ -50,39 +47,46 @@ fn init_level(
                 },
             ])));
 
-            macro_rules! spawn {
-                ($nomino:expr, $transform:expr) => {{
-                    parent
-                        .spawn_nomino(bag_position, $nomino, LEVEL_COLOR, $transform)
-                        .id()
-                }};
-            }
-
-            let pieces = [
-                spawn!(Nomino::TetrominoL, Transform::from_xyz(0., 1., 0.)),
-                spawn!(
-                    Nomino::TetrominoT,
-                    Transform::from_xyz(3., 0., 0.).with_rotation(DEG_90.inverse())
-                ),
-                spawn!(Nomino::TetrominoStraight, Transform::from_xyz(5., 2., 0.)),
-                spawn!(Nomino::TetrominoSquare, Transform::from_xyz(1., 1., 0.)),
-                spawn!(
-                    Nomino::TetrominoL,
-                    Transform::from_xyz(1., 3., 0.).with_rotation(DEG_90.inverse())
-                ),
-                spawn!(Nomino::TetrominoSquare, Transform::from_xyz(0., 4., 0.)),
-                spawn!(
-                    Nomino::TetrominoSkew,
-                    Transform::from_xyz(4., 2., 0.).with_rotation(*DEG_MIRRORED)
-                ),
-                spawn!(Nomino::TetrominoSkew, Transform::from_xyz(4., 4., 0.)),
-            ];
-
-            for piece in pieces {
-                placed_pieces.send(PiecePlaced { piece, bag: bag_id })
-            }
+            let bag_id = parent.spawn_bag::<1>(Color::default(), &dips_window)[0];
+            (parent.parent_entity(), bag_id)
         })
-        .id();
+        .out;
+
+    commands.entity(bag).with_children(|parent| {
+        let origin = Transform::from_translation(-BAG_ORIGIN);
+        macro_rules! spawn {
+            ($nomino:expr, $transform:expr) => {{
+                parent
+                    .spawn_nomino(origin, $nomino, LEVEL_COLOR, $transform)
+                    .id()
+            }};
+        }
+
+        let pieces = [
+            spawn!(Nomino::TetrominoL, Transform::from_xyz(0., 1., 0.)),
+            spawn!(
+                Nomino::TetrominoT,
+                Transform::from_xyz(3., 0., 0.).with_rotation(DEG_90.inverse())
+            ),
+            spawn!(Nomino::TetrominoStraight, Transform::from_xyz(5., 2., 0.)),
+            spawn!(Nomino::TetrominoSquare, Transform::from_xyz(1., 1., 0.)),
+            spawn!(
+                Nomino::TetrominoL,
+                Transform::from_xyz(1., 3., 0.).with_rotation(DEG_90.inverse())
+            ),
+            spawn!(Nomino::TetrominoSquare, Transform::from_xyz(0., 4., 0.)),
+            spawn!(
+                Nomino::TetrominoSkew,
+                Transform::from_xyz(4., 2., 0.).with_rotation(*DEG_MIRRORED)
+            ),
+            spawn!(Nomino::TetrominoSkew, Transform::from_xyz(4., 4., 0.)),
+        ];
+
+        for piece in pieces {
+            placed_pieces.send(PiecePlaced { piece, bag })
+        }
+    });
+
     current.root = Some(root);
     level_initialized.send(LevelLoaded(root));
 }

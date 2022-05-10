@@ -1,6 +1,6 @@
 use std::lazy::SyncLazy;
 
-use bevy::prelude::*;
+use bevy::{math::const_vec3, prelude::*};
 use bevy_prototype_lyon::prelude::{
     tess::{math::Point, path::path::Builder},
     *,
@@ -21,8 +21,7 @@ pub const BAG_LID_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
 };
 
 pub const RADIUS: f32 = 3.;
-// TODO remove should probably use BagCoord
-pub const BAG_OFFSET: f32 = 2.5;
+pub const BAG_ORIGIN: Vec3 = const_vec3!([RADIUS, RADIUS, 0.]);
 pub const BAG_SPACING: f32 = 2.;
 pub const BAG_CAPACITY: usize = 36;
 

@@ -53,8 +53,7 @@ pub fn compute_bag_coordinates(window: &DipsWindow, num_bags: usize) -> SmallVec
 fn center_bags(
     mut resized_events: EventReader<WindowResized>,
     dips_window: Res<DipsWindow>,
-    mut positions: Query<&mut Transform>,
-    bags: Query<(Entity, &BagPieces)>,
+    mut bags: Query<&mut Transform, With<BagPieces>>,
 ) {
     if resized_events.iter().count() == 0 {
         return;
@@ -62,15 +61,7 @@ fn center_bags(
 
     let bag_count = bags.iter().count();
     let bag_positions = compute_bag_coordinates(&dips_window, bag_count);
-
-    for (index, (bag_id, bag_pieces)) in bags.iter().enumerate() {
-        let mut bag_position = positions.get_mut(bag_id).unwrap();
-        let old_position = bag_position.translation;
+    for (index, mut bag_position) in bags.iter_mut().enumerate() {
         bag_position.translation = bag_positions[index];
-        let diff = bag_position.translation - old_position;
-
-        for piece in &**bag_pieces {
-            positions.get_mut(*piece).unwrap().translation += diff;
-        }
     }
 }

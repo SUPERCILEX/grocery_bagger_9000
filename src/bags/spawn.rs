@@ -13,7 +13,7 @@ pub trait BagSpawner {
         &mut self,
         color: Color,
         window: &DipsWindow,
-    ) -> SmallVec<[(Transform, Entity); 3]>;
+    ) -> SmallVec<[Entity; 3]>;
 }
 
 impl<'w, 's, 'a> BagSpawner for ChildBuilder<'w, 's, 'a> {
@@ -21,18 +21,14 @@ impl<'w, 's, 'a> BagSpawner for ChildBuilder<'w, 's, 'a> {
         &mut self,
         color: Color,
         window: &DipsWindow,
-    ) -> SmallVec<[(Transform, Entity); 3]> {
-        let mut bag_positions = compute_bag_coordinates(window, N);
+    ) -> SmallVec<[Entity; 3]> {
         let mut spawned_bags = SmallVec::new();
-        for position in &mut bag_positions {
-            let mut position = Transform::from_translation(*position);
-            let id = spawn_bag(self, color, position);
-
-            // Adjust bag coordinates such that the canvas is centered on the bottom left
-            // corner
-            position.translation -= Vec3::new(RADIUS, RADIUS, 0.);
-
-            spawned_bags.push((position, id))
+        for position in compute_bag_coordinates(window, N) {
+            spawned_bags.push(spawn_bag(
+                self,
+                color,
+                Transform::from_translation(position),
+            ))
         }
         spawned_bags
     }
