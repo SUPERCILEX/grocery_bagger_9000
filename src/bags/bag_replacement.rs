@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
@@ -51,7 +51,7 @@ fn replace_full_bags(
         }
 
         let mut bag_coords = *bags.get(*bag).unwrap();
-        bag_coords.translation += Vec3::new(0.5 - bags::RADIUS, bags::RADIUS - 0.5, 0.);
+        bag_coords.translation += const_vec3!([0.5 - bags::RADIUS, bags::RADIUS - 0.5, 0.]);
 
         let mut top_row_full = true;
         for i in 0..6 {

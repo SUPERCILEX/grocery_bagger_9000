@@ -43,17 +43,17 @@ pub static MAIN_BAG_COLLIDER: SyncLazy<Collider> =
 pub static BOUNDARY_BAG_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
     Collider::compound(vec![
         (
-            Vec3::new(-RADIUS, 0., 0.),
+            const_vec3!([-RADIUS, 0., 0.]),
             Quat::IDENTITY,
             Collider::cuboid(0.009, RADIUS, 0.),
         ),
         (
-            Vec3::new(0., -RADIUS, 0.),
+            const_vec3!([0., -RADIUS, 0.]),
             Quat::IDENTITY,
             Collider::cuboid(RADIUS, 0.009, 0.),
         ),
         (
-            Vec3::new(RADIUS, 0., 0.),
+            const_vec3!([RADIUS, 0., 0.]),
             Quat::IDENTITY,
             Collider::cuboid(0.009, RADIUS, 0.),
         ),
@@ -62,7 +62,7 @@ pub static BOUNDARY_BAG_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
 
 pub static LID_BAG_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
     Collider::compound(vec![(
-        Vec3::new(0., RADIUS + 0.5, 0.),
+        const_vec3!([0., RADIUS + 0.5, 0.]),
         Quat::IDENTITY,
         Collider::cuboid(RADIUS, 0.49, 0.),
     )])

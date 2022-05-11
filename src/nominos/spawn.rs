@@ -1,4 +1,4 @@
-use bevy::{ecs::system::EntityCommands, prelude::*};
+use bevy::{ecs::system::EntityCommands, math::const_vec3, prelude::*};
 use bevy_prototype_lyon::prelude::{FillMode, *};
 use bevy_rapier3d::prelude::*;
 
@@ -26,7 +26,7 @@ impl<'w, 's, 'a> NominoSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
         mut transform: Transform,
     ) -> EntityCommands<'w, 's, '_> {
         // Offset by 0.5 since every piece is centered on a block
-        transform.translation += base.translation + Vec3::new(0.5, 0.5, 0.);
+        transform.translation += base.translation + const_vec3!([0.5, 0.5, 0.]);
         transform.rotation *= base.rotation;
         transform.scale *= base.scale;
 

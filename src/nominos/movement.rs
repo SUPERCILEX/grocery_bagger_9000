@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
 
 use crate::{
@@ -222,7 +222,7 @@ fn piece_is_floating(
     // intersects with another piece.
     rapier_context
         .intersection_with_shape(
-            transform.translation - Vec3::new(0., 0.5, 0.),
+            transform.translation - const_vec3!([0., 0.5, 0.]),
             transform.rotation,
             collider,
             CollisionGroups::new(0b101, 0b101).into(),
