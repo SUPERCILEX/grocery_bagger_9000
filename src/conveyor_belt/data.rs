@@ -100,7 +100,7 @@ impl<const NOM_TYPES: usize, const COLORS: usize> ConveyorBelt
         Some(Piece {
             nomino: self.nomino_types[next_shape],
             color: self.colors[next_color],
-            rotation: Quat::IDENTITY,
+            rotation,
         })
     }
 }
