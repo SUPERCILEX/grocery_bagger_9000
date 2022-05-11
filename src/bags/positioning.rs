@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::WindowResized};
+use bevy::{prelude::*, transform::TransformSystem, window::WindowResized};
 use smallvec::SmallVec;
 
 use crate::{
@@ -7,7 +7,7 @@ use crate::{
         BagMarker,
     },
     conveyor_belt,
-    nominos::PiecePlaced,
+    nominos::{NominoMarker, PiecePlaced},
     window_management::DipsWindow,
 };
 
@@ -15,7 +15,10 @@ pub struct BagPositioningPlugin;
 
 impl Plugin for BagPositioningPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(transfer_piece_ownership);
+        app.add_system_to_stage(
+            CoreStage::PostUpdate,
+            transfer_piece_ownership.after(TransformSystem::TransformPropagate),
+        );
         app.add_system(center_bags);
     }
 }
@@ -55,18 +58,18 @@ pub fn compute_bag_coordinates(window: &DipsWindow, num_bags: usize) -> SmallVec
 fn transfer_piece_ownership(
     mut commands: Commands,
     mut piece_placements: EventReader<PiecePlaced>,
-    mut positions: Query<&mut Transform>,
-    parents: Query<&Parent>,
+    bag_positions: Query<&Transform, With<BagMarker>>,
+    mut piece_positions: Query<
+        (&GlobalTransform, &mut Transform),
+        (With<NominoMarker>, Without<BagMarker>),
+    >,
 ) {
     for PiecePlaced { piece, bag } in piece_placements.iter() {
-        if parents.get(*piece).map(|p| **p).contains(bag) {
-            continue;
-        }
-
-        let bag_position = positions.get(*bag).unwrap().translation;
-        positions.get_mut(*piece).unwrap().translation -= bag_position;
-
         commands.entity(*bag).add_child(*piece);
+
+        let bag_global = bag_positions.get(*bag).unwrap().translation;
+        let (piece_global, mut piece_local) = piece_positions.get_mut(*piece).unwrap();
+        piece_local.translation = piece_global.translation - bag_global;
     }
 }
 
