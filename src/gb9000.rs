@@ -18,6 +18,10 @@ impl Plugin for GroceryBagger9000Plugin {
         app.add_plugin(AnimationPlugin);
 
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+        app.insert_resource(RapierConfiguration {
+            physics_pipeline_active: false,
+            ..default()
+        });
         app.add_plugin(TweeningPlugin);
     }
 }

@@ -3,6 +3,7 @@ use smallvec::SmallVec;
 
 use crate::{
     bags::{
+        bag_replacement::BagPieces,
         consts::{BAG_SPACING, RADIUS},
         BagMarker,
     },
@@ -15,10 +16,11 @@ pub struct BagPositioningPlugin;
 
 impl Plugin for BagPositioningPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(
-            CoreStage::PostUpdate,
-            transfer_piece_ownership.after(TransformSystem::TransformPropagate),
-        );
+        // TODO add back after https://github.com/dimforge/bevy_rapier/issues/172
+        // app.add_system_to_stage(
+        //     CoreStage::PostUpdate,
+        //     transfer_piece_ownership.after(TransformSystem::TransformPropagate),
+        // );
         app.add_system(center_bags);
     }
 }
@@ -73,10 +75,12 @@ fn transfer_piece_ownership(
     }
 }
 
+// TODO only move bags after https://github.com/dimforge/bevy_rapier/issues/172
 fn center_bags(
     mut resized_events: EventReader<WindowResized>,
     dips_window: Res<DipsWindow>,
-    mut bags: Query<&mut Transform, With<BagMarker>>,
+    mut piece_positions: Query<&mut Transform, (With<NominoMarker>, Without<BagMarker>)>,
+    mut bags: Query<(&mut Transform, &BagPieces), (With<BagMarker>, Without<NominoMarker>)>,
 ) {
     if resized_events.iter().count() == 0 {
         return;
@@ -84,7 +88,14 @@ fn center_bags(
 
     let bag_count = bags.iter().count();
     let bag_positions = compute_bag_coordinates(&dips_window, bag_count);
-    for (index, mut bag_position) in bags.iter_mut().enumerate() {
+
+    for (index, (mut bag_position, bag_pieces)) in bags.iter_mut().enumerate() {
+        let old_position = bag_position.translation;
         bag_position.translation = bag_positions[index];
+        let diff = bag_position.translation - old_position;
+
+        for piece in &**bag_pieces {
+            piece_positions.get_mut(*piece).unwrap().translation += diff;
+        }
     }
 }

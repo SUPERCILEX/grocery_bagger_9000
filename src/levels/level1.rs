@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags::{BagSpawner, BAG_ORIGIN},
+    bags::{compute_bag_coordinates, BagSpawner, BAG_ORIGIN},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltInstance, Piece, PresetPiecesConveyorBelt},
     levels::{CurrentLevel, LevelLoaded},
@@ -45,8 +45,10 @@ fn init_level(
         })
         .out;
 
-    commands.entity(bag).with_children(|parent| {
-        let origin = Transform::from_translation(-BAG_ORIGIN);
+    // TODO use local coordinates after https://github.com/dimforge/bevy_rapier/issues/172
+    commands.entity(root).with_children(|parent| {
+        let origin =
+            Transform::from_translation(compute_bag_coordinates(&dips_window, 1)[0] - BAG_ORIGIN);
         macro_rules! spawn {
             ($nomino:expr, $transform:expr) => {{
                 parent
