@@ -57,12 +57,20 @@ fn piece_selection_handler(
     mut selected_piece: ResMut<SelectedPiece>,
     mut picked_up_events: EventWriter<PiecePickedUp>,
     mut placed_events: EventWriter<PiecePlaced>,
-    selectables: Query<(), With<Selectable>>,
+    selectables: Query<&Selectable, With<NominoMarker>>,
     game_speed: Res<GameSpeed>,
     windows: Res<Windows>,
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     rapier_context: Res<RapierContext>,
-    mut selected_shape: Query<(&mut Transform, &Collider, Option<&Original<Transform>>)>,
+    mut selected_shape: Query<
+        (
+            &GlobalTransform,
+            &mut Transform,
+            &Collider,
+            Option<&Original<Transform>>,
+        ),
+        With<NominoMarker>,
+    >,
     #[cfg(feature = "debug")] debug_options: Res<crate::debug::DebugOptions>,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Left) {
@@ -70,7 +78,8 @@ fn piece_selection_handler(
     }
 
     if let Some(piece) = &**selected_piece {
-        let (mut transform, collider, original) = selected_shape.get_mut(*piece).unwrap();
+        let (global_transform, mut transform, collider, original) =
+            selected_shape.get_mut(*piece).unwrap();
         if let Some(original) = original {
             transform.rotation = original.rotation;
             commands
@@ -85,16 +94,16 @@ fn piece_selection_handler(
         }
 
         let intersects_with_bag = rapier_context.intersection_with_shape(
-            transform.translation,
-            transform.rotation,
+            global_transform.translation,
+            global_transform.rotation,
             collider,
             BAG_COLLIDER_GROUP.into(),
             None,
         );
 
         if let Some(bag) = intersects_with_bag
-            && !straddles_bag_or_overlaps_pieces(&rapier_context, *transform, collider, *piece)
-            && !piece_is_floating(&rapier_context, *transform, collider, *piece) {
+            && !straddles_bag_or_overlaps_pieces(&rapier_context, *global_transform, collider, *piece)
+            && !piece_is_floating(&rapier_context, *global_transform, collider, *piece) {
             commands.entity(*piece).remove::<Selectable>();
 
             placed_events.send(PiecePlaced {
@@ -134,7 +143,7 @@ fn piece_rotation_handler(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
     selected_piece: Res<SelectedPiece>,
-    mut pieces: Query<(&mut Transform, Option<&Original<Transform>>)>,
+    mut pieces: Query<(&mut Transform, Option<&Original<Transform>>), With<NominoMarker>>,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Right) {
         return;
@@ -160,7 +169,7 @@ fn piece_rotation_handler(
 
 fn selected_piece_mover(
     selected_piece: Res<SelectedPiece>,
-    mut pieces: Query<(&mut Transform, &Collider)>,
+    mut pieces: Query<(&GlobalTransform, &mut Transform, &Collider), With<NominoMarker>>,
     rapier_context: Res<RapierContext>,
     windows: Res<Windows>,
     camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -168,12 +177,12 @@ fn selected_piece_mover(
     if let Some(piece) = &**selected_piece &&
     let Some(cursor_position) = compute_cursor_position(windows, camera_query)
     {
-        let (mut piece_transform, collider) = pieces.get_mut(*piece).unwrap();
+        let (global_transform, mut piece_transform, collider) = pieces.get_mut(*piece).unwrap();
         let snapped_cursor_position = cursor_position.round().extend(0.);
 
         let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
             &rapier_context,
-            Transform::from_translation(snapped_cursor_position).with_rotation(piece_transform.rotation),
+            GlobalTransform::from_translation(snapped_cursor_position).with_rotation(global_transform.rotation),
             collider,
             *piece,
         );
@@ -188,7 +197,7 @@ fn selected_piece_mover(
 
 fn straddles_bag_or_overlaps_pieces(
     rapier_context: &Res<RapierContext>,
-    transform: Transform,
+    transform: GlobalTransform,
     collider: &Collider,
     self_id: Entity,
 ) -> bool {
@@ -214,7 +223,7 @@ fn straddles_bag_or_overlaps_pieces(
 
 fn piece_is_floating(
     rapier_context: &Res<RapierContext>,
-    transform: Transform,
+    transform: GlobalTransform,
     collider: &Collider,
     self_id: Entity,
 ) -> bool {

@@ -7,6 +7,9 @@ use crate::{
     nominos::{Nomino, NOMINO_COLLIDER_GROUP},
 };
 
+#[derive(Component)]
+pub struct NominoMarker;
+
 pub trait NominoSpawner<'w, 's> {
     fn spawn_nomino(
         &mut self,
@@ -43,6 +46,7 @@ impl<'w, 's, 'a> NominoSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
             draw_mode,
             transform,
         ));
+        commands.insert(NominoMarker);
         commands.insert(nomino.collider().clone());
         commands.insert(Sensor(true));
         commands.insert(NOMINO_COLLIDER_GROUP);

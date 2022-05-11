@@ -1,7 +1,6 @@
-use bevy::math::const_vec3;
 use std::{f32::consts::PI, lazy::SyncLazy};
 
-use bevy::prelude::*;
+use bevy::{math::const_vec3, prelude::*};
 use bevy_prototype_lyon::prelude::{
     tess::{math::Point, path::path::Builder},
     *,

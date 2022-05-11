@@ -3,8 +3,8 @@ use smallvec::SmallVec;
 
 use crate::{
     bags::{
-        bag_replacement::BagPieces,
         consts::{BAG_SPACING, RADIUS},
+        BagMarker,
     },
     conveyor_belt,
     nominos::PiecePlaced,
@@ -73,7 +73,7 @@ fn transfer_piece_ownership(
 fn center_bags(
     mut resized_events: EventReader<WindowResized>,
     dips_window: Res<DipsWindow>,
-    mut bags: Query<&mut Transform, With<BagPieces>>,
+    mut bags: Query<&mut Transform, With<BagMarker>>,
 ) {
     if resized_events.iter().count() == 0 {
         return;

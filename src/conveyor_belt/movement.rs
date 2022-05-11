@@ -6,7 +6,7 @@ use crate::{
         ConveyorBeltInstance, ConveyorBeltOptions,
     },
     levels::{CurrentLevel, LevelLoaded, LevelUnloaded},
-    nominos::{NominoSpawner, PiecePickedUp, Selectable},
+    nominos::{NominoMarker, NominoSpawner, PiecePickedUp, Selectable},
     window_management::DipsWindow,
 };
 
@@ -145,7 +145,7 @@ fn replace_pieces(
 
 fn move_pieces(
     belt_pieces: Res<BeltPieceIds>,
-    mut positions: Query<&mut Transform>,
+    mut positions: Query<&mut Transform, With<NominoMarker>>,
     dips_window: Res<DipsWindow>,
 ) {
     if !belt_pieces.is_changed() {

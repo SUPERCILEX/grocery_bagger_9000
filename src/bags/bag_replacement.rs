@@ -4,9 +4,12 @@ use smallvec::SmallVec;
 
 use crate::{
     bags,
-    bags::BAG_LID_COLLIDER_GROUP,
+    bags::{
+        spawn::{BagLidMarker, BagMarker},
+        BAG_LID_COLLIDER_GROUP,
+    },
     conveyor_belt,
-    nominos::{PiecePlaced, NOMINO_COLLIDER_GROUP},
+    nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
 
 pub struct BagReplacementPlugin;
@@ -23,10 +26,10 @@ pub struct BagPieces(pub SmallVec<[Entity; conveyor_belt::MAX_NUM_PIECES]>);
 fn replace_full_bags(
     mut commands: Commands,
     mut piece_placements: EventReader<PiecePlaced>,
-    mut bags: Query<(&Transform, &mut BagPieces)>,
+    mut bags: Query<(&GlobalTransform, &mut BagPieces), With<BagMarker>>,
     rapier_context: Res<RapierContext>,
-    piece_colliders: Query<(&Transform, &Collider)>,
-    lid_collider_bag: Query<&Parent>,
+    piece_colliders: Query<(&GlobalTransform, &Collider), With<NominoMarker>>,
+    lid_collider_bag: Query<&Parent, With<BagLidMarker>>,
 ) {
     for PiecePlaced { piece, bag } in piece_placements.iter() {
         let (bag_coords, mut bag_pieces) = bags.get_mut(*bag).unwrap();
@@ -49,7 +52,7 @@ fn replace_full_bags(
             }
         }
 
-        let mut bag_coords = bag_coords.clone();
+        let mut bag_coords = *bag_coords;
         bag_coords.translation += const_vec3!([0.5 - bags::RADIUS, bags::RADIUS - 0.5, 0.]);
 
         let mut top_row_full = true;

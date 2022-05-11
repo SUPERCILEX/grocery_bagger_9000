@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 pub use consts::*;
-pub use spawn::BagSpawner;
+pub use spawn::{BagMarker, BagSpawner};
 
 use crate::bags::{bag_replacement::BagReplacementPlugin, positioning::BagPositioningPlugin};
 

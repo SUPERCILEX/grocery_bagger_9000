@@ -4,9 +4,9 @@ use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
 
 use crate::{
-    bags::{BAG_CAPACITY, BAG_ORIGIN},
+    bags::{BagMarker, BAG_CAPACITY, BAG_ORIGIN},
     colors::NominoColor,
-    nominos::{PiecePlaced, NOMINO_COLLIDER_GROUP},
+    nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
 
 pub struct ScoringPlugin;
@@ -21,8 +21,8 @@ impl Plugin for ScoringPlugin {
 
 fn score_bags(
     mut piece_placements: EventReader<PiecePlaced>,
-    bags: Query<&Transform>,
-    color_wrapper: Query<&NominoColor>,
+    bags: Query<&GlobalTransform, With<BagMarker>>,
+    color_wrapper: Query<&NominoColor, With<NominoMarker>>,
     rapier_context: Res<RapierContext>,
 ) {
     for PiecePlaced { bag, .. } in piece_placements.iter() {

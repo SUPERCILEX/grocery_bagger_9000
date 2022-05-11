@@ -10,6 +10,15 @@ use crate::{
 
 const BAG_COLOR: Color = Color::rgb(0xE6 as f32 / 255., 0xE6 as f32 / 255., 0xE6 as f32 / 255.);
 
+#[derive(Component)]
+pub struct BagMarker;
+
+#[derive(Component)]
+pub struct BagBoundaryMarker;
+
+#[derive(Component)]
+pub struct BagLidMarker;
+
 pub trait BagSpawner {
     fn spawn_bag<const N: usize>(&mut self, window: &DipsWindow) -> SmallVec<[Entity; 3]>;
 }
@@ -35,6 +44,7 @@ fn spawn_bag(commands: &mut ChildBuilder, transform: Transform) -> Entity {
 
     commands
         .spawn_bundle(GeometryBuilder::build_as(&*BAG_PATH, draw_mode, transform))
+        .insert(BagMarker)
         .insert(MAIN_BAG_COLLIDER.clone())
         .insert(Sensor(true))
         .insert(BAG_COLLIDER_GROUP)
@@ -43,12 +53,14 @@ fn spawn_bag(commands: &mut ChildBuilder, transform: Transform) -> Entity {
         .with_children(|parent| {
             parent
                 .spawn()
+                .insert(BagBoundaryMarker)
                 .insert(BOUNDARY_BAG_COLLIDER.clone())
                 .insert(Sensor(true))
                 .insert(BAG_BOUNDARY_COLLIDER_GROUP);
 
             parent
                 .spawn()
+                .insert(BagLidMarker)
                 .insert(LID_BAG_COLLIDER.clone())
                 .insert(Sensor(true))
                 .insert(BAG_LID_COLLIDER_GROUP);
