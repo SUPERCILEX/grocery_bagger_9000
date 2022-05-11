@@ -136,7 +136,7 @@ fn piece_rotation_handler(
     selected_piece: Res<SelectedPiece>,
     mut pieces: Query<(&mut Transform, Option<&Original<Transform>>)>,
 ) {
-    if !(mouse_button_input.just_pressed(MouseButton::Right)) {
+    if !mouse_button_input.just_pressed(MouseButton::Right) {
         return;
     }
 

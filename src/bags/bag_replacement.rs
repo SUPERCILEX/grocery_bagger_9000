@@ -23,14 +23,13 @@ pub struct BagPieces(pub SmallVec<[Entity; conveyor_belt::MAX_NUM_PIECES]>);
 fn replace_full_bags(
     mut commands: Commands,
     mut piece_placements: EventReader<PiecePlaced>,
-    bags: Query<&Transform>,
-    mut bag_pieces: Query<&mut BagPieces>,
+    mut bags: Query<(&Transform, &mut BagPieces)>,
     rapier_context: Res<RapierContext>,
     piece_colliders: Query<(&Transform, &Collider)>,
     lid_collider_bag: Query<&Parent>,
 ) {
     for PiecePlaced { piece, bag } in piece_placements.iter() {
-        let bag_pieces = &mut *bag_pieces.get_mut(*bag).unwrap();
+        let (bag_coords, mut bag_pieces) = bags.get_mut(*bag).unwrap();
         bag_pieces.push(*piece);
 
         {
@@ -45,12 +44,12 @@ fn replace_full_bags(
                 )
                 .is_some();
             if bag_overflowing {
-                replace_bag(&mut commands, bag_pieces);
+                replace_bag(&mut commands, &mut *bag_pieces);
                 continue;
             }
         }
 
-        let mut bag_coords = *bags.get(*bag).unwrap();
+        let mut bag_coords = bag_coords.clone();
         bag_coords.translation += const_vec3!([0.5 - bags::RADIUS, bags::RADIUS - 0.5, 0.]);
 
         let mut top_row_full = true;
@@ -72,7 +71,7 @@ fn replace_full_bags(
             }
         }
         if top_row_full {
-            replace_bag(&mut commands, bag_pieces);
+            replace_bag(&mut commands, &mut *bag_pieces);
         }
     }
 }

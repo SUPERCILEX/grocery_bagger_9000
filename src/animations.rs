@@ -77,7 +77,7 @@ fn change_animation_speed<T: Component>(
     game_speed: Res<GameSpeed>,
     mut animators: Query<&mut Animator<T>>,
 ) {
-    if !(game_speed.is_changed()) {
+    if !game_speed.is_changed() {
         return;
     }
 
