@@ -1,10 +1,7 @@
-use std::ops::Deref;
-
 use bevy::prelude::*;
 use rand::{
-    distributions::{uniform::SampleUniform, Distribution, WeightedIndex},
-    rngs::ThreadRng,
-    thread_rng, Rng, RngCore,
+    distributions::{Distribution, WeightedIndex},
+    thread_rng, Rng,
 };
 
 use crate::{

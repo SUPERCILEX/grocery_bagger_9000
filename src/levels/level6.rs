@@ -3,15 +3,13 @@ use bevy::prelude::*;
 use crate::{
     bags::BagSpawner,
     colors::NominoColor,
-    conveyor_belt::{
-        ConveyorBeltInstance, Piece, PresetPiecesConveyorBelt, RandomPiecesConveyorBelt,
-    },
+    conveyor_belt::{ConveyorBeltInstance, RandomPiecesConveyorBelt},
     levels::{CurrentLevel, LevelLoaded},
-    nominos::{Nomino, DEG_180, DEG_MIRRORED, TETROMINOS},
+    nominos::TETROMINOS,
     window_management::DipsWindow,
 };
 
-const LEVEL_COLOR: NominoColor = NominoColor::Pink;
+const NUM_PIECES: usize = 18;
 
 pub struct Level6Plugin;
 
@@ -20,8 +18,6 @@ impl Plugin for Level6Plugin {
         app.add_system_to_stage(CoreStage::PreUpdate, init_level);
     }
 }
-
-const NUM_PIECES: usize = 18;
 
 fn init_level(
     mut commands: Commands,
@@ -49,9 +45,3 @@ fn init_level(
     current.root = Some(root);
     level_initialized.send(LevelLoaded(root));
 }
-
-//                 Piece {
-//                     nomino: Nomino::TetrominoL,
-//                     color: LEVEL_COLOR,
-//                     rotation: *DEG_MIRRORED * *DEG_180,
-//                 },

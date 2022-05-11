@@ -4,7 +4,6 @@ use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
 
 use crate::{
-    bags,
     bags::{BAG_CAPACITY, BAG_ORIGIN},
     colors::NominoColor,
     nominos::{PiecePlaced, NOMINO_COLLIDER_GROUP},
@@ -70,7 +69,7 @@ fn score_bags(
 }
 
 fn count_holes(matrix: &[[bool; 6]; 6], block_count: u32) -> u32 {
-    return (BAG_CAPACITY as u32) - block_count - (get_connected_empties(matrix).len() as u32);
+    (BAG_CAPACITY as u32) - block_count - (get_connected_empties(matrix).len() as u32)
 }
 
 // generates a vector containing the coordinates of all the empty spaces in the
@@ -114,7 +113,7 @@ fn get_connected_empties(matrix: &[[bool; 6]; 6]) -> Vec<(usize, usize)> {
             }
         }
     }
-    return connected_to_top;
+    connected_to_top
 }
 
 fn touch_neighbor(
@@ -128,9 +127,9 @@ fn touch_neighbor(
     }
 }
 
-fn calculate_color_score(color_map: [u8; NominoColor::COUNT], block_count: u32) -> u32 {
+fn calculate_color_score(color_map: [u8; NominoColor::COUNT], _block_count: u32) -> u32 {
     let mut ranked_colors = Vec::from(color_map);
-    ranked_colors.sort();
+    ranked_colors.sort_unstable();
     ranked_colors.reverse();
     let mut color_score: u32 = 0;
     let mut total_blocks: usize = 0;
@@ -152,7 +151,7 @@ fn calculate_color_score(color_map: [u8; NominoColor::COUNT], block_count: u32) 
     if total_blocks == BAG_CAPACITY {
         color_score += 100;
     }
-    return color_score;
+    color_score
 }
 
 fn calculate_bag_fill_multiplier(block_count: u32) -> u32 {
@@ -162,10 +161,10 @@ fn calculate_bag_fill_multiplier(block_count: u32) -> u32 {
         28..=BAG_CAPACITY => return 5,
         _ => println!("You shouldn't be here!"), //should be impossible
     }
-    return 0;
+    0
 }
 
-fn score_blocks(num: u32) -> u32 {
+fn score_blocks(_num: u32) -> u32 {
     1
 }
 
