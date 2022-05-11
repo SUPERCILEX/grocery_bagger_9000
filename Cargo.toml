@@ -10,6 +10,9 @@ categories = ["games"]
 
 [patch.crates-io]
 bevy = { git = "https://github.com/SUPERCILEX/bevy" }
+bevy_ecs = { git = "https://github.com/SUPERCILEX/bevy" }
+bevy_app = { git = "https://github.com/SUPERCILEX/bevy" }
+bevy_render = { git = "https://github.com/SUPERCILEX/bevy" }
 
 [dependencies]
 bevy = { version = "0.7.0", default-features = false }
