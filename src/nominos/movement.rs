@@ -1,12 +1,11 @@
 use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
+use bevy_tweening::AnimationSystem;
 
 use crate::{
     animations,
     animations::{AnimationBundle, GameSpeed, Original},
-    bags::{
-        BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP, BAG_FLOOR_COLLIDER_GROUP,
-    },
+    bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP, BAG_FLOOR_COLLIDER_GROUP},
     levels::LevelUnloaded,
     nominos::*,
     window_management::MainCamera,
@@ -23,13 +22,11 @@ impl Plugin for PieceMovementPlugin {
 
         app.add_system_to_stage(CoreStage::PreUpdate, reset_selected_piece);
         app.add_system(piece_selection_handler);
-        app.add_system(
-            piece_rotation_handler.after(bevy_tweening::component_animator_system::<Transform>),
-        );
+        app.add_system(piece_rotation_handler.after(AnimationSystem::AnimationUpdate));
         app.add_system(
             selected_piece_mover
                 .before(piece_selection_handler)
-                .after(bevy_tweening::component_animator_system::<Transform>),
+                .after(AnimationSystem::AnimationUpdate),
         );
     }
 }

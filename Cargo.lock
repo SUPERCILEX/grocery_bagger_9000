@@ -699,7 +699,7 @@ dependencies = [
 [[package]]
 name = "bevy_tweening"
 version = "0.4.0"
-source = "git+https://github.com/SUPERCILEX/bevy_tweening#6152625e74bd773adba0e4347ffa6aafb08dd77c"
+source = "git+https://github.com/SUPERCILEX/bevy_tweening#1e34d3d11976da7bbdf2f0a20bf67ed6390e86e9"
 dependencies = [
  "bevy",
  "interpolation",
