@@ -14,10 +14,13 @@ const BAG_COLOR: Color = Color::rgb(0xE6 as f32 / 255., 0xE6 as f32 / 255., 0xE6
 pub struct BagMarker;
 
 #[derive(Component)]
-pub struct BagBoundaryMarker;
+pub struct BagLidMarker;
 
 #[derive(Component)]
-pub struct BagLidMarker;
+pub struct BagWallsMarker;
+
+#[derive(Component)]
+pub struct BagFloorMarker;
 
 pub trait BagSpawner {
     fn spawn_bag<const N: usize>(&mut self, window: &DipsWindow) -> SmallVec<[Entity; 3]>;
@@ -45,7 +48,7 @@ fn spawn_bag(commands: &mut ChildBuilder, transform: Transform) -> Entity {
     commands
         .spawn_bundle(GeometryBuilder::build_as(&*BAG_PATH, draw_mode, transform))
         .insert(BagMarker)
-        .insert(MAIN_BAG_COLLIDER.clone())
+        .insert(BAG_MAIN_COLLIDER.clone())
         .insert(Sensor(true))
         .insert(BAG_COLLIDER_GROUP)
         .insert(RigidBody::Fixed)
@@ -53,17 +56,24 @@ fn spawn_bag(commands: &mut ChildBuilder, transform: Transform) -> Entity {
         .with_children(|parent| {
             parent
                 .spawn()
-                .insert(BagBoundaryMarker)
-                .insert(BOUNDARY_BAG_COLLIDER.clone())
+                .insert(BagLidMarker)
+                .insert(BAG_LID_COLLIDER.clone())
                 .insert(Sensor(true))
-                .insert(BAG_BOUNDARY_COLLIDER_GROUP);
+                .insert(BAG_LID_COLLIDER_GROUP);
 
             parent
                 .spawn()
-                .insert(BagLidMarker)
-                .insert(LID_BAG_COLLIDER.clone())
+                .insert(BagWallsMarker)
+                .insert(BAG_WALLS_COLLIDER.clone())
                 .insert(Sensor(true))
-                .insert(BAG_LID_COLLIDER_GROUP);
+                .insert(BAG_WALLS_COLLIDER_GROUP);
+
+            parent
+                .spawn()
+                .insert(BagFloorMarker)
+                .insert(BAG_FLOOR_COLLIDER.clone())
+                .insert(Sensor(true))
+                .insert(BAG_FLOOR_COLLIDER_GROUP);
         })
         .id()
 }

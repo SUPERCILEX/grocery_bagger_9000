@@ -4,7 +4,9 @@ use bevy_rapier3d::prelude::*;
 use crate::{
     animations,
     animations::{AnimationBundle, GameSpeed, Original},
-    bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP},
+    bags::{
+        BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP, BAG_FLOOR_COLLIDER_GROUP,
+    },
     levels::LevelUnloaded,
     nominos::*,
     window_management::MainCamera,
@@ -45,6 +47,11 @@ pub struct PiecePickedUp(Entity);
 
 #[derive(Deref, DerefMut, Default)]
 struct SelectedPiece(Option<Entity>);
+
+const FLOATING_PIECE_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
+    memberships: BAG_FLOOR_COLLIDER_GROUP.memberships | NOMINO_COLLIDER_GROUP.memberships,
+    filters: BAG_FLOOR_COLLIDER_GROUP.filters | NOMINO_COLLIDER_GROUP.filters,
+};
 
 fn reset_selected_piece(
     mut level_unloaded: EventReader<LevelUnloaded>,
@@ -194,7 +201,7 @@ fn selected_piece_mover(
         let snapped_cursor_position = cursor_position.round().extend(piece_transform.translation.z);
 
         if piece_transform.translation == snapped_cursor_position {
-            return
+            return;
         }
 
         if let Some(original) = original {
@@ -258,7 +265,7 @@ fn piece_is_floating(
             transform.translation - const_vec3!([0., 0.5, 0.]),
             transform.rotation,
             collider,
-            CollisionGroups::new(0b101, 0b101).into(),
+            FLOATING_PIECE_COLLIDER_GROUP.into(),
             Some(&|entity| entity != self_id),
         )
         .is_none()
