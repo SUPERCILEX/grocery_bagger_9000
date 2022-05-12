@@ -57,6 +57,8 @@ pub fn compute_bag_coordinates(window: &DipsWindow, num_bags: usize) -> SmallVec
     bags
 }
 
+// TODO https://github.com/dimforge/bevy_rapier/issues/172
+#[allow(dead_code)]
 fn transfer_piece_ownership(
     mut commands: Commands,
     mut piece_placements: EventReader<PiecePlaced>,
