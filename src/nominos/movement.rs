@@ -24,7 +24,11 @@ impl Plugin for PieceMovementPlugin {
         app.add_system(
             piece_rotation_handler.after(bevy_tweening::component_animator_system::<Transform>),
         );
-        app.add_system(selected_piece_mover.before(piece_selection_handler));
+        app.add_system(
+            selected_piece_mover
+                .before(piece_selection_handler)
+                .after(bevy_tweening::component_animator_system::<Transform>),
+        );
     }
 }
 
@@ -168,8 +172,17 @@ fn piece_rotation_handler(
 }
 
 fn selected_piece_mover(
+    mut commands: Commands,
     selected_piece: Res<SelectedPiece>,
-    mut pieces: Query<(&GlobalTransform, &mut Transform, &Collider), With<NominoMarker>>,
+    mut pieces: Query<
+        (
+            &GlobalTransform,
+            &mut Transform,
+            &Collider,
+            Option<&Original<Transform>>,
+        ),
+        With<NominoMarker>,
+    >,
     rapier_context: Res<RapierContext>,
     windows: Res<Windows>,
     camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -177,8 +190,19 @@ fn selected_piece_mover(
     if let Some(piece) = &**selected_piece &&
     let Some(cursor_position) = compute_cursor_position(windows, camera_query)
     {
-        let (global_transform, mut piece_transform, collider) = pieces.get_mut(*piece).unwrap();
+        let (global_transform, mut piece_transform, collider, original) = pieces.get_mut(*piece).unwrap();
         let snapped_cursor_position = cursor_position.round().extend(piece_transform.translation.z);
+
+        if piece_transform.translation == snapped_cursor_position {
+            return
+        }
+
+        if let Some(original) = original {
+            piece_transform.rotation = original.rotation;
+            commands
+                .entity(*piece)
+                .remove_bundle::<AnimationBundle<Transform>>();
+        }
 
         let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
             &rapier_context,
