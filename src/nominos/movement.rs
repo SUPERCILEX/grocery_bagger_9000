@@ -178,7 +178,7 @@ fn selected_piece_mover(
     let Some(cursor_position) = compute_cursor_position(windows, camera_query)
     {
         let (global_transform, mut piece_transform, collider) = pieces.get_mut(*piece).unwrap();
-        let snapped_cursor_position = cursor_position.round().extend(0.);
+        let snapped_cursor_position = cursor_position.round().extend(piece_transform.translation.z);
 
         let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
             &rapier_context,

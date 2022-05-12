@@ -1,4 +1,4 @@
-use bevy::{prelude::*, transform::TransformSystem, window::WindowResized};
+use bevy::{prelude::*, window::WindowResized};
 use smallvec::SmallVec;
 
 use crate::{

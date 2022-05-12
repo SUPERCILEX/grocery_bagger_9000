@@ -29,7 +29,7 @@ impl<'w, 's, 'a> NominoSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
         mut transform: Transform,
     ) -> EntityCommands<'w, 's, '_> {
         // Offset by 0.5 since every piece is centered on a block
-        transform.translation += base.translation + const_vec3!([0.5, 0.5, 0.]);
+        transform.translation += base.translation + const_vec3!([0.5, 0.5, 0.01]);
         transform.rotation *= base.rotation;
         transform.scale *= base.scale;
 

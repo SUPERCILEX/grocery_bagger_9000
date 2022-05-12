@@ -156,7 +156,12 @@ fn move_pieces(
     for (index, piece) in belt_pieces.iter().enumerate() {
         if let Some(piece) = piece {
             let mut position = positions.get_mut(*piece).unwrap();
-            position.translation = base + Vec3::new(index as f32 * PIECE_WIDTH, PIECE_WIDTH, 0.);
+            position.translation = base
+                + Vec3::new(
+                    index as f32 * PIECE_WIDTH,
+                    PIECE_WIDTH,
+                    position.translation.z,
+                );
         } else {
             break;
         }
