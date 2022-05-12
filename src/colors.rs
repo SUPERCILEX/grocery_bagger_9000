@@ -2,7 +2,7 @@ use std::ops::{Index, IndexMut};
 
 use bevy::prelude::*;
 
-#[derive(Debug, Copy, Clone, Component)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Component)]
 pub enum NominoColor {
     Red,
     Orange,

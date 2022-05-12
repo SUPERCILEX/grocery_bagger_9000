@@ -46,7 +46,7 @@ impl Default for DebugOptions {
     }
 }
 
-#[derive(Default, PartialEq)]
+#[derive(Default, Eq, PartialEq)]
 enum NominoType {
     #[default]
     Straight,
@@ -56,6 +56,15 @@ enum NominoType {
     L2,
     Skew,
     Skew2,
+}
+
+#[derive(Deref, DerefMut)]
+struct NominoColorWrapper(NominoColor);
+
+impl Default for NominoColorWrapper {
+    fn default() -> Self {
+        Self(NominoColor::Debug)
+    }
 }
 
 impl NominoType {
@@ -77,6 +86,7 @@ fn debug_options(
     mut debug_options: ResMut<DebugOptions>,
     mut inspector: ResMut<WorldInspectorParams>,
     mut nomino_to_spawn: Local<NominoType>,
+    mut nomino_color_to_spawn: Local<NominoColorWrapper>,
     mut commands: Commands,
     mut current_level: ResMut<CurrentLevel>,
     mut conveyor_belt_options: ResMut<ConveyorBeltOptions>,
@@ -131,7 +141,7 @@ fn debug_options(
                                         .spawn_nomino(
                                             position,
                                             $nomino,
-                                            NominoColor::Debug,
+                                            **nomino_color_to_spawn,
                                             $transform,
                                         )
                                         .insert(Selectable)
@@ -160,6 +170,27 @@ fn debug_options(
                         });
                     }
                 }
+
+                egui::ComboBox::from_id_source("Nomino color to spawn")
+                    .selected_text(format!("{:?}", **nomino_color_to_spawn))
+                    .show_ui(ui, |ui| {
+                        macro_rules! option {
+                            ($nomino:expr) => {
+                                ui.selectable_value(
+                                    &mut **nomino_color_to_spawn,
+                                    $nomino,
+                                    format!("{:?}", $nomino),
+                                );
+                            };
+                        }
+
+                        option!(NominoColor::Red);
+                        option!(NominoColor::Orange);
+                        option!(NominoColor::Blue);
+                        option!(NominoColor::Green);
+                        option!(NominoColor::Pink);
+                        option!(NominoColor::Debug);
+                    });
 
                 egui::ComboBox::from_id_source("Nomino to spawn")
                     .selected_text(nomino_to_spawn.name())
