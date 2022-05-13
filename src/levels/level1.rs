@@ -52,7 +52,7 @@ fn init_level(
         macro_rules! spawn {
             ($nomino:expr, $transform:expr) => {{
                 parent
-                    .spawn_nomino(origin, $nomino, LEVEL_COLOR, $transform)
+                    .spawn_nomino_into_bag(origin, $nomino, LEVEL_COLOR, $transform)
                     .id()
             }};
         }

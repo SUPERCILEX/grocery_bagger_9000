@@ -4,7 +4,7 @@ use bevy_prototype_lyon::draw::DrawMode;
 use crate::{
     conveyor_belt::{
         consts::{HEIGHT, LENGTH, MAX_NUM_PIECES, PIECE_WIDTH},
-        ConveyorBeltInstance, ConveyorBeltOptions,
+        ConveyorBelt, ConveyorBeltInstance, ConveyorBeltOptions,
     },
     levels::{CurrentLevel, LevelLoaded, LevelUnloaded},
     nominos::{NominoMarker, NominoSpawner, PiecePickedUp, Selectable},
@@ -53,34 +53,23 @@ fn init_pieces(
     mut conveyor_belt: ResMut<ConveyorBeltInstance>,
     mut belt_pieces: ResMut<BeltPieceIds>,
     dips_window: Res<DipsWindow>,
+    belt_options: Res<ConveyorBeltOptions>,
 ) {
     // TODO these ANDs should be flipped, but CLion completely destroys the code if
     //  you do that and rustfmt is still too stupid to understand let chains.
     if let Some(conveyor_belt) = &mut **conveyor_belt &&
     let Some(initialized_level) = level_initialized.iter().last()
     {
-        let base = Transform::from_xyz(dips_window.width - LENGTH, dips_window.height - HEIGHT, 0.);
-
-        for piece_id in &mut **belt_pieces {
-            if let Some(piece) = conveyor_belt.next() {
-                let color = faded_piece_color(piece.color.render());
-
-                commands
-                    .entity(**initialized_level)
-                    .with_children(|parent| {
-                        let spawned = parent.spawn_nomino_with_color(
-                            base,
-                            piece.nomino,
-                            piece.color,
-                            color,
-                            Transform::from_rotation(piece.rotation),
-                        );
-
-                        *piece_id = Some(spawned.id());
-                    });
-            } else {
-                *piece_id = None;
-            }
+        for (index, piece_id) in belt_pieces.iter_mut().enumerate() {
+            spawn_piece(
+                &mut commands,
+                index,
+                **initialized_level,
+                conveyor_belt.as_mut(),
+                &dips_window,
+                &belt_options,
+                piece_id,
+            );
         }
     }
 }
@@ -107,66 +96,67 @@ fn replace_pieces(
                 }
             }
 
-            if let Some(conveyor_belt) = &mut **conveyor_belt &&
-            let Some(piece) = conveyor_belt.next()
-            {
-                let color = faded_piece_color(piece.color.render());
-                let base = Transform::from_xyz(
-                    dips_window.width - LENGTH,
-                    dips_window.height - HEIGHT,
-                    0.,
+            if let Some(conveyor_belt) = &mut **conveyor_belt {
+                spawn_piece(
+                    &mut commands,
+                    MAX_NUM_PIECES - 1,
+                    current_level.root.unwrap(),
+                    conveyor_belt.as_mut(),
+                    &dips_window,
+                    &belt_options,
+                    &mut belt_pieces[MAX_NUM_PIECES - 1],
                 );
-
-                commands
-                    .entity(current_level.root.unwrap())
-                    .with_children(|parent| {
-                        let spawned = parent.spawn_nomino_with_color(
-                            base,
-                            piece.nomino,
-                            piece.color,
-                            color,
-                            Transform::from_rotation(piece.rotation),
-                        );
-
-                        belt_pieces[MAX_NUM_PIECES - 1] = Some(spawned.id());
-                    });
-            } else {
-                belt_pieces[MAX_NUM_PIECES - 1] = None;
             }
         }
     }
 }
 
+#[derive(Default, Eq, PartialEq)]
+enum PieceMovementFsm {
+    #[default]
+    Ready,
+    Loaded,
+}
+
 fn move_pieces(
     belt_pieces: Res<BeltPieceIds>,
     belt_options: Res<ConveyorBeltOptions>,
-    mut positions: Query<&mut Transform, With<NominoMarker>>,
     dips_window: Res<DipsWindow>,
+    mut fsm: Local<PieceMovementFsm>,
+    mut level_loaded: EventReader<LevelLoaded>,
+    mut positions: Query<&mut Transform, With<NominoMarker>>,
 ) {
+    if level_loaded.iter().count() > 0 {
+        *fsm = PieceMovementFsm::Ready;
+    }
     if !belt_pieces.is_changed() {
         return;
     }
+    if *fsm == PieceMovementFsm::Ready {
+        *fsm = PieceMovementFsm::Loaded;
+        return;
+    }
 
-    let base = Vec3::new(dips_window.width - LENGTH, dips_window.height - HEIGHT, 0.);
+    let base = Vec2::new(dips_window.width - LENGTH, dips_window.height - HEIGHT);
     for (index, piece) in belt_pieces.iter().enumerate() {
         if let Some(piece) = piece {
-            let selectable_spacing = if index < belt_options.num_pieces_selectable.into() {
-                SELECTABLE_SEPARATION
-            } else {
-                0.
-            };
-
             let mut position = positions.get_mut(*piece).unwrap();
-            position.translation = base
-                + Vec3::new(
-                    index as f32 * PIECE_WIDTH - selectable_spacing,
-                    PIECE_WIDTH,
-                    position.translation.z,
-                );
+            position.translation = piece_position(&belt_options, index, base);
         } else {
             break;
         }
     }
+}
+
+fn piece_position(belt_options: &Res<ConveyorBeltOptions>, index: usize, base: Vec2) -> Vec3 {
+    let selectable_spacing = if index < belt_options.num_pieces_selectable.into() {
+        SELECTABLE_SEPARATION
+    } else {
+        0.
+    };
+
+    let offset = Vec2::new(index as f32 * PIECE_WIDTH - selectable_spacing, PIECE_WIDTH);
+    (base + offset).round().extend(0.01)
 }
 
 fn update_piece_selectability(
@@ -243,4 +233,33 @@ fn faded_piece_color(from: Color) -> Color {
         unreachable!()
     }
     color
+}
+
+fn spawn_piece(
+    commands: &mut Commands,
+    index: usize,
+    root: Entity,
+    conveyor_belt: &mut dyn ConveyorBelt,
+    dips_window: &Res<DipsWindow>,
+    belt_options: &Res<ConveyorBeltOptions>,
+    belt_piece: &mut Option<Entity>,
+) {
+    if let Some(piece) = conveyor_belt.next() {
+        let color = faded_piece_color(piece.color.render());
+        let base = Vec2::new(dips_window.width - LENGTH, dips_window.height - HEIGHT);
+
+        commands.entity(root).with_children(|parent| {
+            let spawned = parent.spawn_nomino(
+                Transform::from_translation(piece_position(belt_options, index, base))
+                    .with_rotation(piece.rotation),
+                piece.nomino,
+                piece.color,
+                color,
+            );
+
+            *belt_piece = Some(spawned.id());
+        });
+    } else {
+        *belt_piece = None;
+    }
 }

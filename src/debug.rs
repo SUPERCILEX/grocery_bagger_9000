@@ -138,7 +138,7 @@ fn debug_options(
 
                                 ($nomino:expr, $transform:expr) => {{
                                     parent
-                                        .spawn_nomino(
+                                        .spawn_nomino_into_bag(
                                             position,
                                             $nomino,
                                             **nomino_color_to_spawn,

@@ -11,7 +11,7 @@ use crate::{
 pub struct NominoMarker;
 
 pub trait NominoSpawner<'w, 's> {
-    fn spawn_nomino(
+    fn spawn_nomino_into_bag(
         &mut self,
         bag: Transform,
         nomino: Nomino,
@@ -19,33 +19,21 @@ pub trait NominoSpawner<'w, 's> {
         transform: Transform,
     ) -> EntityCommands<'w, 's, '_>;
 
-    fn spawn_nomino_with_color(
+    fn spawn_nomino(
         &mut self,
-        bag: Transform,
+        position: Transform,
         nomino: Nomino,
         color: NominoColor,
         render_color: Color,
-        transform: Transform,
     ) -> EntityCommands<'w, 's, '_>;
 }
 
 impl<'w, 's, 'a> NominoSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
-    fn spawn_nomino(
+    fn spawn_nomino_into_bag(
         &mut self,
         bag: Transform,
         nomino: Nomino,
         color: NominoColor,
-        transform: Transform,
-    ) -> EntityCommands<'w, 's, '_> {
-        self.spawn_nomino_with_color(bag, nomino, color, color.render(), transform)
-    }
-
-    fn spawn_nomino_with_color(
-        &mut self,
-        bag: Transform,
-        nomino: Nomino,
-        color: NominoColor,
-        render_color: Color,
         mut transform: Transform,
     ) -> EntityCommands<'w, 's, '_> {
         // Offset by 0.5 since every piece is centered on a block
@@ -53,6 +41,16 @@ impl<'w, 's, 'a> NominoSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
         transform.rotation *= bag.rotation;
         transform.scale *= bag.scale;
 
+        self.spawn_nomino(transform, nomino, color, color.render())
+    }
+
+    fn spawn_nomino(
+        &mut self,
+        position: Transform,
+        nomino: Nomino,
+        color: NominoColor,
+        render_color: Color,
+    ) -> EntityCommands<'w, 's, '_> {
         let draw_mode = DrawMode::Outlined {
             fill_mode: FillMode {
                 options: FillOptions::default().with_intersections(false),
@@ -64,7 +62,7 @@ impl<'w, 's, 'a> NominoSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
         let mut commands = self.spawn_bundle(GeometryBuilder::build_as(
             nomino.path(),
             draw_mode,
-            transform,
+            position,
         ));
         commands.insert(NominoMarker);
         commands.insert(nomino.collider().clone());
