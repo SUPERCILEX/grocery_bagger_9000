@@ -23,10 +23,6 @@ pub struct LevelsPlugin;
 
 impl Plugin for LevelsPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<CurrentLevel>();
-        app.add_event::<LevelLoaded>();
-        app.add_event::<LevelUnloaded>();
-
         app.add_plugin(LevelTransitionPlugin);
         app.add_plugin(ScoringPlugin);
 

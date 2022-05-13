@@ -4,6 +4,10 @@ pub struct LevelTransitionPlugin;
 
 impl Plugin for LevelTransitionPlugin {
     fn build(&self, app: &mut App) {
+        app.init_resource::<CurrentLevel>();
+        app.add_event::<LevelLoaded>();
+        app.add_event::<LevelUnloaded>();
+
         app.add_system_to_stage(CoreStage::First, level_change_handler);
     }
 }
