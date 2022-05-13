@@ -12,6 +12,7 @@ use crate::{
 };
 
 const SELECTABLE_SEPARATION: f32 = 2.;
+const NON_SELECTABLE_LIGHTNESS: f32 = 0.38;
 
 pub struct ConveyorBeltMovementPlugin;
 
@@ -61,12 +62,9 @@ fn init_pieces(
     {
         let base = Transform::from_xyz(dips_window.width - LENGTH, dips_window.height - HEIGHT, 0.);
 
-        for (index, piece_id) in belt_pieces.iter_mut().enumerate() {
+        for piece_id in &mut **belt_pieces {
             if let Some(piece) = conveyor_belt.next() {
-                let color = faded_piece_color(
-                    piece.color.render(),
-                    index as f32 / belt_options.num_pieces_selectable as f32,
-                );
+                let color = faded_piece_color(piece.color.render());
 
                 commands
                     .entity(**initialized_level)
@@ -113,6 +111,7 @@ fn replace_pieces(
             if let Some(conveyor_belt) = &mut **conveyor_belt &&
             let Some(piece) = conveyor_belt.next()
             {
+                let color = faded_piece_color(piece.color.render());
                 let base = Transform::from_xyz(
                     dips_window.width - LENGTH,
                     dips_window.height - HEIGHT,
@@ -122,10 +121,11 @@ fn replace_pieces(
                 commands
                     .entity(current_level.root.unwrap())
                     .with_children(|parent| {
-                        let spawned = parent.spawn_nomino(
+                        let spawned = parent.spawn_nomino_with_color(
                             base,
                             piece.nomino,
                             piece.color,
+                            color,
                             Transform::from_rotation(piece.rotation),
                         );
 
@@ -221,16 +221,14 @@ fn fade_non_selectable_pieces(
         }
     }
 
-    let non_selectables = (belt_pieces.len() - start) as f32;
-    for (index, piece) in belt_pieces[start..].iter().enumerate() {
+    for piece in &belt_pieces[start..] {
         if let Some(piece) = piece {
             let mut draw_mode = colors.get_mut(*piece).unwrap();
             if let DrawMode::Outlined {
                 ref mut fill_mode, ..
             } = *draw_mode
             {
-                fill_mode.color =
-                    faded_piece_color(fill_mode.color, index as f32 / non_selectables);
+                fill_mode.color = faded_piece_color(fill_mode.color);
             }
         } else {
             break;
@@ -238,15 +236,10 @@ fn fade_non_selectable_pieces(
     }
 }
 
-fn faded_piece_color(from: Color, percentage: f32) -> Color {
-    let ease_out_cubic = |x: f32| {
-        let x1 = 1. - x;
-        1. - x1 * x1 * x1
-    };
-
+fn faded_piece_color(from: Color) -> Color {
     let mut color = from.as_hsla();
     if let Color::Hsla { lightness, .. } = &mut color {
-        *lightness = 0.4 - 0.2 * ease_out_cubic(percentage);
+        *lightness = NON_SELECTABLE_LIGHTNESS;
     } else {
         unreachable!()
     }
