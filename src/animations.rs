@@ -1,7 +1,10 @@
 use std::{f32::consts::PI, time::Duration};
 
-use bevy::prelude::*;
-use bevy_tweening::{lens::TransformRotationLens, *};
+use bevy::{math::const_vec3, prelude::*};
+use bevy_tweening::{
+    lens::{TransformPositionLens, TransformRotationLens, TransformScaleLens},
+    *,
+};
 
 pub struct AnimationPlugin;
 
@@ -27,15 +30,23 @@ impl Default for GameSpeed {
 pub struct Original<T: Component>(T);
 
 #[derive(Bundle)]
-pub struct AnimationBundle<T: Component> {
+pub struct UndoableAnimationBundle<T: Component> {
     animator: Animator<T>,
     original: Original<T>,
 }
 
-pub fn error_shake(current: Transform, speed: &GameSpeed) -> AnimationBundle<Transform> {
+type DynTweenable = Box<dyn Tweenable<Transform> + Send + Sync + 'static>;
+
+struct NoopLens;
+
+impl<T> Lens<T> for NoopLens {
+    fn lerp(&mut self, _: &mut T, _: f32) {}
+}
+
+pub fn error_shake(current: Transform, speed: &GameSpeed) -> UndoableAnimationBundle<Transform> {
     let wiggle = Quat::from_rotation_z(PI / 16.);
 
-    AnimationBundle {
+    UndoableAnimationBundle {
         animator: Animator::new(Sequence::new([
             Tween::new(
                 EaseMethod::Linear,
@@ -73,6 +84,86 @@ pub fn error_shake(current: Transform, speed: &GameSpeed) -> AnimationBundle<Tra
     }
 }
 
+pub fn bag_enter(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<Transform> {
+    Animator::new(Sequence::new([
+        Box::new(
+            Tween::new(
+                EaseMethod::Linear,
+                TweeningType::Once,
+                Duration::from_millis(500),
+                NoopLens,
+            )
+            .with_speed(**speed),
+        ) as DynTweenable,
+        Box::new(Tracks::new([
+            Box::new(
+                Tween::new(
+                    EaseMethod::CustomFunction(|x: f32| {
+                        const C1: f32 = 1.70158;
+                        const C3: f32 = C1 + 1.;
+
+                        let x1 = x - 1.;
+                        let x2 = x1 * x1;
+                        1. + C3 * x1 * x2 + C1 * x2
+                    }),
+                    TweeningType::Once,
+                    Duration::from_millis(200),
+                    TransformScaleLens {
+                        start: from.scale,
+                        end: to.scale,
+                    },
+                )
+                .with_speed(**speed)
+                .with_completed_event(true, u64::MAX),
+            ) as DynTweenable,
+            Box::new(Sequence::new([
+                Tween::new(
+                    EaseMethod::EaseFunction(EaseFunction::CircularIn),
+                    TweeningType::Once,
+                    Duration::from_millis(100),
+                    TransformPositionLens {
+                        start: from.translation,
+                        end: from.translation + const_vec3!([0., 2., 0.]),
+                    },
+                )
+                .with_speed(**speed),
+                Tween::new(
+                    EaseMethod::EaseFunction(EaseFunction::CircularOut),
+                    TweeningType::Once,
+                    Duration::from_millis(100),
+                    TransformPositionLens {
+                        start: from.translation + const_vec3!([0., 2., 0.]),
+                        end: to.translation,
+                    },
+                )
+                .with_speed(**speed),
+            ])) as DynTweenable,
+        ])) as DynTweenable,
+    ]))
+}
+
+pub fn bag_exit(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<Transform> {
+    Animator::new(
+        Tween::new(
+            EaseMethod::CustomFunction(|x| {
+                const C1: f32 = 1.70158;
+                const C3: f32 = C1 + 1.;
+
+                let x2 = x * x;
+                C3 * x * x2 - C1 * x2
+            }),
+            TweeningType::Once,
+            Duration::from_millis(500),
+            TransformPositionLens {
+                start: from.translation,
+                end: to.translation,
+            },
+        )
+        .with_speed(**speed)
+        .with_completed_event(true, u64::MAX),
+    )
+}
+
 fn change_animation_speed<T: Component>(
     game_speed: Res<GameSpeed>,
     mut animators: Query<&mut Animator<T>>,
@@ -93,6 +184,6 @@ fn cleanup_animations<T: Component>(
     for TweenCompleted { entity, .. } in completed_animations.iter() {
         commands
             .entity(*entity)
-            .remove_bundle::<AnimationBundle<T>>();
+            .remove_bundle::<UndoableAnimationBundle<T>>();
     }
 }

@@ -24,6 +24,8 @@ pub struct BagFloorMarker;
 
 pub trait BagSpawner {
     fn spawn_bag<const N: usize>(&mut self, window: &DipsWindow) -> SmallVec<[Entity; 3]>;
+
+    fn spawn_bag_into(&mut self, transform: Transform) -> Entity;
 }
 
 impl<'w, 's, 'a> BagSpawner for ChildBuilder<'w, 's, 'a> {
@@ -33,6 +35,10 @@ impl<'w, 's, 'a> BagSpawner for ChildBuilder<'w, 's, 'a> {
             spawned_bags.push(spawn_bag(self, Transform::from_translation(position)))
         }
         spawned_bags
+    }
+
+    fn spawn_bag_into(&mut self, transform: Transform) -> Entity {
+        spawn_bag(self, transform)
     }
 }
 

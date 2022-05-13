@@ -3,30 +3,41 @@ use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
 use crate::{
+    animations,
+    animations::GameSpeed,
     bags,
     bags::{
         spawn::{BagLidMarker, BagMarker},
-        BAG_LID_COLLIDER_GROUP,
+        BagSpawner, BAG_LID_COLLIDER_GROUP, RADIUS,
     },
     conveyor_belt,
+    levels::CurrentLevel,
     nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
+    window_management::DipsWindow,
 };
 
 pub struct BagReplacementPlugin;
 
 impl Plugin for BagReplacementPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::PostUpdate, replace_full_bags);
+        app.add_event::<BagFilled>();
+
+        app.add_system_to_stage(CoreStage::PostUpdate, detect_filled_bags);
+        app.add_system(replace_full_bags);
     }
 }
+
+#[derive(Deref)]
+struct BagFilled(Entity);
 
 #[derive(Component, Deref, DerefMut)]
 pub struct BagPieces(pub SmallVec<[Entity; conveyor_belt::MAX_NUM_PIECES]>);
 
-fn replace_full_bags(
-    mut commands: Commands,
+fn detect_filled_bags(
+    _commands: Commands,
     mut piece_placements: EventReader<PiecePlaced>,
     mut bags: Query<(&GlobalTransform, &mut BagPieces), With<BagMarker>>,
+    mut filled_events: EventWriter<BagFilled>,
     rapier_context: Res<RapierContext>,
     piece_colliders: Query<(&GlobalTransform, &Collider), With<NominoMarker>>,
     lid_collider_bag: Query<&Parent, With<BagLidMarker>>,
@@ -47,7 +58,7 @@ fn replace_full_bags(
                 )
                 .is_some();
             if bag_overflowing {
-                replace_bag(&mut commands, &mut *bag_pieces);
+                filled_events.send(BagFilled(*bag));
                 continue;
             }
         }
@@ -74,14 +85,61 @@ fn replace_full_bags(
             }
         }
         if top_row_full {
-            replace_bag(&mut commands, &mut *bag_pieces);
+            filled_events.send(BagFilled(*bag));
         }
     }
 }
 
-fn replace_bag(commands: &mut Commands, bag_pieces: &mut BagPieces) {
-    for piece in bag_pieces.iter() {
-        commands.entity(*piece).despawn_recursive();
+fn replace_full_bags(
+    mut commands: Commands,
+    mut filled_events: EventReader<BagFilled>,
+    current_level: Res<CurrentLevel>,
+    _dips_window: Res<DipsWindow>,
+    game_speed: Res<GameSpeed>,
+    bag_positions: Query<&Transform, With<BagMarker>>,
+    bag_pieces: Query<&BagPieces, With<BagMarker>>,
+    mut piece_positions: Query<
+        (&GlobalTransform, &mut Transform),
+        (With<NominoMarker>, Without<BagMarker>),
+    >,
+) {
+    for filled_bag in filled_events.iter() {
+        let current_bag_position = bag_positions.get(**filled_bag).unwrap();
+        let new_bag_start = {
+            let mut p = *current_bag_position;
+            p.scale = Vec3::ZERO;
+            p
+        };
+
+        let spawned_bag = commands
+            .entity(current_level.root.unwrap())
+            .with_children(|parent| parent.spawn_bag_into(new_bag_start))
+            .out;
+
+        commands.entity(spawned_bag).insert(animations::bag_enter(
+            new_bag_start,
+            *current_bag_position,
+            &game_speed,
+        ));
+
+        let exit_bag_position = {
+            let mut p = *current_bag_position;
+            p.translation.y = -(RADIUS + 0.5);
+            p
+        };
+        commands.entity(**filled_bag).insert(animations::bag_exit(
+            *current_bag_position,
+            exit_bag_position,
+            &game_speed,
+        ));
+
+        // TODO remove after https://github.com/dimforge/bevy_rapier/issues/172
+        for piece in &**bag_pieces.get(**filled_bag).unwrap() {
+            commands.entity(**filled_bag).add_child(*piece);
+
+            let bag_global = current_bag_position.translation;
+            let (piece_global, mut piece_local) = piece_positions.get_mut(*piece).unwrap();
+            piece_local.translation = piece_global.translation - bag_global;
+        }
     }
-    bag_pieces.clear();
 }

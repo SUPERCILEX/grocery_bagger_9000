@@ -4,7 +4,7 @@ use bevy_tweening::AnimationSystem;
 
 use crate::{
     animations,
-    animations::{AnimationBundle, GameSpeed, Original},
+    animations::{GameSpeed, Original, UndoableAnimationBundle},
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP, BAG_FLOOR_COLLIDER_GROUP},
     levels::LevelUnloaded,
     nominos::*,
@@ -92,7 +92,7 @@ fn piece_selection_handler(
             transform.rotation = original.rotation;
             commands
                 .entity(*piece)
-                .remove_bundle::<AnimationBundle<Transform>>();
+                .remove_bundle::<UndoableAnimationBundle<Transform>>();
         }
 
         #[cfg(feature = "debug")]
@@ -163,7 +163,7 @@ fn piece_rotation_handler(
             transform.rotation = original.rotation;
             commands
                 .entity(*piece)
-                .remove_bundle::<AnimationBundle<Transform>>();
+                .remove_bundle::<UndoableAnimationBundle<Transform>>();
         }
 
         let rotation = &mut transform.rotation;
@@ -205,7 +205,7 @@ fn selected_piece_mover(
             piece_transform.rotation = original.rotation;
             commands
                 .entity(*piece)
-                .remove_bundle::<AnimationBundle<Transform>>();
+                .remove_bundle::<UndoableAnimationBundle<Transform>>();
         }
 
         let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
