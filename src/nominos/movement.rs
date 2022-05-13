@@ -213,10 +213,28 @@ fn selected_piece_mover(
     if let Some(piece) = &**selected_piece &&
     let Some(cursor_position) = compute_cursor_position(windows, camera_query)
     {
-        let (global_transform, mut piece_transform, collider, original) = pieces.get_mut(*piece).unwrap();
-        let snapped_cursor_position = cursor_position.round().extend(piece_transform.translation.z);
+        let (global_transform, mut piece_transform, collider, original) =
+            pieces.get_mut(*piece).unwrap();
+        let snapped_cursor_position = cursor_position
+            .round()
+            .extend(piece_transform.translation.z);
 
         if piece_transform.translation == snapped_cursor_position {
+            return;
+        }
+
+        let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
+            &rapier_context,
+            GlobalTransform::from_translation(snapped_cursor_position).with_rotation(
+                original
+                    .map(|o| o.rotation)
+                    .unwrap_or(global_transform.rotation),
+            ),
+            collider,
+            *piece,
+        );
+
+        if would_move_over_invalid_position {
             return;
         }
 
@@ -225,17 +243,6 @@ fn selected_piece_mover(
             commands
                 .entity(*piece)
                 .remove_bundle::<UndoableAnimationBundle<Transform>>();
-        }
-
-        let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
-            &rapier_context,
-            GlobalTransform::from_translation(snapped_cursor_position).with_rotation(global_transform.rotation),
-            collider,
-            *piece,
-        );
-
-        if would_move_over_invalid_position {
-            return;
         }
 
         piece_transform.translation = snapped_cursor_position;
