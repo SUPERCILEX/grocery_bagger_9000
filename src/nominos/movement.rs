@@ -70,15 +70,18 @@ fn piece_selection_handler(
     windows: Res<Windows>,
     camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
     rapier_context: Res<RapierContext>,
-    mut selected_shape: Query<
-        (
-            &GlobalTransform,
-            &mut Transform,
-            &Collider,
-            Option<&Original<Transform>>,
-        ),
-        With<NominoMarker>,
-    >,
+    mut pieces_queries: ParamSet<(
+        Query<
+            (
+                &GlobalTransform,
+                &mut Transform,
+                &Collider,
+                Option<&Original<Transform>>,
+            ),
+            With<NominoMarker>,
+        >,
+        Query<&mut Transform, With<NominoMarker>>,
+    )>,
     #[cfg(feature = "debug")] debug_options: Res<crate::debug::DebugOptions>,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Left) {
@@ -86,6 +89,7 @@ fn piece_selection_handler(
     }
 
     if let Some(piece) = &**selected_piece {
+        let mut selected_shape = pieces_queries.p0();
         let (global_transform, mut transform, collider, original) =
             selected_shape.get_mut(*piece).unwrap();
         if let Some(original) = original {
@@ -127,23 +131,38 @@ fn piece_selection_handler(
     }
 
     if let Some(cursor_position) = compute_cursor_position(windows, camera) {
+        let mut failed_selection = None;
+
         rapier_context.intersections_with_point(
             cursor_position.extend(0.),
             NOMINO_COLLIDER_GROUP.into(),
-            Some(&|entity| {
+            None,
+            |id| {
+                let mut selectable = selectables.contains(id);
+
                 #[cfg(feature = "debug")]
                 if debug_options.unrestricted_pieces {
-                    return true;
+                    selectable = true;
                 }
 
-                selectables.contains(entity)
-            }),
-            |id| {
-                *selected_piece = SelectedPiece(Some(id));
-                picked_up_events.send(PiecePickedUp(id));
-                false
+                if selectable {
+                    *selected_piece = SelectedPiece(Some(id));
+                    picked_up_events.send(PiecePickedUp(id));
+                }
+                failed_selection = if selectable { None } else { Some(id) };
+
+                !selectable
             },
         );
+
+        if let Some(failed) = failed_selection {
+            let mut piece_positions = pieces_queries.p1();
+            let piece_position = piece_positions.get_mut(failed).unwrap();
+
+            commands
+                .entity(failed)
+                .insert_bundle(animations::error_shake(*piece_position, &game_speed));
+        }
     }
 }
 
