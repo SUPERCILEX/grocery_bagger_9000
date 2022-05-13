@@ -80,7 +80,7 @@ fn piece_selection_handler(
             ),
             With<NominoMarker>,
         >,
-        Query<&mut Transform, With<NominoMarker>>,
+        Query<(&mut Transform, Option<&Original<Transform>>), With<NominoMarker>>,
     )>,
     #[cfg(feature = "debug")] debug_options: Res<crate::debug::DebugOptions>,
 ) {
@@ -159,7 +159,11 @@ fn piece_selection_handler(
 
         if let Some(failed) = failed_selection {
             let mut piece_positions = pieces_queries.p1();
-            let piece_position = piece_positions.get_mut(failed).unwrap();
+            let (mut piece_position, original) = piece_positions.get_mut(failed).unwrap();
+
+            if let Some(original) = original {
+                piece_position.rotation = original.rotation;
+            }
 
             commands
                 .entity(failed)
