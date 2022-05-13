@@ -1,4 +1,5 @@
 use bevy::{prelude::*, window::WindowResized};
+
 use smallvec::SmallVec;
 
 use crate::{
@@ -87,8 +88,11 @@ fn center_bags(
     if resized_events.iter().count() == 0 {
         return;
     }
-
     let bag_count = bags.iter().count();
+    if bag_count == 0 {
+        return;
+    }
+
     let bag_positions = compute_bag_coordinates(&dips_window, bag_count);
 
     for (index, (mut bag_position, bag_pieces)) in bags.iter_mut().enumerate() {
