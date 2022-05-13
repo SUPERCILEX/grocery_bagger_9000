@@ -135,19 +135,20 @@ fn move_pieces(
         *fsm = PieceMovementFsm::Ready;
     }
 
-    let (belt_pieces, belt_changes) = belt_pieces.single();
-    if !belt_changes.is_changed() {
-        return;
-    }
-    if *fsm == PieceMovementFsm::Ready {
-        *fsm = PieceMovementFsm::Loaded;
-        return;
-    }
+    if let Ok((belt_pieces, belt_changes)) = belt_pieces.get_single() {
+        if !belt_changes.is_changed() {
+            return;
+        }
+        if *fsm == PieceMovementFsm::Ready {
+            *fsm = PieceMovementFsm::Loaded;
+            return;
+        }
 
-    let base = Vec2::new(dips_window.width - LENGTH, dips_window.height - HEIGHT);
-    for (index, piece) in belt_pieces.iter().enumerate() {
-        let mut position = positions.get_mut(*piece).unwrap();
-        position.translation = piece_position(&belt_options, index, base);
+        let base = Vec2::new(dips_window.width - LENGTH, dips_window.height - HEIGHT);
+        for (index, piece) in belt_pieces.iter().enumerate() {
+            let mut position = positions.get_mut(*piece).unwrap();
+            position.translation = piece_position(&belt_options, index, base);
+        }
     }
 }
 
