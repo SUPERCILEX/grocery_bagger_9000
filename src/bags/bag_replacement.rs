@@ -1,6 +1,6 @@
 use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
-use bevy_tweening::{TweenCompleted};
+use bevy_tweening::TweenCompleted;
 use smallvec::SmallVec;
 
 use crate::{

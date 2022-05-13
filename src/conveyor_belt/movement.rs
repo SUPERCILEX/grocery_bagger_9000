@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, transform::TransformSystem::TransformPropagate};
 
 use crate::{
     conveyor_belt::{
@@ -10,6 +10,8 @@ use crate::{
     window_management::DipsWindow,
 };
 
+const SELECTABLE_SEPARATION: f32 = 2.;
+
 pub struct ConveyorBeltMovementPlugin;
 
 impl Plugin for ConveyorBeltMovementPlugin {
@@ -19,7 +21,10 @@ impl Plugin for ConveyorBeltMovementPlugin {
         app.add_system_to_stage(CoreStage::PreUpdate, reset_conveyor_belt);
         app.add_system(init_pieces);
         app.add_system(replace_pieces.after(init_pieces));
-        app.add_system_to_stage(CoreStage::PostUpdate, move_pieces);
+        app.add_system_to_stage(
+            CoreStage::PostUpdate,
+            move_pieces.before(TransformPropagate),
+        );
         app.add_system_to_stage(CoreStage::PostUpdate, update_piece_selectability);
     }
 }
@@ -44,7 +49,6 @@ fn init_pieces(
     mut level_initialized: EventReader<LevelLoaded>,
     mut conveyor_belt: ResMut<ConveyorBeltInstance>,
     mut belt_pieces: ResMut<BeltPieceIds>,
-    belt_options: Res<ConveyorBeltOptions>,
     dips_window: Res<DipsWindow>,
 ) {
     // TODO these ANDs should be flipped, but CLion completely destroys the code if
@@ -58,25 +62,17 @@ fn init_pieces(
             0.,
         );
 
-        for (index, piece_id) in (&mut **belt_pieces).iter_mut().enumerate() {
+        for piece_id in &mut **belt_pieces {
             if let Some(piece) = conveyor_belt.next() {
                 commands
                     .entity(**initialized_level)
                     .with_children(|parent| {
-                        let mut spawned = parent.spawn_nomino(
+                        let spawned = parent.spawn_nomino(
                             base,
                             piece.nomino,
                             piece.color,
-                            Transform::from_xyz(
-                                index as f32 * PIECE_WIDTH,
-                                PIECE_WIDTH,
-                                0.,
-                            )
-                                .with_rotation(piece.rotation),
+                            Transform::from_rotation(piece.rotation),
                         );
-                        if index < belt_options.num_pieces_selectable.into() {
-                            spawned.insert(Selectable);
-                        }
 
                         *piece_id = Some(spawned.id());
                     });
@@ -145,6 +141,7 @@ fn replace_pieces(
 
 fn move_pieces(
     belt_pieces: Res<BeltPieceIds>,
+    belt_options: Res<ConveyorBeltOptions>,
     mut positions: Query<&mut Transform, With<NominoMarker>>,
     dips_window: Res<DipsWindow>,
 ) {
@@ -155,10 +152,16 @@ fn move_pieces(
     let base = Vec3::new(dips_window.width - LENGTH, dips_window.height - HEIGHT, 0.);
     for (index, piece) in belt_pieces.iter().enumerate() {
         if let Some(piece) = piece {
+            let selectable_spacing = if index < belt_options.num_pieces_selectable.into() {
+                SELECTABLE_SEPARATION
+            } else {
+                0.
+            };
+
             let mut position = positions.get_mut(*piece).unwrap();
             position.translation = base
                 + Vec3::new(
-                    index as f32 * PIECE_WIDTH,
+                    index as f32 * PIECE_WIDTH - selectable_spacing,
                     PIECE_WIDTH,
                     position.translation.z,
                 );
