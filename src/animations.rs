@@ -177,6 +177,34 @@ pub fn bag_exit(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<T
     )
 }
 
+pub fn piece_placed(current: Transform, speed: &GameSpeed) -> Animator<Transform> {
+    let pop = current.scale + const_vec3!([0.2, 0.2, 0.2]);
+
+    Animator::new(Sequence::new([
+        Tween::new(
+            EaseMethod::EaseFunction(EaseFunction::CircularIn),
+            TweeningType::Once,
+            Duration::from_millis(100),
+            TransformScaleLens {
+                start: current.scale,
+                end: pop,
+            },
+        )
+        .with_speed(**speed),
+        Tween::new(
+            EaseMethod::EaseFunction(EaseFunction::CircularOut),
+            TweeningType::Once,
+            Duration::from_millis(150),
+            TransformScaleLens {
+                start: pop,
+                end: current.scale,
+            },
+        )
+        .with_speed(**speed)
+        .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+    ]))
+}
+
 fn change_animation_speed<T: Component>(
     game_speed: Res<GameSpeed>,
     mut animators: Query<&mut Animator<T>>,

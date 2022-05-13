@@ -116,15 +116,17 @@ fn piece_selection_handler(
         if let Some(bag) = intersects_with_bag
             && !straddles_bag_or_overlaps_pieces(&rapier_context, *global_transform, collider, *piece)
             && !piece_is_floating(&rapier_context, *global_transform, collider, *piece) {
-            commands.entity(*piece).remove::<Selectable>();
+            commands
+                .entity(*piece)
+                .remove::<Selectable>()
+                .insert(animations::piece_placed(*transform, &game_speed));
 
-            placed_events.send(PiecePlaced {
-                piece: *piece,
-                bag,
-            });
+            placed_events.send(PiecePlaced { piece: *piece, bag });
             *selected_piece = default();
         } else {
-            commands.entity(*piece).insert_bundle(animations::error_shake(*transform, &game_speed));
+            commands
+                .entity(*piece)
+                .insert_bundle(animations::error_shake(*transform, &game_speed));
         }
 
         return;

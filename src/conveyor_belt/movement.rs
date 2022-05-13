@@ -52,7 +52,6 @@ fn init_pieces(
     mut level_initialized: EventReader<LevelLoaded>,
     mut conveyor_belt: ResMut<ConveyorBeltInstance>,
     mut belt_pieces: ResMut<BeltPieceIds>,
-    belt_options: Res<ConveyorBeltOptions>,
     dips_window: Res<DipsWindow>,
 ) {
     // TODO these ANDs should be flipped, but CLion completely destroys the code if
