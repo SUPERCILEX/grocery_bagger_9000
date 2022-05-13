@@ -1,4 +1,5 @@
 use bevy::{prelude::*, transform::TransformSystem::TransformPropagate};
+use bevy_prototype_lyon::draw::DrawMode;
 
 use crate::{
     conveyor_belt::{
@@ -26,6 +27,7 @@ impl Plugin for ConveyorBeltMovementPlugin {
             move_pieces.before(TransformPropagate),
         );
         app.add_system_to_stage(CoreStage::PostUpdate, update_piece_selectability);
+        app.add_system_to_stage(CoreStage::PostUpdate, fade_non_selectable_pieces);
     }
 }
 
@@ -49,6 +51,7 @@ fn init_pieces(
     mut level_initialized: EventReader<LevelLoaded>,
     mut conveyor_belt: ResMut<ConveyorBeltInstance>,
     mut belt_pieces: ResMut<BeltPieceIds>,
+    belt_options: Res<ConveyorBeltOptions>,
     dips_window: Res<DipsWindow>,
 ) {
     // TODO these ANDs should be flipped, but CLion completely destroys the code if
@@ -56,21 +59,23 @@ fn init_pieces(
     if let Some(conveyor_belt) = &mut **conveyor_belt &&
     let Some(initialized_level) = level_initialized.iter().last()
     {
-        let base = Transform::from_xyz(
-            dips_window.width - LENGTH,
-            dips_window.height - HEIGHT,
-            0.,
-        );
+        let base = Transform::from_xyz(dips_window.width - LENGTH, dips_window.height - HEIGHT, 0.);
 
-        for piece_id in &mut **belt_pieces {
+        for (index, piece_id) in belt_pieces.iter_mut().enumerate() {
             if let Some(piece) = conveyor_belt.next() {
+                let color = faded_piece_color(
+                    piece.color.render(),
+                    index as f32 / belt_options.num_pieces_selectable as f32,
+                );
+
                 commands
                     .entity(**initialized_level)
                     .with_children(|parent| {
-                        let spawned = parent.spawn_nomino(
+                        let spawned = parent.spawn_nomino_with_color(
                             base,
                             piece.nomino,
                             piece.color,
+                            color,
                             Transform::from_rotation(piece.rotation),
                         );
 
@@ -121,13 +126,7 @@ fn replace_pieces(
                             base,
                             piece.nomino,
                             piece.color,
-                            Transform::from_xyz(
-                                (MAX_NUM_PIECES - 1) as f32
-                                    * PIECE_WIDTH,
-                                PIECE_WIDTH,
-                                0.,
-                            )
-                                .with_rotation(piece.rotation),
+                            Transform::from_rotation(piece.rotation),
                         );
 
                         belt_pieces[MAX_NUM_PIECES - 1] = Some(spawned.id());
@@ -189,4 +188,67 @@ fn update_piece_selectability(
             }
         }
     }
+}
+
+fn fade_non_selectable_pieces(
+    belt_pieces: Res<BeltPieceIds>,
+    belt_options: Res<ConveyorBeltOptions>,
+    mut colors: Query<&mut DrawMode, With<NominoMarker>>,
+) {
+    if !belt_pieces.is_changed() {
+        return;
+    }
+
+    let start = belt_options.num_pieces_selectable.into();
+
+    for piece in &belt_pieces[..start] {
+        if let Some(piece) = piece {
+            let mut draw_mode = colors.get_mut(*piece).unwrap();
+            if let DrawMode::Outlined {
+                ref mut fill_mode, ..
+            } = *draw_mode
+            {
+                let mut color = fill_mode.color.as_hsla();
+                if let Color::Hsla { lightness, .. } = &mut color {
+                    *lightness = 0.5;
+                } else {
+                    unreachable!()
+                }
+                fill_mode.color = color;
+            }
+        } else {
+            break;
+        }
+    }
+
+    let non_selectables = (belt_pieces.len() - start) as f32;
+    for (index, piece) in belt_pieces[start..].iter().enumerate() {
+        if let Some(piece) = piece {
+            let mut draw_mode = colors.get_mut(*piece).unwrap();
+            if let DrawMode::Outlined {
+                ref mut fill_mode, ..
+            } = *draw_mode
+            {
+                fill_mode.color =
+                    faded_piece_color(fill_mode.color, index as f32 / non_selectables);
+            }
+        } else {
+            break;
+        }
+    }
+}
+
+fn faded_piece_color(from: Color, percentage: f32) -> Color {
+    let ease_out_cubic = |x: f32| {
+        let x1 = 1. - x;
+        1. - x1 * x1 * x1
+    };
+
+    let mut color = from.as_hsla();
+    if let Color::Hsla { lightness, .. } = &mut color {
+        *lightness = 0.4 - 0.2 * ease_out_cubic(percentage);
+    } else {
+        unreachable!()
+    }
+    color
 }
