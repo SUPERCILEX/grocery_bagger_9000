@@ -113,16 +113,17 @@ fn replace_full_bags(
             p
         };
 
-        let spawned_bag = commands
+        commands
             .entity(current_level.root.unwrap())
-            .with_children(|parent| parent.spawn_bag_into(new_bag_start))
-            .out;
-
-        commands.entity(spawned_bag).insert(animations::bag_enter(
-            new_bag_start,
-            *current_bag_position,
-            &game_speed,
-        ));
+            .with_children(|parent| {
+                parent
+                    .spawn_bag_into(new_bag_start)
+                    .insert(animations::bag_enter(
+                        new_bag_start,
+                        *current_bag_position,
+                        &game_speed,
+                    ));
+            });
 
         let exit_bag_position = {
             let mut p = *current_bag_position;
