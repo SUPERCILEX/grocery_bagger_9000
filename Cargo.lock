@@ -1528,6 +1528,7 @@ dependencies = [
  "bevy_rapier3d",
  "bevy_screen_diags",
  "bevy_tweening",
+ "bitflags",
  "console_error_panic_hook",
  "log",
  "rand",

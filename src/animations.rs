@@ -5,6 +5,7 @@ use bevy_tweening::{
     lens::{TransformPositionLens, TransformRotationLens, TransformScaleLens},
     *,
 };
+use bitflags::bitflags;
 
 pub struct AnimationPlugin;
 
@@ -12,7 +13,9 @@ impl Plugin for AnimationPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<GameSpeed>();
 
-        app.add_system(change_animation_speed::<Transform>);
+        app.add_system(
+            change_animation_speed::<Transform>.before(AnimationSystem::AnimationUpdate),
+        );
         app.add_system_to_stage(CoreStage::PostUpdate, cleanup_animations::<Transform>);
     }
 }
@@ -33,6 +36,13 @@ pub struct Original<T: Component>(T);
 pub struct UndoableAnimationBundle<T: Component> {
     animator: Animator<T>,
     original: Original<T>,
+}
+
+bitflags! {
+    pub struct AnimationEvent: u64 {
+        const COMPLETED = 1;
+        const BAG_OFF_SCREEN = 1 << 1;
+    }
 }
 
 type DynTweenable = Box<dyn Tweenable<Transform> + Send + Sync + 'static>;
@@ -78,7 +88,7 @@ pub fn error_shake(current: Transform, speed: &GameSpeed) -> UndoableAnimationBu
                 },
             )
             .with_speed(**speed)
-            .with_completed_event(true, u64::MAX),
+            .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
         ])),
         original: Original(current),
     }
@@ -114,7 +124,7 @@ pub fn bag_enter(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<
                     },
                 )
                 .with_speed(**speed)
-                .with_completed_event(true, u64::MAX),
+                .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
             ) as DynTweenable,
             Box::new(Sequence::new([
                 Tween::new(
@@ -160,7 +170,10 @@ pub fn bag_exit(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<T
             },
         )
         .with_speed(**speed)
-        .with_completed_event(true, u64::MAX),
+        .with_completed_event(
+            true,
+            (AnimationEvent::COMPLETED | AnimationEvent::BAG_OFF_SCREEN).bits(),
+        ),
     )
 }
 
@@ -181,9 +194,11 @@ fn cleanup_animations<T: Component>(
     mut commands: Commands,
     mut completed_animations: EventReader<TweenCompleted>,
 ) {
-    for TweenCompleted { entity, .. } in completed_animations.iter() {
-        commands
-            .entity(*entity)
-            .remove_bundle::<UndoableAnimationBundle<T>>();
+    for TweenCompleted { entity, user_data } in completed_animations.iter() {
+        if *user_data & AnimationEvent::COMPLETED.bits() != 0 {
+            commands
+                .entity(*entity)
+                .remove_bundle::<UndoableAnimationBundle<T>>();
+        }
     }
 }
