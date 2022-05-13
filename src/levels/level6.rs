@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::{
     bags::BagSpawner,
     colors::NominoColor,
-    conveyor_belt::{ConveyorBeltInstance, RandomPiecesConveyorBelt},
+    conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
     levels::{CurrentLevel, LevelLoaded},
     nominos::TETROMINOS,
     window_management::DipsWindow,
@@ -23,7 +23,6 @@ fn init_level(
     mut commands: Commands,
     mut current: ResMut<CurrentLevel>,
     mut level_initialized: EventWriter<LevelLoaded>,
-    mut conveyor_belt: ResMut<ConveyorBeltInstance>,
     dips_window: Res<DipsWindow>,
 ) {
     if current.level != 5 || current.root.is_some() {
@@ -35,7 +34,7 @@ fn init_level(
         .with_children(|parent| {
             parent.spawn_bag::<2>(&dips_window);
 
-            **conveyor_belt = Some(Box::new(RandomPiecesConveyorBelt::new(
+            parent.spawn_belt(Box::new(RandomPiecesConveyorBelt::new(
                 NUM_PIECES,
                 TETROMINOS,
                 [NominoColor::Blue, NominoColor::Green],

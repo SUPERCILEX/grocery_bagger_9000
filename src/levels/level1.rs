@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::{
     bags::{compute_bag_coordinates, BagSpawner, BAG_ORIGIN},
     colors::NominoColor,
-    conveyor_belt::{ConveyorBeltInstance, Piece, PresetPiecesConveyorBelt},
+    conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     levels::{CurrentLevel, LevelLoaded},
     nominos::{Nomino, NominoSpawner, PiecePlaced, DEG_90},
     window_management::DipsWindow,
@@ -23,7 +23,6 @@ fn init_level(
     mut commands: Commands,
     mut current: ResMut<CurrentLevel>,
     mut level_initialized: EventWriter<LevelLoaded>,
-    mut conveyor_belt: ResMut<ConveyorBeltInstance>,
     mut placed_pieces: EventWriter<PiecePlaced>,
     dips_window: Res<DipsWindow>,
 ) {
@@ -34,7 +33,7 @@ fn init_level(
     let (root, bag) = commands
         .spawn_bundle(TransformBundle::default())
         .with_children(|parent| {
-            **conveyor_belt = Some(Box::new(PresetPiecesConveyorBelt::new([Piece {
+            parent.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([Piece {
                 nomino: Nomino::TetrominoL,
                 color: LEVEL_COLOR,
                 rotation: Quat::IDENTITY,

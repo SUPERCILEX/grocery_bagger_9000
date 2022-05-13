@@ -9,9 +9,6 @@ use crate::{
     nominos::{Nomino, DEG_180, DEG_MIRRORED},
 };
 
-#[derive(Default, Deref, DerefMut)]
-pub struct ConveyorBeltInstance(pub Option<Box<dyn ConveyorBelt + Send + Sync>>);
-
 pub trait ConveyorBelt {
     fn next(&mut self) -> Option<Piece>;
 }
