@@ -1,7 +1,6 @@
-use std::fmt::Write;
-use bevy::prelude::*;
-use bevy::ui::PositionType::Absolute;
 use crate::levels::scoring::CurrentScore;
+use bevy::{prelude::*};
+use std::fmt::Write;
 
 pub struct DisplayScorePlugin;
 
@@ -29,7 +28,11 @@ fn update_score(score: Res<CurrentScore>, mut text_query: Query<&mut Text, With<
     write!(text, "{}{}", STRING_FORMAT, new_score).unwrap();
 }
 
-fn setup_score(mut commands: Commands, asset_server: Res<AssetServer>, score: ResMut<CurrentScore>) {
+fn setup_score(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    _score: ResMut<CurrentScore>,
+) {
     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
     commands
         .spawn_bundle(TextBundle {

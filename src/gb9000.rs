@@ -4,9 +4,8 @@ use bevy_tweening::TweeningPlugin;
 
 use crate::{
     animations::AnimationPlugin, bags::BagsPlugin, conveyor_belt::ConveyorBeltPlugin,
-    levels::LevelsPlugin, nominos::PiecesPlugin,
+    levels::LevelsPlugin, nominos::PiecesPlugin, ui::UiPlugin,
 };
-use crate::ui::UiPlugin;
 
 pub struct GroceryBagger9000Plugin;
 

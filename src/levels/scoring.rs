@@ -1,6 +1,6 @@
-use std::collections::{HashSet, VecDeque};
-use std::iter::Map;
-use std::collections::HashMap;
+use std::{
+    collections::{HashMap, HashSet, VecDeque},
+};
 
 use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
@@ -8,9 +8,9 @@ use bevy_rapier3d::prelude::*;
 use crate::{
     bags::{BagMarker, BAG_CAPACITY, BAG_ORIGIN},
     colors::NominoColor,
+    levels::LevelUnloaded,
     nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
-use crate::levels::LevelUnloaded;
 
 pub struct ScoringPlugin;
 
@@ -27,14 +27,14 @@ impl Plugin for ScoringPlugin {
 #[derive(Component)]
 pub struct CurrentScore {
     pub points: i32,
-    score_map: HashMap<Entity, i32>
+    score_map: HashMap<Entity, i32>,
 }
 
 impl Default for CurrentScore {
     fn default() -> Self {
         CurrentScore {
             points: 0,
-            score_map: HashMap::new()
+            score_map: HashMap::new(),
         }
     }
 }
@@ -96,9 +96,12 @@ fn score_bags(
     }
 }
 
-fn reset_score(mut level_unloaded: EventReader<LevelUnloaded>, mut current_score: ResMut<CurrentScore>) {
+fn reset_score(
+    mut level_unloaded: EventReader<LevelUnloaded>,
+    mut current_score: ResMut<CurrentScore>,
+) {
     if level_unloaded.iter().count() > 0 {
-        *current_score = CurrentScore{..default()}
+        *current_score = CurrentScore { ..default() }
     }
 }
 

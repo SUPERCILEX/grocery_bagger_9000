@@ -18,9 +18,9 @@ mod debug;
 mod gb9000;
 mod levels;
 mod nominos;
+mod ui;
 mod window_management;
 mod window_utils;
-mod ui;
 
 fn main() {
     #[cfg(target_arch = "wasm32")]
