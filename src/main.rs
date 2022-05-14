@@ -20,6 +20,7 @@ mod levels;
 mod nominos;
 mod window_management;
 mod window_utils;
+mod ui;
 
 fn main() {
     #[cfg(target_arch = "wasm32")]

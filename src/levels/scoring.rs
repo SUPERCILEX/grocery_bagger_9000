@@ -1,4 +1,6 @@
 use std::collections::{HashSet, VecDeque};
+use std::iter::Map;
+use std::collections::HashMap;
 
 use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
@@ -8,14 +10,32 @@ use crate::{
     colors::NominoColor,
     nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
+use crate::levels::LevelUnloaded;
 
 pub struct ScoringPlugin;
 
-const BLOCK_POINT_VALUE: u32 = 25;
+const BLOCK_POINT_VALUE: i32 = 25;
 
 impl Plugin for ScoringPlugin {
     fn build(&self, app: &mut App) {
+        app.init_resource::<CurrentScore>();
         app.add_system_to_stage(CoreStage::PostUpdate, score_bags);
+        app.add_system_to_stage(CoreStage::PreUpdate, reset_score);
+    }
+}
+
+#[derive(Component)]
+pub struct CurrentScore {
+    pub points: i32,
+    score_map: HashMap<Entity, i32>
+}
+
+impl Default for CurrentScore {
+    fn default() -> Self {
+        CurrentScore {
+            points: 0,
+            score_map: HashMap::new()
+        }
     }
 }
 
@@ -24,6 +44,7 @@ fn score_bags(
     bags: Query<&GlobalTransform, With<BagMarker>>,
     color_wrapper: Query<&NominoColor, With<NominoMarker>>,
     rapier_context: Res<RapierContext>,
+    mut current_score: ResMut<CurrentScore>,
 ) {
     for PiecePlaced { bag, .. } in piece_placements.iter() {
         let bag_coords = *bags.get(*bag).unwrap();
@@ -55,7 +76,7 @@ fn score_bags(
         // dbg!(color_block_count_map);
         // dbg!(bag_matrix);
         // dbg!(block_count);
-        let num_holes = count_holes(&bag_matrix, block_count);
+        let num_holes = count_holes(&bag_matrix, block_count) as i32;
         let hole_penalty = num_holes * BLOCK_POINT_VALUE;
         // dbg!(num_holes);
         let color_score = calculate_color_score(color_block_count_map, block_count);
@@ -65,6 +86,19 @@ fn score_bags(
         dbg!(mult);
         let total_bag_score = mult * (color_score - hole_penalty);
         dbg!(total_bag_score);
+        let bag_score = current_score.score_map.entry(*bag).or_insert(0);
+        *bag_score = total_bag_score;
+        let mut total_level_score = 0;
+        for score in current_score.score_map.values() {
+            total_level_score += *score;
+        }
+        current_score.points = total_level_score;
+    }
+}
+
+fn reset_score(mut level_unloaded: EventReader<LevelUnloaded>, mut current_score: ResMut<CurrentScore>) {
+    if level_unloaded.iter().count() > 0 {
+        *current_score = CurrentScore{..default()}
     }
 }
 
@@ -127,14 +161,14 @@ fn touch_neighbor(
     }
 }
 
-fn calculate_color_score(color_map: [u8; NominoColor::COUNT], _block_count: u32) -> u32 {
+fn calculate_color_score(color_map: [u8; NominoColor::COUNT], _block_count: u32) -> i32 {
     let mut ranked_colors = Vec::from(color_map);
     ranked_colors.sort_unstable();
     ranked_colors.reverse();
-    let mut color_score: u32 = 0;
+    let mut color_score: i32 = 0;
     let mut total_blocks: usize = 0;
     for x in 0..ranked_colors.len() {
-        let current_color_count: u32 = ranked_colors[x].into();
+        let current_color_count: i32 = ranked_colors[x].into();
         if current_color_count == 0 {
             break;
         }
@@ -144,7 +178,7 @@ fn calculate_color_score(color_map: [u8; NominoColor::COUNT], _block_count: u32)
         if perfect_bag_bonus {
             raw_points += 100;
         }
-        let adjusted_points = raw_points * (1 + 1 / (1 + (x as u32)));
+        let adjusted_points = raw_points * (1 + 1 / (1 + (x as i32)));
         dbg!(adjusted_points);
         color_score += adjusted_points;
     }
@@ -154,7 +188,7 @@ fn calculate_color_score(color_map: [u8; NominoColor::COUNT], _block_count: u32)
     color_score
 }
 
-fn calculate_bag_fill_multiplier(block_count: u32) -> u32 {
+fn calculate_bag_fill_multiplier(block_count: u32) -> i32 {
     match block_count as usize {
         0..=19 => return 1,
         20..=27 => return 2,

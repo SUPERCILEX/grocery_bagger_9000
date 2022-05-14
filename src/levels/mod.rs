@@ -6,7 +6,7 @@ use level3::Level3Plugin;
 use level4::Level4Plugin;
 use level5::Level5Plugin;
 use level6::Level6Plugin;
-use scoring::ScoringPlugin;
+pub use scoring::ScoringPlugin;
 use transitions::LevelTransitionPlugin;
 pub use transitions::{CurrentLevel, LevelLoaded, LevelUnloaded};
 
@@ -16,7 +16,7 @@ mod level3;
 mod level4;
 mod level5;
 mod level6;
-mod scoring;
+pub(crate) mod scoring;
 mod transitions;
 
 pub struct LevelsPlugin;

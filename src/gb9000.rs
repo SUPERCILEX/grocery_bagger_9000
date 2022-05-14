@@ -6,6 +6,7 @@ use crate::{
     animations::AnimationPlugin, bags::BagsPlugin, conveyor_belt::ConveyorBeltPlugin,
     levels::LevelsPlugin, nominos::PiecesPlugin,
 };
+use crate::ui::UiPlugin;
 
 pub struct GroceryBagger9000Plugin;
 
@@ -16,7 +17,7 @@ impl Plugin for GroceryBagger9000Plugin {
         app.add_plugin(BagsPlugin);
         app.add_plugin(ConveyorBeltPlugin);
         app.add_plugin(AnimationPlugin);
-
+        app.add_plugin(UiPlugin);
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
         app.insert_resource(RapierConfiguration {
             physics_pipeline_active: false,
