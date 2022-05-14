@@ -61,7 +61,6 @@ fn setup(mut commands: Commands, windows: Res<Windows>, mut dips_window: ResMut<
     );
 
     commands.spawn_bundle(camera_2d).insert(MainCamera);
-    #[cfg(feature = "debug")]
     commands.spawn_bundle(UiCameraBundle::default());
 }
 
