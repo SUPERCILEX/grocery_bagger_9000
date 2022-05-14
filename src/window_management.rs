@@ -46,6 +46,7 @@ pub struct MainCamera;
 pub struct DipsWindow {
     pub width: f32,
     pub height: f32,
+    pub scale: f32,
 }
 
 fn setup(mut commands: Commands, windows: Res<Windows>, mut dips_window: ResMut<DipsWindow>) {
@@ -99,6 +100,7 @@ fn scale_window(
 
     dips_window.width = window_width * proj.scale;
     dips_window.height = window_height * proj.scale;
+    dips_window.scale = proj.scale;
 }
 
 fn full_screen_toggle(mut windows: ResMut<Windows>, keyboard_input: Res<Input<KeyCode>>) {

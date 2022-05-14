@@ -8,7 +8,7 @@ use crate::{
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP, BAG_FLOOR_COLLIDER_GROUP},
     levels::LevelUnloaded,
     nominos::*,
-    window_management::MainCamera,
+    window_management::{DipsWindow, MainCamera},
     window_utils::compute_cursor_position,
 };
 
@@ -204,6 +204,8 @@ fn piece_rotation_handler(
 fn selected_piece_mover(
     mut commands: Commands,
     selected_piece: Res<SelectedPiece>,
+    dips_window: Res<DipsWindow>,
+    mut cursor_movements: EventReader<CursorMoved>,
     mut pieces: Query<
         (
             &GlobalTransform,
@@ -214,12 +216,12 @@ fn selected_piece_mover(
         With<NominoMarker>,
     >,
     rapier_context: Res<RapierContext>,
-    windows: Res<Windows>,
-    camera_query: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {
     if let Some(piece) = &**selected_piece &&
-    let Some(cursor_position) = compute_cursor_position(windows, camera_query)
+    let Some(moved_event) = cursor_movements.iter().last()
     {
+        let cursor_position = moved_event.position * dips_window.scale;
+
         let (global_transform, mut piece_transform, collider, original) =
             pieces.get_mut(*piece).unwrap();
         let snapped_cursor_position = cursor_position

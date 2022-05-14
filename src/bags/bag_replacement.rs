@@ -14,7 +14,6 @@ use crate::{
     conveyor_belt,
     levels::CurrentLevel,
     nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
-    window_management::DipsWindow,
 };
 
 pub struct BagReplacementPlugin;
@@ -36,7 +35,6 @@ struct BagFilled(Entity);
 pub struct BagPieces(pub SmallVec<[Entity; conveyor_belt::MAX_NUM_PIECES]>);
 
 fn detect_filled_bags(
-    _commands: Commands,
     mut piece_placements: EventReader<PiecePlaced>,
     mut bags: Query<(&GlobalTransform, &mut BagPieces), With<BagMarker>>,
     mut filled_events: EventWriter<BagFilled>,
@@ -96,7 +94,6 @@ fn replace_full_bags(
     mut commands: Commands,
     mut filled_events: EventReader<BagFilled>,
     current_level: Res<CurrentLevel>,
-    _dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
     bag_positions: Query<&Transform, With<BagMarker>>,
     bag_pieces: Query<&BagPieces, With<BagMarker>>,
