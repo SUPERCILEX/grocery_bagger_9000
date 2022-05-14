@@ -1,6 +1,8 @@
-use crate::levels::scoring::CurrentScore;
-use bevy::prelude::*;
 use std::fmt::Write;
+
+use bevy::prelude::*;
+
+use crate::levels::scoring::CurrentScore;
 
 pub struct DisplayScorePlugin;
 
@@ -13,26 +15,24 @@ impl Plugin for DisplayScorePlugin {
 
 const FONT_SIZE: f32 = 32.0;
 const FONT_COLOR: Color = Color::BLUE;
-const STRING_FORMAT: &str = "Score: ";
-const STRING_MISSING: &str = "Score: ???";
 
 #[derive(Component)]
 struct ScoreText;
 
 fn update_score(score: Res<CurrentScore>, mut text_query: Query<&mut Text, With<ScoreText>>) {
+    if !score.is_changed() {
+        return;
+    }
+
     let new_score = score.points;
     let mut text = text_query.single_mut();
     let text = &mut text.sections[0].value;
     text.clear();
 
-    write!(text, "{}{}", STRING_FORMAT, new_score).unwrap();
+    write!(text, "Score: {new_score}").unwrap();
 }
 
-fn setup_score(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    _score: ResMut<CurrentScore>,
-) {
+fn setup_score(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
     commands
         .spawn_bundle(TextBundle {
