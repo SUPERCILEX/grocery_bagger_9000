@@ -202,9 +202,9 @@ pub fn piece_loaded(
         let x2 = x * x;
         let x4 = x2 * x2;
 
-        -55.48 * x4 * x2 + 156.48 * x * x4 - 147. * x4 + 44. * x * x2 + 3. * x2
+        -42.48 * x4 * x2 + 120.48 * x * x4 - 114. * x4 + 34. * x * x2 + 3. * x2
     };
-    let steady_velocity_time = (to.translation.x - from.translation.x).abs() as u64 * 10;
+    let steady_velocity_time = (to.translation.x - from.translation.x).abs() as u64 * 16;
     let enter = Tween::new(
         EaseMethod::CustomFunction(bezier_6th),
         TweeningType::Once,
@@ -222,7 +222,7 @@ pub fn piece_loaded(
             Tween::new(
                 EaseMethod::Linear,
                 TweeningType::Once,
-                Duration::from_millis(60 * index as u64),
+                Duration::from_millis(10 * index as u64),
                 NoopLens,
             )
             .with_speed(**speed),
