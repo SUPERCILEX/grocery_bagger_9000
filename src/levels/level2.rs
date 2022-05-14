@@ -4,7 +4,10 @@ use crate::{
     bags::{compute_bag_coordinates, BagSpawner, BAG_ORIGIN},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    levels::{init::level_init_chrome, CurrentLevel, LevelLoaded},
+    levels::{
+        init::{level_init_chrome, InitSystem::LevelInit},
+        CurrentLevel, LevelLoaded,
+    },
     nominos::{Nomino, NominoSpawner, PiecePlaced, DEG_90, DEG_MIRRORED},
     window_management::DipsWindow,
 };
@@ -15,7 +18,7 @@ pub struct Level2Plugin;
 
 impl Plugin for Level2Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::PreUpdate, init_level);
+        app.add_system_to_stage(CoreStage::PreUpdate, init_level.label(LevelInit));
     }
 }
 

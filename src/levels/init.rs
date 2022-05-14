@@ -2,6 +2,11 @@ use bevy::prelude::*;
 
 use crate::levels::{CurrentLevel, LevelLoaded};
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
+pub enum InitSystem {
+    LevelInit,
+}
+
 pub fn level_init_chrome(
     level_num: u16,
     mut current: ResMut<CurrentLevel>,
