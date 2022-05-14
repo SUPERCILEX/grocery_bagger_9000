@@ -1,5 +1,5 @@
 use crate::levels::scoring::CurrentScore;
-use bevy::{prelude::*};
+use bevy::prelude::*;
 use std::fmt::Write;
 
 pub struct DisplayScorePlugin;

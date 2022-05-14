@@ -140,6 +140,7 @@ fn piece_selection_handler(
             NOMINO_COLLIDER_GROUP.into(),
             None,
             |id| {
+                #[allow(unused_mut)]
                 let mut selectable = selectables.contains(id);
 
                 #[cfg(feature = "debug")]
