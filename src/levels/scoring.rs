@@ -7,7 +7,7 @@ use smallvec::SmallVec;
 use crate::{
     bags::{BagMarker, BAG_CAPACITY, BAG_ORIGIN},
     colors::NominoColor,
-    levels::LevelUnloaded,
+    levels::LevelLoaded,
     nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
 
@@ -74,11 +74,12 @@ fn score_bags(
 }
 
 fn reset_score(
-    mut level_unloaded: EventReader<LevelUnloaded>,
+    mut level_unloaded: EventReader<LevelLoaded>,
     mut current_score: ResMut<CurrentScore>,
 ) {
     if level_unloaded.iter().count() > 0 {
-        *current_score = CurrentScore { ..default() }
+        current_score.points = 0;
+        current_score.score_map.clear();
     }
 }
 
