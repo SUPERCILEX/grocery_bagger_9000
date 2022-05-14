@@ -3,6 +3,8 @@ use bevy_prototype_lyon::draw::DrawMode;
 use smallvec::SmallVec;
 
 use crate::{
+    animations,
+    animations::GameSpeed,
     conveyor_belt::{
         consts::{HEIGHT, LENGTH, MAX_NUM_PIECES, PIECE_WIDTH},
         spawn::{ConveyorBeltInstance, ConveyorBeltMarker},
@@ -40,22 +42,34 @@ fn init_pieces(
         With<ConveyorBeltMarker>,
     >,
     dips_window: Res<DipsWindow>,
+    game_speed: Res<GameSpeed>,
     belt_options: Res<ConveyorBeltOptions>,
 ) {
     if let Some(initialized_level) = level_loaded.iter().last() {
         let (mut conveyor_belt, mut belt_pieces) = conveyor_belt.single_mut();
         for i in 0..MAX_NUM_PIECES {
+            let start = Transform::from_xyz(
+                dips_window.width + PIECE_WIDTH,
+                dips_window.height - HEIGHT + PIECE_WIDTH,
+                0.,
+            );
             let spawned = maybe_spawn_piece(
                 &mut commands,
+                start,
                 i,
                 **initialized_level,
                 &mut ***conveyor_belt,
-                &dips_window,
                 &belt_options,
             );
 
             if let Some(spawned) = spawned {
                 belt_pieces.push(spawned);
+                commands.entity(spawned).insert(animations::piece_loaded(
+                    i,
+                    start,
+                    Transform::from_translation(piece_position(&dips_window, &belt_options, i)),
+                    &game_speed,
+                ));
             } else {
                 break;
             }
@@ -101,12 +115,15 @@ fn replace_pieces(
                 }
             }
 
+            let position = MAX_NUM_PIECES - 1;
+            let transform =
+                Transform::from_translation(piece_position(&dips_window, &belt_options, position));
             let spawned = maybe_spawn_piece(
                 &mut commands,
-                MAX_NUM_PIECES - 1,
+                transform,
+                position,
                 current_level.root.unwrap(),
                 &mut ***conveyor_belt,
-                &dips_window,
                 &belt_options,
             );
             if let Some(spawned) = spawned {
@@ -144,21 +161,25 @@ fn move_pieces(
             return;
         }
 
-        let base = Vec2::new(dips_window.width - LENGTH, dips_window.height - HEIGHT);
         for (index, piece) in belt_pieces.iter().enumerate() {
             let mut position = positions.get_mut(*piece).unwrap();
-            position.translation = piece_position(&belt_options, index, base);
+            position.translation = piece_position(&dips_window, &belt_options, index);
         }
     }
 }
 
-fn piece_position(belt_options: &Res<ConveyorBeltOptions>, index: usize, base: Vec2) -> Vec3 {
+fn piece_position(
+    dips_window: &Res<DipsWindow>,
+    belt_options: &Res<ConveyorBeltOptions>,
+    index: usize,
+) -> Vec3 {
     let selectable_spacing = if index < belt_options.num_pieces_selectable.into() {
         SELECTABLE_SEPARATION
     } else {
         0.
     };
 
+    let base = Vec2::new(dips_window.width - LENGTH, dips_window.height - HEIGHT);
     let offset = Vec2::new(index as f32 * PIECE_WIDTH - selectable_spacing, PIECE_WIDTH);
     (base + offset).round().extend(0.01)
 }
@@ -175,10 +196,10 @@ fn faded_piece_color(from: Color) -> Color {
 
 fn maybe_spawn_piece(
     commands: &mut Commands,
+    transform: Transform,
     position: usize,
     root: Entity,
     conveyor_belt: &mut dyn ConveyorBelt,
-    dips_window: &Res<DipsWindow>,
     belt_options: &Res<ConveyorBeltOptions>,
 ) -> Option<Entity> {
     conveyor_belt.next().map(|piece| {
@@ -187,14 +208,12 @@ fn maybe_spawn_piece(
         } else {
             faded_piece_color(piece.color.render())
         };
-        let base = Vec2::new(dips_window.width - LENGTH, dips_window.height - HEIGHT);
 
         commands
             .entity(root)
             .with_children(|parent| {
                 let mut commands = parent.spawn_nomino(
-                    Transform::from_translation(piece_position(belt_options, position, base))
-                        .with_rotation(piece.rotation),
+                    transform.with_rotation(piece.rotation),
                     piece.nomino,
                     piece.color,
                     color,

@@ -108,14 +108,7 @@ pub fn bag_enter(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<
         Box::new(Tracks::new([
             Box::new(
                 Tween::new(
-                    EaseMethod::CustomFunction(|x: f32| {
-                        const C1: f32 = 1.70158;
-                        const C3: f32 = C1 + 1.;
-
-                        let x1 = x - 1.;
-                        let x2 = x1 * x1;
-                        1. + C3 * x1 * x2 + C1 * x2
-                    }),
+                    EaseMethod::CustomFunction(ease_out_back),
                     TweeningType::Once,
                     Duration::from_millis(200),
                     TransformScaleLens {
@@ -155,13 +148,7 @@ pub fn bag_enter(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<
 pub fn bag_exit(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<Transform> {
     Animator::new(
         Tween::new(
-            EaseMethod::CustomFunction(|x| {
-                const C1: f32 = 1.70158;
-                const C3: f32 = C1 + 1.;
-
-                let x2 = x * x;
-                C3 * x * x2 - C1 * x2
-            }),
+            EaseMethod::CustomFunction(ease_in_back),
             TweeningType::Once,
             Duration::from_millis(500),
             TransformPositionLens {
@@ -205,6 +192,39 @@ pub fn piece_placed(current: Transform, speed: &GameSpeed) -> Animator<Transform
     ]))
 }
 
+pub fn piece_loaded(
+    index: usize,
+    from: Transform,
+    to: Transform,
+    speed: &GameSpeed,
+) -> Animator<Transform> {
+    Animator::new(Sequence::new([
+        Tween::new(
+            EaseMethod::Linear,
+            TweeningType::Once,
+            Duration::from_millis(60 * (index + 1) as u64),
+            NoopLens,
+        )
+        .with_speed(**speed),
+        Tween::new(
+            EaseMethod::CustomFunction(|x| {
+                let x2 = x * x;
+                let x4 = x2 * x2;
+
+                -55.48 * x4 * x2 + 156.48 * x * x4 - 147. * x4 + 44. * x * x2 + 3. * x2
+            }),
+            TweeningType::Once,
+            Duration::from_millis((to.translation.x - from.translation.x).abs() as u64 * 10),
+            TransformPositionLens {
+                start: from.translation,
+                end: to.translation,
+            },
+        )
+        .with_speed(**speed)
+        .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+    ]))
+}
+
 fn change_animation_speed<T: Component>(
     game_speed: Res<GameSpeed>,
     mut animators: Query<&mut Animator<T>>,
@@ -229,4 +249,21 @@ fn cleanup_animations<T: Component>(
                 .remove_bundle::<UndoableAnimationBundle<T>>();
         }
     }
+}
+
+fn ease_in_back(x: f32) -> f32 {
+    const C1: f32 = 1.70158;
+    const C3: f32 = C1 + 1.;
+
+    let x2 = x * x;
+    C3 * x * x2 - C1 * x2
+}
+
+fn ease_out_back(x: f32) -> f32 {
+    const C1: f32 = 1.70158;
+    const C3: f32 = C1 + 1.;
+
+    let x1 = x - 1.;
+    let x2 = x1 * x1;
+    1. + C3 * x1 * x2 + C1 * x2
 }
