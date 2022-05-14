@@ -5,7 +5,7 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     levels::{
-        init::{level_init_chrome, InitSystem::LevelInit},
+        init::{level_init_chrome, LevelInitLabel},
         CurrentLevel, LevelLoaded,
     },
     nominos::{Nomino, DEG_180, DEG_MIRRORED},
@@ -18,7 +18,7 @@ pub struct Level3Plugin;
 
 impl Plugin for Level3Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::PreUpdate, init_level.label(LevelInit));
+        app.add_system_to_stage(CoreStage::PreUpdate, init_level.label(LevelInitLabel));
     }
 }
 

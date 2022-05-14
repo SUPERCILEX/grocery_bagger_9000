@@ -7,7 +7,7 @@ use smallvec::SmallVec;
 use crate::{
     bags::{BagMarker, BAG_CAPACITY, BAG_ORIGIN},
     colors::NominoColor,
-    levels::{init::InitSystem::LevelInit, LevelLoaded},
+    levels::{init::LevelInitLabel, LevelLoaded},
     nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
 
@@ -20,7 +20,7 @@ impl Plugin for ScoringPlugin {
         app.init_resource::<CurrentScore>();
 
         app.add_system_to_stage(CoreStage::PostUpdate, score_bags.after(TransformPropagate));
-        app.add_system_to_stage(CoreStage::PreUpdate, reset_score.after(LevelInit));
+        app.add_system_to_stage(CoreStage::PreUpdate, reset_score.after(LevelInitLabel));
     }
 }
 
