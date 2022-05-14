@@ -4,7 +4,7 @@ use crate::{
     bags::BagSpawner,
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
-    levels::{CurrentLevel, LevelLoaded},
+    levels::{init::level_init_chrome, CurrentLevel, LevelLoaded},
     nominos::TETROMINOS,
     window_management::DipsWindow,
 };
@@ -21,26 +21,22 @@ impl Plugin for Level6Plugin {
 
 fn init_level(
     mut commands: Commands,
-    mut current: ResMut<CurrentLevel>,
-    mut level_initialized: EventWriter<LevelLoaded>,
+    current: ResMut<CurrentLevel>,
+    level_loaded: EventWriter<LevelLoaded>,
     dips_window: Res<DipsWindow>,
 ) {
-    if current.level != 5 || current.root.is_some() {
-        return;
-    }
+    level_init_chrome(6, current, level_loaded, || {
+        commands
+            .spawn_bundle(TransformBundle::default())
+            .with_children(|parent| {
+                parent.spawn_bag::<2>(&dips_window);
 
-    let root = commands
-        .spawn_bundle(TransformBundle::default())
-        .with_children(|parent| {
-            parent.spawn_bag::<2>(&dips_window);
-
-            parent.spawn_belt(Box::new(RandomPiecesConveyorBelt::new(
-                NUM_PIECES,
-                TETROMINOS,
-                [NominoColor::Blue, NominoColor::Green],
-            )));
-        })
-        .id();
-    current.root = Some(root);
-    level_initialized.send(LevelLoaded(root));
+                parent.spawn_belt(Box::new(RandomPiecesConveyorBelt::new(
+                    NUM_PIECES,
+                    TETROMINOS,
+                    [NominoColor::Blue, NominoColor::Green],
+                )));
+            })
+            .id()
+    });
 }

@@ -4,7 +4,7 @@ use crate::{
     bags::BagSpawner,
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    levels::{CurrentLevel, LevelLoaded},
+    levels::{init::level_init_chrome, CurrentLevel, LevelLoaded},
     nominos::{Nomino, DEG_180, DEG_MIRRORED},
     window_management::DipsWindow,
 };
@@ -21,113 +21,109 @@ impl Plugin for Level5Plugin {
 
 fn init_level(
     mut commands: Commands,
-    mut current: ResMut<CurrentLevel>,
-    mut level_initialized: EventWriter<LevelLoaded>,
+    current: ResMut<CurrentLevel>,
+    level_loaded: EventWriter<LevelLoaded>,
     dips_window: Res<DipsWindow>,
 ) {
-    if current.level != 4 || current.root.is_some() {
-        return;
-    }
+    level_init_chrome(5, current, level_loaded, || {
+        commands
+            .spawn_bundle(TransformBundle::default())
+            .with_children(|parent| {
+                parent.spawn_bag::<1>(&dips_window);
 
-    let root = commands
-        .spawn_bundle(TransformBundle::default())
-        .with_children(|parent| {
-            parent.spawn_bag::<1>(&dips_window);
-
-            parent.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_MIRRORED * *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_MIRRORED * *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoSkew,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoT,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoT,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoSquare,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoSquare,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoT,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoSkew,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_MIRRORED,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoT,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_MIRRORED * *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoL,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_MIRRORED * *DEG_180,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoT,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoSkew,
-                    color: LEVEL_COLOR,
-                    rotation: *DEG_MIRRORED,
-                },
-                Piece {
-                    nomino: Nomino::TetrominoT,
-                    color: LEVEL_COLOR,
-                    rotation: Quat::IDENTITY,
-                },
-            ])));
-        })
-        .id();
-    current.root = Some(root);
-    level_initialized.send(LevelLoaded(root));
+                parent.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([
+                    Piece {
+                        nomino: Nomino::TetrominoL,
+                        color: LEVEL_COLOR,
+                        rotation: *DEG_MIRRORED * *DEG_180,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoL,
+                        color: LEVEL_COLOR,
+                        rotation: *DEG_MIRRORED * *DEG_180,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoSkew,
+                        color: LEVEL_COLOR,
+                        rotation: Quat::IDENTITY,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoL,
+                        color: LEVEL_COLOR,
+                        rotation: Quat::IDENTITY,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoL,
+                        color: LEVEL_COLOR,
+                        rotation: Quat::IDENTITY,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoL,
+                        color: LEVEL_COLOR,
+                        rotation: *DEG_180,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoT,
+                        color: LEVEL_COLOR,
+                        rotation: *DEG_180,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoT,
+                        color: LEVEL_COLOR,
+                        rotation: Quat::IDENTITY,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoSquare,
+                        color: LEVEL_COLOR,
+                        rotation: Quat::IDENTITY,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoSquare,
+                        color: LEVEL_COLOR,
+                        rotation: Quat::IDENTITY,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoT,
+                        color: LEVEL_COLOR,
+                        rotation: Quat::IDENTITY,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoSkew,
+                        color: LEVEL_COLOR,
+                        rotation: *DEG_MIRRORED,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoT,
+                        color: LEVEL_COLOR,
+                        rotation: *DEG_180,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoL,
+                        color: LEVEL_COLOR,
+                        rotation: *DEG_MIRRORED * *DEG_180,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoL,
+                        color: LEVEL_COLOR,
+                        rotation: *DEG_MIRRORED * *DEG_180,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoT,
+                        color: LEVEL_COLOR,
+                        rotation: Quat::IDENTITY,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoSkew,
+                        color: LEVEL_COLOR,
+                        rotation: *DEG_MIRRORED,
+                    },
+                    Piece {
+                        nomino: Nomino::TetrominoT,
+                        color: LEVEL_COLOR,
+                        rotation: Quat::IDENTITY,
+                    },
+                ])));
+            })
+            .id()
+    });
 }

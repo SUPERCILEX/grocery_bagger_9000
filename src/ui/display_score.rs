@@ -2,7 +2,7 @@ use std::fmt::Write;
 
 use bevy::prelude::*;
 
-use crate::levels::scoring::CurrentScore;
+use crate::levels::CurrentScore;
 
 pub struct DisplayScorePlugin;
 
