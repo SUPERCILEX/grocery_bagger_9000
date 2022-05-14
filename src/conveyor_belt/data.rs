@@ -14,6 +14,7 @@ pub trait ConveyorBelt {
 }
 
 #[derive(Copy, Clone)]
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Piece {
     pub nomino: Nomino,
     pub color: NominoColor,
@@ -99,5 +100,60 @@ impl<const NOM_TYPES: usize, const COLORS: usize> ConveyorBelt
             color: self.colors[next_color],
             rotation,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_preset_pieces_returns_none() {
+        let mut belt = PresetPiecesConveyorBelt::new([]);
+
+        assert_eq!(belt.next(), None);
+    }
+
+    #[test]
+    fn preset_pieces_returns_them() {
+        let pieces = [
+            Piece {
+                nomino: Nomino::TetrominoSkew,
+                color: NominoColor::Green,
+                rotation: Quat::from_xyzw(1., 2., 3., 4.),
+            },
+            Piece {
+                nomino: Nomino::TetrominoL,
+                color: NominoColor::Pink,
+                rotation: Quat::from_xyzw(2., 1., 3., 4.),
+            },
+            Piece {
+                nomino: Nomino::TetrominoSquare,
+                color: NominoColor::Blue,
+                rotation: Quat::from_xyzw(1., 2., 4., 3.),
+            },
+        ];
+        let mut belt = PresetPiecesConveyorBelt::new(pieces);
+
+        assert_eq!(belt.next(), Some(pieces[0]));
+        assert_eq!(belt.next(), Some(pieces[1]));
+        assert_eq!(belt.next(), Some(pieces[2]));
+        assert_eq!(belt.next(), None);
+    }
+
+    #[test]
+    fn random_pieces_returns_some() {
+        let mut belt =
+            RandomPiecesConveyorBelt::new(2, [Nomino::TetrominoL], [NominoColor::Orange]);
+
+        let a = belt.next().unwrap();
+        assert_eq!(a.nomino, Nomino::TetrominoL);
+        assert_eq!(a.color, NominoColor::Orange);
+
+        let b = belt.next().unwrap();
+        assert_eq!(b.nomino, Nomino::TetrominoL);
+        assert_eq!(b.color, NominoColor::Orange);
+
+        assert_eq!(belt.next(), None);
     }
 }

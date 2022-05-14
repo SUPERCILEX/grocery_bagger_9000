@@ -34,7 +34,7 @@ impl Plugin for PiecesPlugin {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Nomino {
     TetrominoStraight,
     TetrominoSquare,
