@@ -198,31 +198,39 @@ pub fn piece_loaded(
     to: Transform,
     speed: &GameSpeed,
 ) -> Animator<Transform> {
-    Animator::new(Sequence::new([
-        Tween::new(
-            EaseMethod::Linear,
-            TweeningType::Once,
-            Duration::from_millis(60 * (index + 1) as u64),
-            NoopLens,
-        )
-        .with_speed(**speed),
-        Tween::new(
-            EaseMethod::CustomFunction(|x| {
-                let x2 = x * x;
-                let x4 = x2 * x2;
+    let bezier_6th = |x: f32| {
+        let x2 = x * x;
+        let x4 = x2 * x2;
 
-                -55.48 * x4 * x2 + 156.48 * x * x4 - 147. * x4 + 44. * x * x2 + 3. * x2
-            }),
-            TweeningType::Once,
-            Duration::from_millis((to.translation.x - from.translation.x).abs() as u64 * 10),
-            TransformPositionLens {
-                start: from.translation,
-                end: to.translation,
-            },
-        )
-        .with_speed(**speed)
-        .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
-    ]))
+        -55.48 * x4 * x2 + 156.48 * x * x4 - 147. * x4 + 44. * x * x2 + 3. * x2
+    };
+    let steady_velocity_time = (to.translation.x - from.translation.x).abs() as u64 * 10;
+    let enter = Tween::new(
+        EaseMethod::CustomFunction(bezier_6th),
+        TweeningType::Once,
+        Duration::from_millis(steady_velocity_time),
+        TransformPositionLens {
+            start: from.translation,
+            end: to.translation,
+        },
+    )
+    .with_speed(**speed)
+    .with_completed_event(true, AnimationEvent::COMPLETED.bits());
+
+    if index > 0 {
+        Animator::new(Sequence::new([
+            Tween::new(
+                EaseMethod::Linear,
+                TweeningType::Once,
+                Duration::from_millis(60 * index as u64),
+                NoopLens,
+            )
+            .with_speed(**speed),
+            enter,
+        ]))
+    } else {
+        Animator::new(enter)
+    }
 }
 
 fn change_animation_speed<T: Component>(
