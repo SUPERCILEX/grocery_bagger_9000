@@ -90,6 +90,8 @@ fn replace_pieces(
     mut picked_up_pieces: EventReader<PiecePickedUp>,
     belt_options: Res<ConveyorBeltOptions>,
     dips_window: Res<DipsWindow>,
+    game_speed: Res<GameSpeed>,
+    robot_timing: Query<&RobotTiming, With<RobotMarker>>,
 ) {
     for piece_id in picked_up_pieces.iter() {
         let (mut conveyor_belt, mut belt_pieces) = conveyor_belt.single_mut();
@@ -118,11 +120,17 @@ fn replace_pieces(
             }
 
             let position = MAX_NUM_PIECES - 1;
-            let transform =
+            let target =
                 Transform::from_translation(piece_position(&dips_window, &belt_options, position));
+            let from = {
+                let mut from = target;
+                from.translation.x = dips_window.width + PIECE_WIDTH;
+                from
+            };
+
             let spawned = maybe_spawn_piece(
                 &mut commands,
-                transform,
+                from,
                 position,
                 current_level.root.unwrap(),
                 &mut ***conveyor_belt,
@@ -130,6 +138,17 @@ fn replace_pieces(
             );
             if let Some(spawned) = spawned {
                 belt_pieces.push(spawned);
+
+                let ttl = robot_timing
+                    .get_single()
+                    .map(|r| r.time_left())
+                    .unwrap_or(robot::PLACEMENT_TTL);
+                commands.entity(spawned).insert(animations::piece_movement(
+                    from,
+                    target,
+                    ttl,
+                    &game_speed,
+                ));
             }
         }
     }
@@ -166,11 +185,10 @@ fn move_pieces(
             return;
         }
 
-        let ttl = if let Ok(robot) = robot_timing.get_single() {
-            robot.time_left()
-        } else {
-            robot::PLACEMENT_TTL
-        };
+        let ttl = robot_timing
+            .get_single()
+            .map(|r| r.time_left())
+            .unwrap_or(robot::PLACEMENT_TTL);
         for (index, piece) in belt_pieces.iter().enumerate() {
             let position = positions.get(*piece).unwrap();
             commands.entity(*piece).insert(animations::piece_movement(
