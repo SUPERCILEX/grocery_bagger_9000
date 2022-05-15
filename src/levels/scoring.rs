@@ -66,10 +66,10 @@ fn score_bags(
 
         let total_bag_score = score_bag(&bag_matrix, block_count, &color_block_count_map);
         let bag_score = current_score.score_map.entry(*bag).or_insert(0);
-        let diff = total_bag_score - *bag_score;
+        let diff = total_bag_score as i16 - *bag_score as i16;
 
         *bag_score = total_bag_score;
-        current_score.points += diff;
+        current_score.points = (current_score.points as i16 + diff) as u16;
     }
 }
 
