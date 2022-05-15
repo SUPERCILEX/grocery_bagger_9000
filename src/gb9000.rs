@@ -1,5 +1,7 @@
 use bevy::prelude::*;
+use bevy_prototype_lyon::plugin::ShapePlugin;
 use bevy_rapier3d::prelude::*;
+use bevy_svg::prelude::SvgPlugin;
 use bevy_tweening::TweeningPlugin;
 
 use crate::{
@@ -21,12 +23,14 @@ impl Plugin for GroceryBagger9000Plugin {
         app.add_plugin(UiPlugin);
         app.add_plugin(RobotPlugin);
 
+        app.add_plugin(ShapePlugin);
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
         app.insert_resource(RapierConfiguration {
             physics_pipeline_active: false,
             ..default()
         });
         app.add_plugin(TweeningPlugin);
+        app.add_plugin(SvgPlugin);
     }
 }
 

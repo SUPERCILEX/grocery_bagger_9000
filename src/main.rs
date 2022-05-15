@@ -6,7 +6,6 @@
 #![allow(clippy::type_complexity)]
 
 use bevy::{app::App, DefaultPlugins};
-use bevy_prototype_lyon::plugin::ShapePlugin;
 
 use crate::{gb9000::GroceryBagger9000Plugin, window_management::WindowManager};
 
@@ -31,9 +30,8 @@ fn main() {
     let mut app = App::new();
 
     app.add_plugin(WindowManager);
-    app.add_plugin(GroceryBagger9000Plugin);
     app.add_plugins(DefaultPlugins);
-    app.add_plugin(ShapePlugin);
+    app.add_plugin(GroceryBagger9000Plugin);
 
     #[cfg(feature = "debug")]
     app.add_plugin(debug::DebugPlugin);

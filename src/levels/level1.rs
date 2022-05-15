@@ -1,6 +1,12 @@
-use bevy::prelude::*;
+use std::f32::consts::PI;
+
+use bevy::{asset::LoadState, math::const_vec3, prelude::*};
+use bevy_svg::prelude::{Origin, Svg, Svg2dBundle};
+use bevy_tweening::Animator;
 
 use crate::{
+    animations,
+    animations::GameSpeed,
     bags::{compute_bag_coordinates, BagSpawner, BAG_ORIGIN},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
@@ -9,7 +15,9 @@ use crate::{
         init::{level_init_chrome, LevelInitLabel},
         LevelLoaded,
     },
-    nominos::{Nomino, NominoSpawner, PiecePlaced, DEG_90},
+    nominos::{
+        Nomino, NominoMarker, NominoSpawner, PiecePickedUp, PiecePlaced, Selectable, DEG_90,
+    },
     window_management::DipsWindow,
 };
 
@@ -20,6 +28,7 @@ pub struct Level1Plugin;
 impl Plugin for Level1Plugin {
     fn build(&self, app: &mut App) {
         app.add_system_to_stage(CoreStage::PreUpdate, init_level.label(LevelInitLabel));
+        app.add_system(show_tutorial);
     }
 }
 
@@ -85,4 +94,104 @@ fn init_level(
 
         root
     });
+}
+
+#[derive(Default)]
+enum TutorialFsm {
+    #[default]
+    Ready,
+    StartedLoad,
+    Loading(Handle<Svg>, Entity, Entity),
+    Loaded(Entity, Entity),
+    PickedUp(Entity, Entity, Quat),
+    Rotated,
+}
+
+#[derive(Component)]
+struct TutorialIconMarker;
+
+fn show_tutorial(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    gb9000: ResMut<GroceryBagger9000>,
+    game_speed: Res<GameSpeed>,
+    mut piece_selections: EventReader<PiecePickedUp>,
+    mut fsm: Local<TutorialFsm>,
+    first_piece: Query<
+        Entity,
+        (
+            With<Selectable>,
+            With<NominoMarker>,
+            Without<Animator<Transform>>,
+        ),
+    >,
+    pieces: Query<&GlobalTransform, With<NominoMarker>>,
+) {
+    const ICON_SCALE: Vec3 = const_vec3!([0.05, 0.05, 0.05]);
+
+    if gb9000.current_level != 0 {
+        *fsm = TutorialFsm::Ready;
+        return;
+    }
+
+    if let TutorialFsm::Ready = *fsm {
+        // TODO https://github.com/Weasy666/bevy_svg/issues/10
+        *fsm = TutorialFsm::StartedLoad;
+    } else if let TutorialFsm::StartedLoad = &*fsm {
+        if let Ok(piece) = first_piece.get_single() {
+            let handle = asset_server.load("icons/mouse-click.svg");
+            commands.entity(piece).with_children(|parent| {
+                let transform =
+                    Transform::from_translation(Vec3::new(-2., 0.5, 0.)).with_scale(Vec3::ZERO);
+
+                let icon = parent
+                    .spawn_bundle(Svg2dBundle {
+                        svg: handle.clone(),
+                        transform,
+                        origin: Origin::Center,
+                        ..Default::default()
+                    })
+                    .insert(TutorialIconMarker)
+                    .id();
+
+                *fsm = TutorialFsm::Loading(handle, piece, icon);
+            });
+        }
+    } else if let TutorialFsm::Loading(handle, piece, icon) = &*fsm {
+        if asset_server.get_load_state(handle) == LoadState::Loaded {
+            commands
+                .entity(*icon)
+                .insert(animations::mouse_tutorial_enter(
+                    Transform::from_scale(ICON_SCALE),
+                    &game_speed,
+                ));
+
+            *fsm = TutorialFsm::Loaded(*piece, *icon);
+        }
+    } else if let TutorialFsm::Loaded(piece, icon) = &*fsm {
+        if piece_selections.iter().count() > 0 {
+            let transform =
+                Transform::from_translation(Vec3::new(-0.5, 1.5, 0.)).with_scale(ICON_SCALE);
+            commands
+                .entity(*icon)
+                .insert(animations::mouse_tutorial_switch_rotation(
+                    transform.with_rotation(Quat::from_rotation_y(PI)),
+                    &game_speed,
+                ));
+
+            *fsm = TutorialFsm::PickedUp(*piece, *icon, pieces.get(*piece).unwrap().rotation);
+        }
+    } else if let TutorialFsm::PickedUp(piece, icon, rotation) = &*fsm {
+        if pieces.get(*piece).unwrap().rotation != *rotation {
+            let transform =
+                Transform::from_translation(Vec3::new(-2., 0.5, 0.)).with_scale(ICON_SCALE);
+            commands
+                .entity(*icon)
+                .insert(animations::mouse_tutorial_switch_rotation(
+                    transform.with_rotation(DEG_90.inverse()),
+                    &game_speed,
+                ));
+            *fsm = TutorialFsm::Rotated;
+        }
+    }
 }

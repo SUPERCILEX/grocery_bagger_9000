@@ -53,6 +53,14 @@ impl<T> Lens<T> for NoopLens {
     fn lerp(&mut self, _: &mut T, _: f32) {}
 }
 
+struct TeleportLens<T>(T);
+
+impl<T: Copy> Lens<T> for TeleportLens<T> {
+    fn lerp(&mut self, target: &mut T, _: f32) {
+        *target = self.0;
+    }
+}
+
 pub fn error_shake(current: Transform, speed: &GameSpeed) -> UndoableAnimationBundle<Transform> {
     let wiggle = Quat::from_rotation_z(PI / 16.);
 
@@ -252,6 +260,55 @@ pub fn piece_movement(
         .with_speed(**speed)
         .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
     )
+}
+
+pub fn mouse_tutorial_enter(target: Transform, speed: &GameSpeed) -> Animator<Transform> {
+    Animator::new(
+        Tween::new(
+            EaseMethod::Linear,
+            TweeningType::Once,
+            Duration::from_millis(200),
+            TransformScaleLens {
+                start: Vec3::ZERO,
+                end: target.scale,
+            },
+        )
+        .with_speed(**speed)
+        .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+    )
+}
+
+pub fn mouse_tutorial_switch_rotation(target: Transform, speed: &GameSpeed) -> Animator<Transform> {
+    Animator::new(Sequence::new([
+        Tween::new(
+            EaseMethod::Linear,
+            TweeningType::Once,
+            Duration::from_millis(150),
+            TransformScaleLens {
+                start: target.scale,
+                end: Vec3::ZERO,
+            },
+        )
+        .with_speed(**speed),
+        Tween::new(
+            EaseMethod::Linear,
+            TweeningType::Once,
+            Duration::from_millis(25),
+            TeleportLens(target.with_scale(Vec3::ZERO)),
+        )
+        .with_speed(**speed),
+        Tween::new(
+            EaseMethod::Linear,
+            TweeningType::Once,
+            Duration::from_millis(200),
+            TransformScaleLens {
+                start: Vec3::ZERO,
+                end: target.scale,
+            },
+        )
+        .with_speed(**speed)
+        .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+    ]))
 }
 
 fn change_animation_speed<T: Component>(
