@@ -6,7 +6,6 @@ use crate::{
     animations,
     animations::{GameSpeed, Original, UndoableAnimationBundle},
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP, BAG_FLOOR_COLLIDER_GROUP},
-    levels::LevelUnloaded,
     nominos::*,
     window_management::{DipsWindow, MainCamera},
     window_utils::compute_cursor_position,
@@ -16,11 +15,9 @@ pub struct PieceMovementPlugin;
 
 impl Plugin for PieceMovementPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<SelectedPiece>();
         app.add_event::<PiecePlaced>();
         app.add_event::<PiecePickedUp>();
 
-        app.add_system_to_stage(CoreStage::PreUpdate, reset_selected_piece);
         app.add_system(piece_selection_handler);
         app.add_system(piece_rotation_handler.after(AnimationSystem::AnimationUpdate));
         app.add_system(
@@ -42,27 +39,17 @@ pub struct PiecePlaced {
 #[derive(Deref)]
 pub struct PiecePickedUp(Entity);
 
-#[derive(Deref, DerefMut, Default)]
-struct SelectedPiece(Option<Entity>);
+#[derive(Component)]
+struct SelectedPiece;
 
 const FLOATING_PIECE_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
     memberships: BAG_FLOOR_COLLIDER_GROUP.memberships | NOMINO_COLLIDER_GROUP.memberships,
     filters: BAG_FLOOR_COLLIDER_GROUP.filters | NOMINO_COLLIDER_GROUP.filters,
 };
 
-fn reset_selected_piece(
-    mut level_unloaded: EventReader<LevelUnloaded>,
-    mut selected_piece: ResMut<SelectedPiece>,
-) {
-    if level_unloaded.iter().count() > 0 {
-        **selected_piece = None;
-    }
-}
-
 fn piece_selection_handler(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
-    mut selected_piece: ResMut<SelectedPiece>,
     mut picked_up_events: EventWriter<PiecePickedUp>,
     mut placed_events: EventWriter<PiecePlaced>,
     selectables: Query<&Selectable, With<NominoMarker>>,
@@ -73,12 +60,13 @@ fn piece_selection_handler(
     mut pieces_queries: ParamSet<(
         Query<
             (
+                Entity,
                 &GlobalTransform,
                 &mut Transform,
                 &Collider,
                 Option<&Original<Transform>>,
             ),
-            With<NominoMarker>,
+            (With<NominoMarker>, With<SelectedPiece>),
         >,
         Query<(&mut Transform, Option<&Original<Transform>>), With<NominoMarker>>,
     )>,
@@ -88,48 +76,50 @@ fn piece_selection_handler(
         return;
     }
 
-    if let Some(piece) = &**selected_piece {
+    {
         let mut selected_shape = pieces_queries.p0();
-        let (global_transform, mut transform, collider, original) =
-            selected_shape.get_mut(*piece).unwrap();
-        if let Some(original) = original {
-            transform.rotation = original.rotation;
-            commands
-                .entity(*piece)
-                .remove_bundle::<UndoableAnimationBundle<Transform>>();
-        }
+        if let Ok((piece, global_transform, mut transform, collider, original)) =
+            selected_shape.get_single_mut()
+        {
+            if let Some(original) = original {
+                transform.rotation = original.rotation;
+                commands
+                    .entity(piece)
+                    .remove_bundle::<UndoableAnimationBundle<Transform>>();
+            }
 
-        #[cfg(feature = "debug")]
-        if debug_options.unrestricted_pieces {
-            *selected_piece = default();
+            #[cfg(feature = "debug")]
+            if debug_options.unrestricted_pieces {
+                commands.entity(piece).remove::<SelectedPiece>();
+                return;
+            }
+
+            let intersects_with_bag = rapier_context.intersection_with_shape(
+                global_transform.translation,
+                global_transform.rotation,
+                collider,
+                BAG_COLLIDER_GROUP.into(),
+                None,
+            );
+
+            if let Some(bag) = intersects_with_bag
+                && !straddles_bag_or_overlaps_pieces(&rapier_context, *global_transform, collider, piece)
+                && !piece_is_floating(&rapier_context, *global_transform, collider, piece) {
+                commands
+                    .entity(piece)
+                    .remove::<Selectable>()
+                    .remove::<SelectedPiece>()
+                    .insert(animations::piece_placed(*transform, &game_speed));
+
+                placed_events.send(PiecePlaced { piece, bag });
+            } else {
+                commands
+                    .entity(piece)
+                    .insert_bundle(animations::error_shake(*transform, &game_speed));
+            }
+
             return;
         }
-
-        let intersects_with_bag = rapier_context.intersection_with_shape(
-            global_transform.translation,
-            global_transform.rotation,
-            collider,
-            BAG_COLLIDER_GROUP.into(),
-            None,
-        );
-
-        if let Some(bag) = intersects_with_bag
-            && !straddles_bag_or_overlaps_pieces(&rapier_context, *global_transform, collider, *piece)
-            && !piece_is_floating(&rapier_context, *global_transform, collider, *piece) {
-            commands
-                .entity(*piece)
-                .remove::<Selectable>()
-                .insert(animations::piece_placed(*transform, &game_speed));
-
-            placed_events.send(PiecePlaced { piece: *piece, bag });
-            *selected_piece = default();
-        } else {
-            commands
-                .entity(*piece)
-                .insert_bundle(animations::error_shake(*transform, &game_speed));
-        }
-
-        return;
     }
 
     if let Some(cursor_position) = compute_cursor_position(windows, camera) {
@@ -149,11 +139,11 @@ fn piece_selection_handler(
                 }
 
                 if selectable {
-                    *selected_piece = SelectedPiece(Some(id));
                     picked_up_events.send(PiecePickedUp(id));
 
                     commands
                         .entity(id)
+                        .insert(SelectedPiece)
                         .remove_bundle::<UndoableAnimationBundle<Transform>>();
                 }
                 failed_selection = if selectable { None } else { Some(id) };
@@ -180,19 +170,20 @@ fn piece_selection_handler(
 fn piece_rotation_handler(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
-    selected_piece: Res<SelectedPiece>,
-    mut pieces: Query<(&mut Transform, Option<&Original<Transform>>), With<NominoMarker>>,
+    mut selected_piece: Query<
+        (Entity, &mut Transform, Option<&Original<Transform>>),
+        (With<NominoMarker>, With<SelectedPiece>),
+    >,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Right) {
         return;
     }
 
-    if let Some(piece) = &**selected_piece {
-        let (transform, original) = &mut pieces.get_mut(*piece).unwrap();
+    if let Ok((piece, mut transform, original)) = selected_piece.get_single_mut() {
         if let Some(original) = original {
             transform.rotation = original.rotation;
             commands
-                .entity(*piece)
+                .entity(piece)
                 .remove_bundle::<UndoableAnimationBundle<Transform>>();
         }
 
@@ -207,27 +198,25 @@ fn piece_rotation_handler(
 
 fn selected_piece_mover(
     mut commands: Commands,
-    selected_piece: Res<SelectedPiece>,
     dips_window: Res<DipsWindow>,
     mut cursor_movements: EventReader<CursorMoved>,
-    mut pieces: Query<
+    mut selected_piece: Query<
         (
+            Entity,
             &GlobalTransform,
             &mut Transform,
             &Collider,
             Option<&Original<Transform>>,
         ),
-        With<NominoMarker>,
+        (With<NominoMarker>, With<SelectedPiece>),
     >,
     rapier_context: Res<RapierContext>,
 ) {
-    if let Some(piece) = &**selected_piece &&
-    let Some(moved_event) = cursor_movements.iter().last()
+    if let Some(moved_event) = cursor_movements.iter().last() &&
+    let Ok((piece, global_transform, mut piece_transform, collider, original)) = selected_piece.get_single_mut()
     {
         let cursor_position = moved_event.position * dips_window.scale;
 
-        let (global_transform, mut piece_transform, collider, original) =
-            pieces.get_mut(*piece).unwrap();
         let snapped_cursor_position = cursor_position
             .round()
             .extend(piece_transform.translation.z);
@@ -244,7 +233,7 @@ fn selected_piece_mover(
                     .unwrap_or(global_transform.rotation),
             ),
             collider,
-            *piece,
+            piece,
         );
 
         if would_move_over_invalid_position {
@@ -254,7 +243,7 @@ fn selected_piece_mover(
         if let Some(original) = original {
             piece_transform.rotation = original.rotation;
             commands
-                .entity(*piece)
+                .entity(piece)
                 .remove_bundle::<UndoableAnimationBundle<Transform>>();
         }
 
