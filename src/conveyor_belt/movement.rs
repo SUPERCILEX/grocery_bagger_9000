@@ -12,6 +12,8 @@ use crate::{
     },
     levels::{CurrentLevel, LevelLoaded},
     nominos::{NominoMarker, NominoSpawner, PiecePickedUp, Selectable},
+    robot,
+    robot::{RobotMarker, RobotTiming},
     window_management::DipsWindow,
 };
 
@@ -141,12 +143,15 @@ enum PieceMovementFsm {
 }
 
 fn move_pieces(
+    mut commands: Commands,
     belt_options: Res<ConveyorBeltOptions>,
     dips_window: Res<DipsWindow>,
+    game_speed: Res<GameSpeed>,
     belt_pieces: Query<(&BeltPieceIds, ChangeTrackers<BeltPieceIds>), With<ConveyorBeltMarker>>,
     mut fsm: Local<PieceMovementFsm>,
     mut level_loaded: EventReader<LevelLoaded>,
-    mut positions: Query<&mut Transform, With<NominoMarker>>,
+    positions: Query<&Transform, With<NominoMarker>>,
+    robot_timing: Query<&RobotTiming, With<RobotMarker>>,
 ) {
     if level_loaded.iter().count() > 0 {
         *fsm = PieceMovementFsm::Ready;
@@ -161,9 +166,19 @@ fn move_pieces(
             return;
         }
 
+        let ttl = if let Ok(robot) = robot_timing.get_single() {
+            robot.time_left()
+        } else {
+            robot::PLACEMENT_TTL
+        };
         for (index, piece) in belt_pieces.iter().enumerate() {
-            let mut position = positions.get_mut(*piece).unwrap();
-            position.translation = piece_position(&dips_window, &belt_options, index);
+            let position = positions.get(*piece).unwrap();
+            commands.entity(*piece).insert(animations::piece_movement(
+                *position,
+                Transform::from_translation(piece_position(&dips_window, &belt_options, index)),
+                ttl,
+                &game_speed,
+            ));
         }
     }
 }

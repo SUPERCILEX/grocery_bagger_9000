@@ -151,6 +151,10 @@ fn piece_selection_handler(
                 if selectable {
                     *selected_piece = SelectedPiece(Some(id));
                     picked_up_events.send(PiecePickedUp(id));
+
+                    commands
+                        .entity(id)
+                        .remove_bundle::<UndoableAnimationBundle<Transform>>();
                 }
                 failed_selection = if selectable { None } else { Some(id) };
 

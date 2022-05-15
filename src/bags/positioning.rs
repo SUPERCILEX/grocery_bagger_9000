@@ -1,5 +1,4 @@
 use bevy::{prelude::*, window::WindowResized};
-
 use smallvec::SmallVec;
 
 use crate::{

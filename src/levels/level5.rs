@@ -9,6 +9,7 @@ use crate::{
         CurrentLevel, LevelLoaded,
     },
     nominos::{Nomino, DEG_180, DEG_MIRRORED},
+    robot::{RobotMarker, RobotTiming},
     window_management::DipsWindow,
 };
 
@@ -33,6 +34,12 @@ fn init_level(
             .spawn_bundle(TransformBundle::default())
             .with_children(|parent| {
                 parent.spawn_bag::<1>(&dips_window);
+
+                // TODO remove
+                parent
+                    .spawn()
+                    .insert(RobotTiming::default())
+                    .insert(RobotMarker);
 
                 parent.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([
                     Piece {

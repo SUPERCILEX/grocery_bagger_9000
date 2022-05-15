@@ -4,7 +4,7 @@ use bevy_tweening::TweeningPlugin;
 
 use crate::{
     animations::AnimationPlugin, bags::BagsPlugin, conveyor_belt::ConveyorBeltPlugin,
-    levels::LevelsPlugin, nominos::PiecesPlugin, ui::UiPlugin,
+    levels::LevelsPlugin, nominos::PiecesPlugin, robot::RobotPlugin, ui::UiPlugin,
 };
 
 pub struct GroceryBagger9000Plugin;
@@ -17,6 +17,8 @@ impl Plugin for GroceryBagger9000Plugin {
         app.add_plugin(ConveyorBeltPlugin);
         app.add_plugin(AnimationPlugin);
         app.add_plugin(UiPlugin);
+        app.add_plugin(RobotPlugin);
+
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
         app.insert_resource(RapierConfiguration {
             physics_pipeline_active: false,

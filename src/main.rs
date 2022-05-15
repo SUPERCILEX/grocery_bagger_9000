@@ -19,6 +19,7 @@ mod debug;
 mod gb9000;
 mod levels;
 mod nominos;
+mod robot;
 mod ui;
 mod window_management;
 mod window_utils;

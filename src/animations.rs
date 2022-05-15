@@ -233,6 +233,27 @@ pub fn piece_loaded(
     }
 }
 
+pub fn piece_movement(
+    from: Transform,
+    to: Transform,
+    duration: Duration,
+    speed: &GameSpeed,
+) -> Animator<Transform> {
+    Animator::new(
+        Tween::new(
+            EaseMethod::Linear,
+            TweeningType::Once,
+            duration,
+            TransformPositionLens {
+                start: from.translation,
+                end: to.translation,
+            },
+        )
+        .with_speed(**speed)
+        .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+    )
+}
+
 fn change_animation_speed<T: Component>(
     game_speed: Res<GameSpeed>,
     mut animators: Query<&mut Animator<T>>,
