@@ -2,7 +2,7 @@ use std::{f32::consts::PI, time::Duration};
 
 use bevy::{math::const_vec3, prelude::*};
 use bevy_tweening::{
-    lens::{TransformPositionLens, TransformRotationLens, TransformScaleLens},
+    lens::{TransformPositionLens, TransformRotationLens, TransformScaleLens, UiPositionLens},
     *,
 };
 use bitflags::bitflags;
@@ -16,7 +16,10 @@ impl Plugin for AnimationPlugin {
         app.add_system(
             change_animation_speed::<Transform>.before(AnimationSystem::AnimationUpdate),
         );
+        app.add_system(change_animation_speed::<Style>.before(AnimationSystem::AnimationUpdate));
+
         app.add_system_to_stage(CoreStage::PostUpdate, cleanup_animations::<Transform>);
+        app.add_system_to_stage(CoreStage::PostUpdate, cleanup_animations::<Style>);
     }
 }
 
@@ -309,6 +312,22 @@ pub fn mouse_tutorial_switch_rotation(target: Transform, speed: &GameSpeed) -> A
         .with_speed(**speed)
         .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
     ]))
+}
+
+pub fn menu_ui_enter(from: Rect<Val>, to: Rect<Val>, speed: &GameSpeed) -> Animator<Style> {
+    Animator::new(
+        Tween::new(
+            EaseMethod::Linear,
+            TweeningType::Once,
+            Duration::from_millis(400),
+            UiPositionLens {
+                start: from,
+                end: to,
+            },
+        )
+        .with_speed(**speed)
+        .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+    )
 }
 
 fn change_animation_speed<T: Component>(

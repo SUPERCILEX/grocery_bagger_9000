@@ -1,6 +1,8 @@
 use bevy::{app::Plugin, prelude::*, ui::PositionType::Absolute};
 
 use crate::{
+    animations,
+    animations::GameSpeed,
     gb9000::{GameState::Playing, GroceryBagger9000},
     levels::{CurrentScore, LevelFinishedEvent, LevelTransitionLabel},
     ui::consts::{MENU_FONT_SIZE, TITLE_FONT_SIZE},
@@ -27,6 +29,7 @@ fn show_level_end_screen(
     mut commands: Commands,
     mut level_end: EventReader<LevelFinishedEvent>,
     score: Res<CurrentScore>,
+    game_speed: Res<GameSpeed>,
     mut gb9000: ResMut<GroceryBagger9000>,
     asset_server: Res<AssetServer>,
 ) {
@@ -34,7 +37,15 @@ fn show_level_end_screen(
         return;
     }
 
-    // TODO: put playing update into callback for button
+    let from = Rect {
+        bottom: Val::Percent(100.),
+        ..default()
+    };
+    let to = Rect {
+        bottom: Val::Percent(0.),
+        ..default()
+    };
+
     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
     let root = commands
         .spawn_bundle(NodeBundle {
@@ -44,11 +55,13 @@ fn show_level_end_screen(
                 flex_direction: FlexDirection::ColumnReverse,
                 align_items: AlignItems::Center,
                 justify_content: JustifyContent::Center,
+                position: from,
                 ..default()
             },
             color: Color::NONE.into(),
             ..default()
         })
+        .insert(animations::menu_ui_enter(from, to, &game_speed))
         .with_children(|parent| {
             // level text
             parent.spawn_bundle(TextBundle {
