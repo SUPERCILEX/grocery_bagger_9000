@@ -241,7 +241,7 @@ pub fn piece_movement(
 ) -> Animator<Transform> {
     Animator::new(
         Tween::new(
-            EaseMethod::Linear,
+            EaseMethod::EaseFunction(EaseFunction::CircularOut),
             TweeningType::Once,
             duration,
             TransformPositionLens {
