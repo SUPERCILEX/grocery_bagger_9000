@@ -1,6 +1,6 @@
 use std::fmt::Write;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, ui::PositionType::Absolute};
 
 use crate::levels::CurrentScore;
 
@@ -35,19 +35,37 @@ fn update_score(score: Res<CurrentScore>, mut text_query: Query<&mut Text, With<
 fn setup_score(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
     commands
-        .spawn_bundle(TextBundle {
-            text: Text {
-                sections: vec![TextSection {
-                    value: String::new(),
-                    style: TextStyle {
-                        font,
-                        font_size: FONT_SIZE,
-                        color: FONT_COLOR,
-                    },
-                }],
-                ..Default::default()
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                align_items: AlignItems::FlexStart,
+                flex_direction: FlexDirection::ColumnReverse,
+                position_type: Absolute,
+                ..default()
             },
-            ..Default::default()
+            color: Color::NONE.into(),
+            ..default()
         })
-        .insert(ScoreText);
+        .with_children(|parent| {
+            parent
+                .spawn_bundle(TextBundle {
+                    text: Text {
+                        sections: vec![TextSection {
+                            value: String::new(),
+                            style: TextStyle {
+                                font,
+                                font_size: FONT_SIZE,
+                                color: FONT_COLOR,
+                            },
+                        }],
+                        ..Default::default()
+                    },
+                    style: Style {
+                        // margin: Rect::all(Val::Auto),
+                        ..default()
+                    },
+                    ..Default::default()
+                })
+                .insert(ScoreText);
+        });
 }
