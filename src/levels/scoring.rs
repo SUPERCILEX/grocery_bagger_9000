@@ -24,7 +24,7 @@ impl Plugin for ScoringPlugin {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct CurrentScore {
     pub points: u16,
     score_map: HashMap<Entity, u16>,

@@ -9,7 +9,9 @@ use level6::Level6Plugin;
 pub use scoring::CurrentScore;
 use scoring::ScoringPlugin;
 use transitions::LevelTransitionPlugin;
-pub use transitions::{CurrentLevel, LevelLoaded};
+pub use transitions::{
+    CurrentLevel, GameState, LevelFinishedEvent, LevelLoaded, LevelTransitionLabel,
+};
 
 mod init;
 mod level1;

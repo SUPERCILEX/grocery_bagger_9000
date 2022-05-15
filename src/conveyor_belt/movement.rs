@@ -24,8 +24,11 @@ pub struct ConveyorBeltMovementPlugin;
 
 impl Plugin for ConveyorBeltMovementPlugin {
     fn build(&self, app: &mut App) {
+        app.add_event::<BeltEmptyEvent>();
+
         app.add_system(init_pieces);
         app.add_system(replace_pieces.after(init_pieces));
+        app.add_system(belt_empty_check.after(replace_pieces));
         app.add_system_to_stage(
             CoreStage::PostUpdate,
             move_pieces.before(TransformPropagate),
@@ -150,6 +153,23 @@ fn replace_pieces(
                     &game_speed,
                 ));
             }
+        }
+    }
+}
+
+pub struct BeltEmptyEvent;
+
+fn belt_empty_check(
+    belt_pieces: Query<(&BeltPieceIds, ChangeTrackers<BeltPieceIds>), With<ConveyorBeltMarker>>,
+    mut belt_empty: EventWriter<BeltEmptyEvent>,
+) {
+    if let Ok((belt_pieces, belt_changes)) = belt_pieces.get_single() {
+        if !belt_changes.is_changed() {
+            return;
+        }
+        // write belt empty event
+        if belt_pieces.is_empty() {
+            belt_empty.send(BeltEmptyEvent {});
         }
     }
 }

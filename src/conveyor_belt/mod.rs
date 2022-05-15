@@ -8,7 +8,7 @@ use crate::conveyor_belt::movement::ConveyorBeltMovementPlugin;
 
 mod consts;
 mod data;
-mod movement;
+pub(crate) mod movement;
 mod spawn;
 
 pub struct ConveyorBeltPlugin;
