@@ -4,18 +4,17 @@ use bevy_tweening::TweenCompleted;
 use crate::{
     animations::AnimationEvent,
     conveyor_belt::BeltEmptyEvent,
-    levels::{
-        init::LevelInitLabel,
-        transitions::GameState::{LevelEnded, Playing},
+    gb9000::{
+        GameState::{LevelEnded, Playing},
+        GroceryBagger9000,
     },
+    levels::init::LevelInitLabel,
 };
 
 pub struct LevelTransitionPlugin;
 
 impl Plugin for LevelTransitionPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<CurrentLevel>();
-
         app.add_event::<LevelLoaded>();
         app.add_event::<LevelFinishedEvent>();
 
@@ -34,20 +33,6 @@ impl Plugin for LevelTransitionPlugin {
                 .label(LevelTransitionLabel),
         );
     }
-}
-
-#[derive(Debug, Default, PartialEq, Eq)]
-pub enum GameState {
-    #[default]
-    Playing,
-    LevelEnded,
-}
-
-#[derive(Debug, Default)]
-pub struct CurrentLevel {
-    pub level: u16,
-    pub root: Option<Entity>,
-    pub state: GameState,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
@@ -84,15 +69,15 @@ fn transition_handler(
 
 fn level_unload_handler(
     mut commands: Commands,
-    mut current_level: ResMut<CurrentLevel>,
+    mut gb9000: ResMut<GroceryBagger9000>,
     mut level_finished: EventReader<LevelFinishedEvent>,
 ) {
     if level_finished.iter().count() > 0 {
-        if let Some(initialized) = current_level.root {
+        if let Some(initialized) = gb9000.level_root {
             commands.entity(initialized).despawn_recursive();
-            current_level.root = None;
+            gb9000.level_root = None;
         }
-        current_level.state = LevelEnded;
+        gb9000.state = LevelEnded;
     }
 }
 
@@ -101,15 +86,21 @@ pub struct LevelLoaded(pub Entity);
 
 fn level_change_handler(
     mut commands: Commands,
-    mut current: ResMut<CurrentLevel>,
+    mut gb9000: ResMut<GroceryBagger9000>,
     mut prev_level: Local<u16>,
 ) {
-    if *prev_level != current.level {
-        *prev_level = current.level;
-        if let Some(initialized) = current.root {
+    if *prev_level != gb9000.current_level {
+        *prev_level = gb9000.current_level;
+
+        if let Some(initialized) = gb9000.level_root {
             commands.entity(initialized).despawn_recursive();
-            current.root = None;
-            current.state = Playing;
+            gb9000.level_root = None;
+        }
+
+        if let Some(initialized) = gb9000.menu_root {
+            commands.entity(initialized).despawn_recursive();
+            gb9000.menu_root = None;
+            gb9000.state = Playing;
         }
     }
 }

@@ -11,6 +11,8 @@ pub struct GroceryBagger9000Plugin;
 
 impl Plugin for GroceryBagger9000Plugin {
     fn build(&self, app: &mut App) {
+        app.init_resource::<GroceryBagger9000>();
+
         app.add_plugin(LevelsPlugin);
         app.add_plugin(PiecesPlugin);
         app.add_plugin(BagsPlugin);
@@ -26,4 +28,19 @@ impl Plugin for GroceryBagger9000Plugin {
         });
         app.add_plugin(TweeningPlugin);
     }
+}
+
+#[derive(Debug, Default, PartialEq, Eq)]
+pub enum GameState {
+    #[default]
+    Playing,
+    LevelEnded,
+}
+
+#[derive(Debug, Default)]
+pub struct GroceryBagger9000 {
+    pub state: GameState,
+    pub current_level: u16,
+    pub level_root: Option<Entity>,
+    pub menu_root: Option<Entity>,
 }

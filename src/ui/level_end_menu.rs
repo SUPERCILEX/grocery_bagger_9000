@@ -1,9 +1,8 @@
 use bevy::{app::Plugin, prelude::*, ui::PositionType::Absolute};
 
 use crate::{
-    levels::{
-        CurrentLevel, CurrentScore, GameState::Playing, LevelFinishedEvent, LevelTransitionLabel,
-    },
+    gb9000::{GameState::Playing, GroceryBagger9000},
+    levels::{CurrentScore, LevelFinishedEvent, LevelTransitionLabel},
     ui::consts::{MENU_FONT_SIZE, TITLE_FONT_SIZE},
     App,
 };
@@ -16,7 +15,6 @@ pub struct LevelEndMenuPlugin;
 
 impl Plugin for LevelEndMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<LevelEndMenu>();
         app.add_system_to_stage(
             CoreStage::Last,
             show_level_end_screen.after(LevelTransitionLabel),
@@ -25,18 +23,12 @@ impl Plugin for LevelEndMenuPlugin {
     }
 }
 
-#[derive(Debug, Default)]
-pub struct LevelEndMenu {
-    root: Option<Entity>,
-}
-
 fn show_level_end_screen(
     mut commands: Commands,
     mut level_end: EventReader<LevelFinishedEvent>,
     score: Res<CurrentScore>,
-    level: ResMut<CurrentLevel>,
+    mut gb9000: ResMut<GroceryBagger9000>,
     asset_server: Res<AssetServer>,
-    mut menu: ResMut<LevelEndMenu>,
 ) {
     if level_end.iter().count() == 0 {
         return;
@@ -62,7 +54,7 @@ fn show_level_end_screen(
             parent.spawn_bundle(TextBundle {
                 text: Text {
                     sections: vec![TextSection {
-                        value: format!("Level {} complete", level.level + 1),
+                        value: format!("Level {} complete", gb9000.current_level + 1),
                         style: TextStyle {
                             font: font.clone(),
                             font_size: TITLE_FONT_SIZE,
@@ -132,7 +124,7 @@ fn show_level_end_screen(
                 });
         })
         .id();
-    menu.root = Some(root);
+    gb9000.menu_root = Some(root);
 }
 
 fn button_system(
@@ -141,15 +133,18 @@ fn button_system(
         (&Interaction, &mut UiColor),
         (Changed<Interaction>, With<Button>),
     >,
-    mut level: ResMut<CurrentLevel>,
-    menu: ResMut<LevelEndMenu>,
+    mut gb9000: ResMut<GroceryBagger9000>,
 ) {
     for (interaction, mut color) in interaction_query.iter_mut() {
         match *interaction {
             Interaction::Clicked => {
-                level.state = Playing;
-                level.level += 1;
-                commands.entity(menu.root.unwrap()).despawn_recursive();
+                commands
+                    .entity(gb9000.menu_root.unwrap())
+                    .despawn_recursive();
+
+                gb9000.state = Playing;
+                gb9000.current_level += 1;
+                gb9000.menu_root = None;
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();

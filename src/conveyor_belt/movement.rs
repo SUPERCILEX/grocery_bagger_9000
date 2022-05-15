@@ -10,7 +10,8 @@ use crate::{
         spawn::{ConveyorBeltInstance, ConveyorBeltMarker},
         ConveyorBelt, ConveyorBeltOptions,
     },
-    levels::{CurrentLevel, LevelLoaded},
+    gb9000::GroceryBagger9000,
+    levels::LevelLoaded,
     nominos::{NominoMarker, NominoSpawner, PiecePickedUp, Selectable},
     robot,
     robot::{RobotMarker, RobotTiming},
@@ -86,7 +87,7 @@ fn init_pieces(
 
 fn replace_pieces(
     mut commands: Commands,
-    current_level: Res<CurrentLevel>,
+    gb9000: Res<GroceryBagger9000>,
     mut conveyor_belt: Query<
         (&mut ConveyorBeltInstance, &mut BeltPieceIds),
         With<ConveyorBeltMarker>,
@@ -137,7 +138,7 @@ fn replace_pieces(
                 &mut commands,
                 from,
                 position,
-                current_level.root.unwrap(),
+                gb9000.level_root.unwrap(),
                 &mut ***conveyor_belt,
                 &belt_options,
             );

@@ -4,9 +4,10 @@ use crate::{
     bags::BagSpawner,
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
+    gb9000::GroceryBagger9000,
     levels::{
         init::{level_init_chrome, LevelInitLabel},
-        CurrentLevel, LevelLoaded,
+        LevelLoaded,
     },
     nominos::TETROMINOS,
     window_management::DipsWindow,
@@ -24,11 +25,11 @@ impl Plugin for Level6Plugin {
 
 fn init_level(
     mut commands: Commands,
-    current: ResMut<CurrentLevel>,
+    gb9000: ResMut<GroceryBagger9000>,
     level_loaded: EventWriter<LevelLoaded>,
     dips_window: Res<DipsWindow>,
 ) {
-    level_init_chrome(6, current, level_loaded, || {
+    level_init_chrome(6, gb9000, level_loaded, || {
         commands
             .spawn_bundle(TransformBundle::default())
             .with_children(|parent| {

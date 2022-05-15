@@ -13,7 +13,7 @@ use crate::{
     },
     conveyor_belt,
     conveyor_belt::BeltEmptyEvent,
-    levels::CurrentLevel,
+    gb9000::GroceryBagger9000,
     nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
 
@@ -186,7 +186,7 @@ fn remove_filled_bags(
 fn replace_filled_bags(
     mut commands: Commands,
     mut replace_events: EventReader<ReplaceFilledBag>,
-    current_level: Res<CurrentLevel>,
+    gb9000: Res<GroceryBagger9000>,
     game_speed: Res<GameSpeed>,
     bag_positions: Query<&Transform, With<BagMarker>>,
 ) {
@@ -199,7 +199,7 @@ fn replace_filled_bags(
         };
 
         commands
-            .entity(current_level.root.unwrap())
+            .entity(gb9000.level_root.unwrap())
             .with_children(|parent| {
                 parent
                     .spawn_bag_into(new_bag_start)

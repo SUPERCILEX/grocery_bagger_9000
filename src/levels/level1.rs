@@ -4,9 +4,10 @@ use crate::{
     bags::{compute_bag_coordinates, BagSpawner, BAG_ORIGIN},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
+    gb9000::GroceryBagger9000,
     levels::{
         init::{level_init_chrome, LevelInitLabel},
-        CurrentLevel, LevelLoaded,
+        LevelLoaded,
     },
     nominos::{Nomino, NominoSpawner, PiecePlaced, DEG_90},
     window_management::DipsWindow,
@@ -24,12 +25,12 @@ impl Plugin for Level1Plugin {
 
 fn init_level(
     mut commands: Commands,
-    current: ResMut<CurrentLevel>,
+    gb9000: ResMut<GroceryBagger9000>,
     level_loaded: EventWriter<LevelLoaded>,
     mut placed_pieces: EventWriter<PiecePlaced>,
     dips_window: Res<DipsWindow>,
 ) {
-    level_init_chrome(1, current, level_loaded, || {
+    level_init_chrome(1, gb9000, level_loaded, || {
         let (root, bag) = commands
             .spawn_bundle(TransformBundle::default())
             .with_children(|parent| {

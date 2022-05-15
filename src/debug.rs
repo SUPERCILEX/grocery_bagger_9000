@@ -6,7 +6,7 @@ use bevy_screen_diags::ScreenDiagsPlugin;
 
 use crate::{
     animations::GameSpeed, colors::NominoColor, conveyor_belt::ConveyorBeltOptions,
-    levels::CurrentLevel, nominos::*,
+    gb9000::GroceryBagger9000, nominos::*,
 };
 
 pub struct DebugPlugin;
@@ -88,7 +88,7 @@ fn debug_options(
     mut nomino_to_spawn: Local<NominoType>,
     mut nomino_color_to_spawn: Local<NominoColorWrapper>,
     mut commands: Commands,
-    mut current_level: ResMut<CurrentLevel>,
+    mut gb9000: ResMut<GroceryBagger9000>,
     mut conveyor_belt_options: ResMut<ConveyorBeltOptions>,
     mut game_speed: ResMut<GameSpeed>,
 ) {
@@ -98,7 +98,7 @@ fn debug_options(
         .show(egui_context.ctx_mut(), |ui| {
             ui.horizontal(|ui| {
                 ui.label("Level");
-                ui.add(egui::DragValue::new(&mut current_level.level).speed(0.025));
+                ui.add(egui::DragValue::new(&mut gb9000.current_level).speed(0.025));
             });
 
             ui.horizontal(|ui| {
@@ -127,7 +127,7 @@ fn debug_options(
             ui.separator();
             ui.horizontal(|ui| {
                 if ui.button("Spawn").clicked() {
-                    if let Some(root) = current_level.root {
+                    if let Some(root) = gb9000.level_root {
                         commands.entity(root).with_children(|parent| {
                             let position = Transform::from_xyz(3., 3., 0.);
 
