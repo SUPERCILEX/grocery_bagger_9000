@@ -1,11 +1,10 @@
 use bevy::{math::const_vec3, prelude::*, transform::TransformSystem::TransformPropagate};
 use bevy_rapier3d::prelude::*;
-use bevy_tweening::TweenCompleted;
 use smallvec::SmallVec;
 
 use crate::{
     animations,
-    animations::{AnimationEvent, GameSpeed},
+    animations::GameSpeed,
     bags,
     bags::{
         spawn::{BagLidMarker, BagMarker},
@@ -42,7 +41,6 @@ impl Plugin for BagReplacementPlugin {
                 .after(replace_full_bags)
                 .after(TransformPropagate),
         );
-        app.add_system_to_stage(CoreStage::PostUpdate, despawn_bags);
     }
 }
 
@@ -209,13 +207,5 @@ fn replace_filled_bags(
                         &game_speed,
                     ));
             });
-    }
-}
-
-fn despawn_bags(mut commands: Commands, mut completed_animations: EventReader<TweenCompleted>) {
-    for TweenCompleted { entity, user_data } in completed_animations.iter() {
-        if *user_data & AnimationEvent::BAG_OFF_SCREEN.bits() != 0 {
-            commands.entity(*entity).despawn_recursive();
-        }
     }
 }

@@ -20,6 +20,7 @@ impl Plugin for AnimationPlugin {
 
         app.add_system_to_stage(CoreStage::PostUpdate, cleanup_animations::<Transform>);
         app.add_system_to_stage(CoreStage::PostUpdate, cleanup_animations::<Style>);
+        app.add_system_to_stage(CoreStage::PostUpdate, despawn_offscreen);
     }
 }
 
@@ -44,7 +45,8 @@ pub struct UndoableAnimationBundle<T: Component> {
 bitflags! {
     pub struct AnimationEvent: u64 {
         const COMPLETED = 1;
-        const BAG_OFF_SCREEN = 1 << 1;
+        const OFFSCREEN = 1 << 1;
+        const BAG = 1 << 2;
     }
 }
 
@@ -128,7 +130,10 @@ pub fn bag_enter(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<
                     },
                 )
                 .with_speed(**speed)
-                .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+                .with_completed_event(
+                    true,
+                    (AnimationEvent::COMPLETED | AnimationEvent::BAG).bits(),
+                ),
             ) as DynTweenable,
             Box::new(Sequence::new([
                 Tween::new(
@@ -170,7 +175,7 @@ pub fn bag_exit(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<T
         .with_speed(**speed)
         .with_completed_event(
             true,
-            (AnimationEvent::COMPLETED | AnimationEvent::BAG_OFF_SCREEN).bits(),
+            (AnimationEvent::COMPLETED | AnimationEvent::OFFSCREEN | AnimationEvent::BAG).bits(),
         ),
     )
 }
@@ -314,7 +319,11 @@ pub fn mouse_tutorial_switch_rotation(target: Transform, speed: &GameSpeed) -> A
     ]))
 }
 
-pub fn menu_ui_enter(from: Rect<Val>, to: Rect<Val>, speed: &GameSpeed) -> Animator<Style> {
+pub fn level_complete_menu_ui_enter(
+    from: Rect<Val>,
+    to: Rect<Val>,
+    speed: &GameSpeed,
+) -> Animator<Style> {
     Animator::new(
         Tween::new(
             EaseMethod::Linear,
@@ -327,6 +336,29 @@ pub fn menu_ui_enter(from: Rect<Val>, to: Rect<Val>, speed: &GameSpeed) -> Anima
         )
         .with_speed(**speed)
         .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+    )
+}
+
+pub fn level_complete_menu_ui_exit(
+    from: Rect<Val>,
+    to: Rect<Val>,
+    speed: &GameSpeed,
+) -> Animator<Style> {
+    Animator::new(
+        Tween::new(
+            EaseMethod::Linear,
+            TweeningType::Once,
+            Duration::from_millis(300),
+            UiPositionLens {
+                start: from,
+                end: to,
+            },
+        )
+        .with_speed(**speed)
+        .with_completed_event(
+            true,
+            (AnimationEvent::COMPLETED | AnimationEvent::OFFSCREEN).bits(),
+        ),
     )
 }
 
@@ -352,6 +384,17 @@ fn cleanup_animations<T: Component>(
             commands
                 .entity(*entity)
                 .remove_bundle::<UndoableAnimationBundle<T>>();
+        }
+    }
+}
+
+fn despawn_offscreen(
+    mut commands: Commands,
+    mut offscreen_animations: EventReader<TweenCompleted>,
+) {
+    for TweenCompleted { entity, user_data } in offscreen_animations.iter() {
+        if *user_data & AnimationEvent::OFFSCREEN.bits() != 0 {
+            commands.entity(*entity).despawn_recursive();
         }
     }
 }

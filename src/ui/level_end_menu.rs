@@ -61,7 +61,11 @@ fn show_level_end_screen(
             color: Color::NONE.into(),
             ..default()
         })
-        .insert(animations::menu_ui_enter(from, to, &game_speed))
+        .insert(animations::level_complete_menu_ui_enter(
+            from,
+            to,
+            &game_speed,
+        ))
         .with_children(|parent| {
             // level text
             parent.spawn_bundle(TextBundle {
@@ -147,13 +151,22 @@ fn button_system(
         (Changed<Interaction>, With<Button>),
     >,
     mut gb9000: ResMut<GroceryBagger9000>,
+    game_speed: Res<GameSpeed>,
 ) {
     for (interaction, mut color) in interaction_query.iter_mut() {
         match *interaction {
             Interaction::Clicked => {
-                commands
-                    .entity(gb9000.menu_root.unwrap())
-                    .despawn_recursive();
+                let from = Rect {
+                    top: Val::Percent(0.),
+                    ..default()
+                };
+                let to = Rect {
+                    top: Val::Percent(100.),
+                    ..default()
+                };
+                commands.entity(gb9000.menu_root.unwrap()).insert(
+                    animations::level_complete_menu_ui_exit(from, to, &game_speed),
+                );
 
                 gb9000.state = Playing;
                 gb9000.current_level += 1;

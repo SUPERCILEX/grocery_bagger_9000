@@ -56,7 +56,9 @@ fn transition_handler(
         level_fsm.belt_empty = true;
     }
     for TweenCompleted { user_data, .. } in bag_offscreen.iter() {
-        if *user_data & AnimationEvent::BAG_OFF_SCREEN.bits() != 0 && level_fsm.belt_empty {
+        if *user_data & (AnimationEvent::BAG | AnimationEvent::OFFSCREEN).bits() != 0
+            && level_fsm.belt_empty
+        {
             level_fsm.bag_offscreen = true;
         }
     }
