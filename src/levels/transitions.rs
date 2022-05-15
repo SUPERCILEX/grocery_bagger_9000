@@ -5,6 +5,7 @@ use crate::{
     animations::AnimationEvent,
     conveyor_belt::BeltEmptyEvent,
     gb9000::{GameState::LevelEnded, GroceryBagger9000},
+    nominos::PiecePlaced,
 };
 
 pub struct LevelTransitionPlugin;
@@ -38,11 +39,13 @@ pub struct LevelLoaded(pub Entity);
 #[derive(Debug, Default)]
 pub struct LevelChangeFsm {
     belt_empty: bool,
+    piece_placed: bool,
     bag_offscreen: bool,
 }
 
 fn transition_handler(
     mut belt_empty_events: EventReader<BeltEmptyEvent>,
+    mut piece_placements: EventReader<PiecePlaced>,
     mut bag_offscreen: EventReader<TweenCompleted>,
     mut level_finished: EventWriter<LevelFinished>,
     mut level_fsm: Local<LevelChangeFsm>,
@@ -50,18 +53,28 @@ fn transition_handler(
     if belt_empty_events.iter().count() > 0 {
         level_fsm.belt_empty = true;
     }
+    if !level_fsm.belt_empty {
+        return;
+    }
+
+    if piece_placements.iter().count() > 0 {
+        level_fsm.piece_placed = true;
+    }
+    if !level_fsm.piece_placed {
+        return;
+    }
+
     for TweenCompleted { user_data, .. } in bag_offscreen.iter() {
-        if *user_data & (AnimationEvent::BAG | AnimationEvent::OFFSCREEN).bits() != 0
-            && level_fsm.belt_empty
-        {
+        if *user_data & (AnimationEvent::BAG | AnimationEvent::OFFSCREEN).bits() != 0 {
             level_fsm.bag_offscreen = true;
         }
     }
-
-    if level_fsm.belt_empty && level_fsm.bag_offscreen {
-        level_finished.send(LevelFinished);
-        *level_fsm = default();
+    if !level_fsm.bag_offscreen {
+        return;
     }
+
+    level_finished.send(LevelFinished);
+    *level_fsm = default();
 }
 
 fn level_unload_handler(
