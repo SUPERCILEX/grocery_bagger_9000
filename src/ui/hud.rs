@@ -2,37 +2,36 @@ use std::fmt::Write;
 
 use bevy::{prelude::*, ui::PositionType::Absolute};
 
-use crate::levels::CurrentScore;
+use crate::{
+    levels::{CurrentScore, LevelFinishedEvent, LevelLoaded},
+    ui::consts::HUD_FONT_SIZE,
+};
 
-pub const FONT_SIZE: f32 = 32.0;
-pub const FONT_COLOR: Color = Color::BLUE;
+pub struct HudPlugin;
 
-pub struct DisplayScorePlugin;
-
-impl Plugin for DisplayScorePlugin {
+impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup_score);
+        app.add_system(setup_hud);
         app.add_system(update_score);
+        app.add_system(despawn_huds);
     }
 }
 
 #[derive(Component)]
+struct Hud;
+
+#[derive(Component)]
 struct ScoreText;
 
-fn update_score(score: Res<CurrentScore>, mut text_query: Query<&mut Text, With<ScoreText>>) {
-    if !score.is_changed() {
+fn setup_hud(
+    mut commands: Commands,
+    mut level_loaded: EventReader<LevelLoaded>,
+    asset_server: Res<AssetServer>,
+) {
+    if level_loaded.iter().count() == 0 {
         return;
     }
 
-    let new_score = score.points;
-    let mut text = text_query.single_mut();
-    let text = &mut text.sections[0].value;
-    text.clear();
-
-    write!(text, "Score: {new_score}").unwrap();
-}
-
-fn setup_score(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
     commands
         .spawn_bundle(NodeBundle {
@@ -46,6 +45,7 @@ fn setup_score(mut commands: Commands, asset_server: Res<AssetServer>) {
             color: Color::NONE.into(),
             ..default()
         })
+        .insert(Hud)
         .with_children(|parent| {
             parent
                 .spawn_bundle(TextBundle {
@@ -54,8 +54,8 @@ fn setup_score(mut commands: Commands, asset_server: Res<AssetServer>) {
                             value: String::new(),
                             style: TextStyle {
                                 font,
-                                font_size: FONT_SIZE,
-                                color: FONT_COLOR,
+                                font_size: HUD_FONT_SIZE,
+                                color: Color::BLUE,
                             },
                         }],
                         ..Default::default()
@@ -64,4 +64,31 @@ fn setup_score(mut commands: Commands, asset_server: Res<AssetServer>) {
                 })
                 .insert(ScoreText);
         });
+}
+
+fn update_score(score: Res<CurrentScore>, mut text_query: Query<&mut Text, With<ScoreText>>) {
+    if !score.is_changed() {
+        return;
+    }
+
+    if let Ok(mut text) = text_query.get_single_mut() {
+        let text = &mut text.sections[0].value;
+
+        text.clear();
+        write!(text, "Score: {}", score.points).unwrap();
+    }
+}
+
+fn despawn_huds(
+    mut commands: Commands,
+    mut level_finished: EventReader<LevelFinishedEvent>,
+    huds: Query<Entity, With<Hud>>,
+) {
+    if level_finished.iter().count() == 0 {
+        return;
+    }
+
+    for hud in huds.iter() {
+        commands.entity(hud).despawn_recursive();
+    }
 }

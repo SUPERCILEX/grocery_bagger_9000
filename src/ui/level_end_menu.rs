@@ -1,11 +1,12 @@
 use bevy::{app::Plugin, prelude::*, ui::PositionType::Absolute};
 
 use crate::{
-    levels::{CurrentLevel, GameState::Playing, LevelFinishedEvent, LevelTransitionLabel},
+    levels::{
+        CurrentLevel, CurrentScore, GameState::Playing, LevelFinishedEvent, LevelTransitionLabel,
+    },
+    ui::consts::{MENU_FONT_SIZE, TITLE_FONT_SIZE},
     App,
 };
-use crate::levels::CurrentScore;
-use crate::ui::display_score::{FONT_COLOR, FONT_SIZE};
 
 const BUTTON_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
@@ -58,46 +59,50 @@ fn show_level_end_screen(
         })
         .with_children(|parent| {
             // level text
-            parent
-                .spawn_bundle(TextBundle {
-                    text: Text {
-                        sections: vec![TextSection {
-                            value: format!("Level: {}", level.level + 1),
-                            style: TextStyle {
-                                font: font.clone(),
-                                font_size: FONT_SIZE * 1.5,
-                                color: Color::BLACK,
-                            },
-                        }],
-                        ..Default::default()
-                    },
-                    style: Style{
-                        margin: Rect{bottom: Val::Px(20.), ..default()},
+            parent.spawn_bundle(TextBundle {
+                text: Text {
+                    sections: vec![TextSection {
+                        value: format!("Level {} complete", level.level + 1),
+                        style: TextStyle {
+                            font: font.clone(),
+                            font_size: TITLE_FONT_SIZE,
+                            color: Color::BLACK,
+                        },
+                    }],
+                    ..Default::default()
+                },
+                style: Style {
+                    margin: Rect {
+                        bottom: Val::Px(20.),
                         ..default()
                     },
-                    ..Default::default()
-                });
+                    ..default()
+                },
+                ..Default::default()
+            });
 
             // score text
-            parent
-                .spawn_bundle(TextBundle {
-                    text: Text {
-                        sections: vec![TextSection {
-                            value: format!("Score: {}", score.points),
-                            style: TextStyle {
-                                font,
-                                font_size: FONT_SIZE,
-                                color: FONT_COLOR,
-                            },
-                        }],
-                        ..Default::default()
-                    },
-                    style: Style{
-                        margin: Rect{bottom: Val::Px(40.), ..default()},
+            parent.spawn_bundle(TextBundle {
+                text: Text {
+                    sections: vec![TextSection {
+                        value: format!("Score: {}", score.points),
+                        style: TextStyle {
+                            font,
+                            font_size: MENU_FONT_SIZE,
+                            color: Color::BLUE,
+                        },
+                    }],
+                    ..Default::default()
+                },
+                style: Style {
+                    margin: Rect {
+                        bottom: Val::Px(40.),
                         ..default()
                     },
-                    ..Default::default()
-                });
+                    ..default()
+                },
+                ..Default::default()
+            });
 
             // next level button
             parent
@@ -106,7 +111,6 @@ fn show_level_end_screen(
                         size: Size::new(Val::Px(200.0), Val::Px(65.0)),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
-                        // margin: Rect{top: Val::Percent(10.), bottom: Val::Percent(10.), ..default()},
                         ..default()
                     },
                     color: NORMAL_BUTTON.into(),
@@ -118,7 +122,7 @@ fn show_level_end_screen(
                             "Next Level",
                             TextStyle {
                                 font: asset_server.load("fonts/FiraSans-Bold.ttf"),
-                                font_size: 40.0,
+                                font_size: MENU_FONT_SIZE,
                                 color: BUTTON_COLOR,
                             },
                             Default::default(),
@@ -126,7 +130,8 @@ fn show_level_end_screen(
                         ..default()
                     });
                 });
-        }).id();
+        })
+        .id();
     menu.root = Some(root);
 }
 
