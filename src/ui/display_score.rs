@@ -4,6 +4,9 @@ use bevy::{prelude::*, ui::PositionType::Absolute};
 
 use crate::levels::CurrentScore;
 
+const FONT_SIZE: f32 = 32.0;
+const FONT_COLOR: Color = Color::BLUE;
+
 pub struct DisplayScorePlugin;
 
 impl Plugin for DisplayScorePlugin {
@@ -12,9 +15,6 @@ impl Plugin for DisplayScorePlugin {
         app.add_system(update_score);
     }
 }
-
-const FONT_SIZE: f32 = 32.0;
-const FONT_COLOR: Color = Color::BLUE;
 
 #[derive(Component)]
 struct ScoreText;
@@ -38,9 +38,9 @@ fn setup_score(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn_bundle(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                align_items: AlignItems::FlexStart,
-                flex_direction: FlexDirection::ColumnReverse,
                 position_type: Absolute,
+                flex_direction: FlexDirection::ColumnReverse,
+                align_items: AlignItems::FlexStart,
                 ..default()
             },
             color: Color::NONE.into(),
@@ -59,10 +59,6 @@ fn setup_score(mut commands: Commands, asset_server: Res<AssetServer>) {
                             },
                         }],
                         ..Default::default()
-                    },
-                    style: Style {
-                        // margin: Rect::all(Val::Auto),
-                        ..default()
                     },
                     ..Default::default()
                 })
