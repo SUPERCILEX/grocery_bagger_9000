@@ -134,64 +134,71 @@ fn show_tutorial(
         return;
     }
 
-    if let TutorialFsm::Ready = *fsm {
-        // TODO https://github.com/Weasy666/bevy_svg/issues/10
-        *fsm = TutorialFsm::StartedLoad;
-    } else if let TutorialFsm::StartedLoad = &*fsm {
-        if let Ok(piece) = first_piece.get_single() {
-            let handle = asset_server.load("icons/mouse-click.svg");
-            commands.entity(piece).with_children(|parent| {
+    match &*fsm {
+        TutorialFsm::Ready => {
+            // TODO https://github.com/Weasy666/bevy_svg/issues/10
+            *fsm = TutorialFsm::StartedLoad;
+        }
+        TutorialFsm::StartedLoad => {
+            if let Ok(piece) = first_piece.get_single() {
+                let handle = asset_server.load("icons/mouse-click.svg");
+                commands.entity(piece).with_children(|parent| {
+                    let transform =
+                        Transform::from_translation(Vec3::new(-2., 0.5, 0.)).with_scale(Vec3::ZERO);
+
+                    let icon = parent
+                        .spawn_bundle(Svg2dBundle {
+                            svg: handle.clone(),
+                            transform,
+                            origin: Origin::Center,
+                            ..Default::default()
+                        })
+                        .insert(TutorialIconMarker)
+                        .id();
+
+                    *fsm = TutorialFsm::Loading(handle, piece, icon);
+                });
+            }
+        }
+        TutorialFsm::Loading(handle, piece, icon) => {
+            if asset_server.get_load_state(handle) == LoadState::Loaded {
+                commands
+                    .entity(*icon)
+                    .insert(animations::mouse_tutorial_enter(
+                        Transform::from_scale(ICON_SCALE),
+                        &game_speed,
+                    ));
+
+                *fsm = TutorialFsm::Loaded(*piece, *icon);
+            }
+        }
+        TutorialFsm::Loaded(piece, icon) => {
+            if piece_selections.iter().count() > 0 {
                 let transform =
-                    Transform::from_translation(Vec3::new(-2., 0.5, 0.)).with_scale(Vec3::ZERO);
+                    Transform::from_translation(Vec3::new(-0.5, 1.5, 0.)).with_scale(ICON_SCALE);
+                commands
+                    .entity(*icon)
+                    .insert(animations::mouse_tutorial_switch_rotation(
+                        transform.with_rotation(Quat::from_rotation_y(PI)),
+                        &game_speed,
+                    ));
 
-                let icon = parent
-                    .spawn_bundle(Svg2dBundle {
-                        svg: handle.clone(),
-                        transform,
-                        origin: Origin::Center,
-                        ..Default::default()
-                    })
-                    .insert(TutorialIconMarker)
-                    .id();
-
-                *fsm = TutorialFsm::Loading(handle, piece, icon);
-            });
+                *fsm = TutorialFsm::PickedUp(*piece, *icon, pieces.get(*piece).unwrap().rotation);
+            }
         }
-    } else if let TutorialFsm::Loading(handle, piece, icon) = &*fsm {
-        if asset_server.get_load_state(handle) == LoadState::Loaded {
-            commands
-                .entity(*icon)
-                .insert(animations::mouse_tutorial_enter(
-                    Transform::from_scale(ICON_SCALE),
-                    &game_speed,
-                ));
-
-            *fsm = TutorialFsm::Loaded(*piece, *icon);
+        TutorialFsm::PickedUp(piece, icon, rotation) => {
+            if pieces.get(*piece).unwrap().rotation != *rotation {
+                let transform =
+                    Transform::from_translation(Vec3::new(-2., 0.5, 0.)).with_scale(ICON_SCALE);
+                commands
+                    .entity(*icon)
+                    .insert(animations::mouse_tutorial_switch_rotation(
+                        transform.with_rotation(DEG_90.inverse()),
+                        &game_speed,
+                    ));
+                *fsm = TutorialFsm::Rotated;
+            }
         }
-    } else if let TutorialFsm::Loaded(piece, icon) = &*fsm {
-        if piece_selections.iter().count() > 0 {
-            let transform =
-                Transform::from_translation(Vec3::new(-0.5, 1.5, 0.)).with_scale(ICON_SCALE);
-            commands
-                .entity(*icon)
-                .insert(animations::mouse_tutorial_switch_rotation(
-                    transform.with_rotation(Quat::from_rotation_y(PI)),
-                    &game_speed,
-                ));
-
-            *fsm = TutorialFsm::PickedUp(*piece, *icon, pieces.get(*piece).unwrap().rotation);
-        }
-    } else if let TutorialFsm::PickedUp(piece, icon, rotation) = &*fsm {
-        if pieces.get(*piece).unwrap().rotation != *rotation {
-            let transform =
-                Transform::from_translation(Vec3::new(-2., 0.5, 0.)).with_scale(ICON_SCALE);
-            commands
-                .entity(*icon)
-                .insert(animations::mouse_tutorial_switch_rotation(
-                    transform.with_rotation(DEG_90.inverse()),
-                    &game_speed,
-                ));
-            *fsm = TutorialFsm::Rotated;
-        }
+        TutorialFsm::Rotated => {}
     }
 }

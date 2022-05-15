@@ -113,8 +113,10 @@ fn detect_filled_bags(
 }
 
 #[derive(Debug, Default)]
-pub struct BagReplacementFsm {
-    belt_empty: bool,
+pub enum BagReplacementFsm {
+    #[default]
+    Ready,
+    BeltEmpty,
 }
 
 fn replace_full_bags(
@@ -126,22 +128,31 @@ fn replace_full_bags(
     mut replace_events: EventWriter<ReplaceFilledBag>,
     bags: Query<Entity, With<BagMarker>>,
 ) {
-    if belt_empty_events.iter().count() > 0 {
-        replacement_fsm.belt_empty = true;
-    }
+    let belt_empty = belt_empty_events.iter().count() > 0;
+    let piece_placed = piece_placements.iter().count() > 0;
 
-    for filled_bag in filled_events.iter() {
-        if !replacement_fsm.belt_empty {
-            remove_events.send(RemoveFilledBag(**filled_bag));
-            replace_events.send(ReplaceFilledBag(**filled_bag));
-        }
-    }
+    match *replacement_fsm {
+        BagReplacementFsm::Ready => {
+            for filled_bag in filled_events.iter() {
+                remove_events.send(RemoveFilledBag(**filled_bag));
+                replace_events.send(ReplaceFilledBag(**filled_bag));
+            }
 
-    if piece_placements.iter().count() > 0 && replacement_fsm.belt_empty {
-        for bag in bags.iter() {
-            remove_events.send(RemoveFilledBag(bag));
+            if belt_empty {
+                *replacement_fsm = BagReplacementFsm::BeltEmpty;
+            }
         }
-        *replacement_fsm = default();
+        BagReplacementFsm::BeltEmpty => {
+            // Consume pending events
+            filled_events.iter().count();
+
+            if piece_placed {
+                for bag in bags.iter() {
+                    remove_events.send(RemoveFilledBag(bag));
+                }
+                *replacement_fsm = default();
+            }
+        }
     }
 }
 

@@ -36,11 +36,12 @@ pub struct LevelFinished;
 #[derive(Deref)]
 pub struct LevelLoaded(pub Entity);
 
-#[derive(Debug, Default)]
-pub struct LevelChangeFsm {
-    belt_empty: bool,
-    piece_placed: bool,
-    bag_offscreen: bool,
+#[derive(Debug, Default, Eq, PartialEq)]
+pub enum LevelChangeFsm {
+    #[default]
+    Ready,
+    BeltEmpty,
+    PiecePlaced,
 }
 
 fn transition_handler(
@@ -50,31 +51,32 @@ fn transition_handler(
     mut level_finished: EventWriter<LevelFinished>,
     mut level_fsm: Local<LevelChangeFsm>,
 ) {
-    if belt_empty_events.iter().count() > 0 {
-        level_fsm.belt_empty = true;
-    }
-    if !level_fsm.belt_empty {
-        return;
-    }
+    let belt_empty = belt_empty_events.iter().count() > 0;
+    let piece_placed = piece_placements.iter().count() > 0;
+    let bag_offscreen = bag_offscreen
+        .iter()
+        .filter(|t| t.user_data & (AnimationEvent::BAG | AnimationEvent::OFFSCREEN).bits() != 0)
+        .count()
+        > 0;
 
-    if piece_placements.iter().count() > 0 {
-        level_fsm.piece_placed = true;
-    }
-    if !level_fsm.piece_placed {
-        return;
-    }
-
-    for TweenCompleted { user_data, .. } in bag_offscreen.iter() {
-        if *user_data & (AnimationEvent::BAG | AnimationEvent::OFFSCREEN).bits() != 0 {
-            level_fsm.bag_offscreen = true;
+    match *level_fsm {
+        LevelChangeFsm::Ready => {
+            if belt_empty {
+                *level_fsm = LevelChangeFsm::BeltEmpty;
+            }
+        }
+        LevelChangeFsm::BeltEmpty => {
+            if piece_placed {
+                *level_fsm = LevelChangeFsm::PiecePlaced;
+            }
+        }
+        LevelChangeFsm::PiecePlaced => {
+            if bag_offscreen {
+                level_finished.send(LevelFinished);
+                *level_fsm = default();
+            }
         }
     }
-    if !level_fsm.bag_offscreen {
-        return;
-    }
-
-    level_finished.send(LevelFinished);
-    *level_fsm = default();
 }
 
 fn level_unload_handler(
