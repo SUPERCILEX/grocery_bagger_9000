@@ -2,13 +2,13 @@ use bevy::prelude::*;
 
 pub use consts::*;
 pub use data::*;
+pub use movement::BeltEmptyEvent;
+use movement::ConveyorBeltMovementPlugin;
 pub use spawn::{BoxedConveyorBelt, ConveyorBeltSpawner};
-
-use crate::conveyor_belt::movement::ConveyorBeltMovementPlugin;
 
 mod consts;
 mod data;
-pub(crate) mod movement;
+mod movement;
 mod spawn;
 
 pub struct ConveyorBeltPlugin;

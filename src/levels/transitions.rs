@@ -1,14 +1,14 @@
+use bevy::prelude::*;
+use bevy_tweening::TweenCompleted;
+
 use crate::{
     animations::AnimationEvent,
-    conveyor_belt::movement::BeltEmptyEvent,
+    conveyor_belt::BeltEmptyEvent,
     levels::{
         init::LevelInitLabel,
         transitions::GameState::{LevelEnded, Playing},
     },
 };
-use bevy::prelude::*;
-use bevy_tweening::TweenCompleted;
-
 
 pub struct LevelTransitionPlugin;
 
@@ -56,7 +56,7 @@ pub struct LevelTransitionLabel;
 pub struct LevelFinishedEvent;
 
 #[derive(Debug, Default)]
-pub struct LevelChangeFSM {
+pub struct LevelChangeFsm {
     belt_empty: bool,
     bag_offscreen: bool,
 }
@@ -65,7 +65,7 @@ fn transition_handler(
     mut belt_empty_events: EventReader<BeltEmptyEvent>,
     mut bag_offscreen: EventReader<TweenCompleted>,
     mut level_finished: EventWriter<LevelFinishedEvent>,
-    mut level_fsm: Local<LevelChangeFSM>,
+    mut level_fsm: Local<LevelChangeFsm>,
 ) {
     if belt_empty_events.iter().count() > 0 {
         level_fsm.belt_empty = true;

@@ -36,6 +36,8 @@ impl Plugin for ConveyorBeltMovementPlugin {
     }
 }
 
+pub struct BeltEmptyEvent;
+
 #[derive(Default, Component, Deref, DerefMut)]
 pub struct BeltPieceIds(SmallVec<[Entity; MAX_NUM_PIECES]>);
 
@@ -157,8 +159,6 @@ fn replace_pieces(
     }
 }
 
-pub struct BeltEmptyEvent;
-
 fn belt_empty_check(
     belt_pieces: Query<(&BeltPieceIds, ChangeTrackers<BeltPieceIds>), With<ConveyorBeltMarker>>,
     mut belt_empty: EventWriter<BeltEmptyEvent>,
@@ -167,9 +167,9 @@ fn belt_empty_check(
         if !belt_changes.is_changed() {
             return;
         }
-        // write belt empty event
+
         if belt_pieces.is_empty() {
-            belt_empty.send(BeltEmptyEvent {});
+            belt_empty.send(BeltEmptyEvent);
         }
     }
 }

@@ -1,12 +1,11 @@
+use bevy::{app::Plugin, prelude::*};
+
 use crate::{
     levels::{
-        CurrentLevel, CurrentScore,
-        GameState::{Playing},
-        LevelFinishedEvent, LevelTransitionLabel,
+        CurrentLevel, CurrentScore, GameState::Playing, LevelFinishedEvent, LevelTransitionLabel,
     },
     App,
 };
-use bevy::{app::Plugin, prelude::*};
 
 pub struct LevelEndMenuPlugin;
 
