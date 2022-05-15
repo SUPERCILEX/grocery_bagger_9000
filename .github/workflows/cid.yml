@@ -14,7 +14,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-04-27
+          toolchain: nightly-2022-05-11
           default: true
       - name: Build project
         run: cargo build --release --all-features
@@ -27,7 +27,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-04-27
+          toolchain: nightly-2022-05-11
           target: wasm32-unknown-unknown
           default: true
       - name: Build project
@@ -44,7 +44,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-04-27
+          toolchain: nightly-2022-05-11
           default: true
       - name: Run tests
         run: cargo test
@@ -57,7 +57,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-04-27
+          toolchain: nightly-2022-05-11
           default: true
           components: rustfmt, clippy
       - name: Run lint
@@ -75,7 +75,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-04-27
+          toolchain: nightly-2022-05-11
           default: true
       - name: Publish release
         run: cargo publish
@@ -101,7 +101,7 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2022-04-27
+          toolchain: nightly-2022-05-11
           target: ${{ matrix.target }}
           default: true
       - name: Build binary
