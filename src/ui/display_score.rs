@@ -4,8 +4,8 @@ use bevy::{prelude::*, ui::PositionType::Absolute};
 
 use crate::levels::CurrentScore;
 
-const FONT_SIZE: f32 = 32.0;
-const FONT_COLOR: Color = Color::BLUE;
+pub const FONT_SIZE: f32 = 32.0;
+pub const FONT_COLOR: Color = Color::BLUE;
 
 pub struct DisplayScorePlugin;
 

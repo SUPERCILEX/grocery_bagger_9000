@@ -4,6 +4,8 @@ use crate::{
     levels::{CurrentLevel, GameState::Playing, LevelFinishedEvent, LevelTransitionLabel},
     App,
 };
+use crate::levels::CurrentScore;
+use crate::ui::display_score::{FONT_COLOR, FONT_SIZE};
 
 const BUTTON_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
@@ -30,8 +32,8 @@ pub struct LevelEndMenu {
 fn show_level_end_screen(
     mut commands: Commands,
     mut level_end: EventReader<LevelFinishedEvent>,
-    // _score: Res<CurrentScore>,
-    // _level: ResMut<CurrentLevel>,
+    score: Res<CurrentScore>,
+    level: ResMut<CurrentLevel>,
     asset_server: Res<AssetServer>,
     mut menu: ResMut<LevelEndMenu>,
 ) {
@@ -40,6 +42,7 @@ fn show_level_end_screen(
     }
 
     // TODO: put playing update into callback for button
+    let font = asset_server.load("fonts/FiraSans-Bold.ttf");
     let root = commands
         .spawn_bundle(NodeBundle {
             style: Style {
@@ -54,12 +57,56 @@ fn show_level_end_screen(
             ..default()
         })
         .with_children(|parent| {
+            // level text
+            parent
+                .spawn_bundle(TextBundle {
+                    text: Text {
+                        sections: vec![TextSection {
+                            value: format!("Level: {}", level.level + 1),
+                            style: TextStyle {
+                                font: font.clone(),
+                                font_size: FONT_SIZE * 1.5,
+                                color: Color::BLACK,
+                            },
+                        }],
+                        ..Default::default()
+                    },
+                    style: Style{
+                        margin: Rect{bottom: Val::Px(20.), ..default()},
+                        ..default()
+                    },
+                    ..Default::default()
+                });
+
+            // score text
+            parent
+                .spawn_bundle(TextBundle {
+                    text: Text {
+                        sections: vec![TextSection {
+                            value: format!("Score: {}", score.points),
+                            style: TextStyle {
+                                font,
+                                font_size: FONT_SIZE,
+                                color: FONT_COLOR,
+                            },
+                        }],
+                        ..Default::default()
+                    },
+                    style: Style{
+                        margin: Rect{bottom: Val::Px(40.), ..default()},
+                        ..default()
+                    },
+                    ..Default::default()
+                });
+
+            // next level button
             parent
                 .spawn_bundle(ButtonBundle {
                     style: Style {
                         size: Size::new(Val::Px(200.0), Val::Px(65.0)),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
+                        // margin: Rect{top: Val::Percent(10.), bottom: Val::Percent(10.), ..default()},
                         ..default()
                     },
                     color: NORMAL_BUTTON.into(),
@@ -79,8 +126,7 @@ fn show_level_end_screen(
                         ..default()
                     });
                 });
-        })
-        .id();
+        }).id();
     menu.root = Some(root);
 }
 
