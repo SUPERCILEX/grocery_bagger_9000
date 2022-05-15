@@ -5,8 +5,12 @@ use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_screen_diags::ScreenDiagsPlugin;
 
 use crate::{
-    animations::GameSpeed, colors::NominoColor, conveyor_belt::ConveyorBeltOptions,
-    gb9000::GroceryBagger9000, nominos::*,
+    animations::GameSpeed,
+    colors::NominoColor,
+    conveyor_belt::ConveyorBeltOptions,
+    gb9000::{GameState::Playing, GroceryBagger9000},
+    levels::LevelInitLabel,
+    nominos::*,
 };
 
 pub struct DebugPlugin;
@@ -24,11 +28,16 @@ impl Plugin for DebugPlugin {
         app.add_plugin(InspectableRapierPlugin);
         app.init_resource::<DebugOptions>();
 
+        app.add_plugin(ScreenDiagsPlugin);
+        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
+
         app.add_system(debug_options);
         app.add_system(open_debug_menu);
 
-        app.add_plugin(ScreenDiagsPlugin);
-        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
+        app.add_system_to_stage(
+            CoreStage::PreUpdate,
+            level_change_handler.before(LevelInitLabel),
+        );
     }
 }
 
@@ -220,5 +229,26 @@ fn debug_options(
 fn open_debug_menu(keys: Res<Input<KeyCode>>, mut debug_options: ResMut<DebugOptions>) {
     if keys.just_pressed(KeyCode::Semicolon) {
         debug_options.open = true;
+    }
+}
+
+fn level_change_handler(
+    mut commands: Commands,
+    mut gb9000: ResMut<GroceryBagger9000>,
+    mut prev_level: Local<u16>,
+) {
+    if *prev_level != gb9000.current_level {
+        *prev_level = gb9000.current_level;
+
+        if let Some(initialized) = gb9000.level_root {
+            commands.entity(initialized).despawn_recursive();
+            gb9000.level_root = None;
+        }
+
+        if let Some(initialized) = gb9000.menu_root {
+            commands.entity(initialized).despawn_recursive();
+            gb9000.menu_root = None;
+            gb9000.state = Playing;
+        }
     }
 }

@@ -4,7 +4,7 @@ use crate::{
     animations,
     animations::GameSpeed,
     gb9000::{GameState::Playing, GroceryBagger9000},
-    levels::{CurrentScore, LevelFinishedEvent, LevelTransitionLabel},
+    levels::{CurrentScore, LevelFinished, LevelTransitionLabel},
     ui::consts::{MENU_FONT_SIZE, TITLE_FONT_SIZE},
     App,
 };
@@ -27,7 +27,7 @@ impl Plugin for LevelEndMenuPlugin {
 
 fn show_level_end_screen(
     mut commands: Commands,
-    mut level_end: EventReader<LevelFinishedEvent>,
+    mut level_end: EventReader<LevelFinished>,
     score: Res<CurrentScore>,
     game_speed: Res<GameSpeed>,
     mut gb9000: ResMut<GroceryBagger9000>,

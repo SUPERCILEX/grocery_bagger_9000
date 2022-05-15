@@ -3,7 +3,7 @@ use std::fmt::Write;
 use bevy::{prelude::*, ui::PositionType::Absolute};
 
 use crate::{
-    levels::{CurrentScore, LevelFinishedEvent, LevelLoaded},
+    levels::{CurrentScore, LevelFinished, LevelLoaded},
     ui::consts::HUD_FONT_SIZE,
 };
 
@@ -81,7 +81,7 @@ fn update_score(score: Res<CurrentScore>, mut text_query: Query<&mut Text, With<
 
 fn despawn_huds(
     mut commands: Commands,
-    mut level_finished: EventReader<LevelFinishedEvent>,
+    mut level_finished: EventReader<LevelFinished>,
     huds: Query<Entity, With<Hud>>,
 ) {
     if level_finished.iter().count() == 0 {
