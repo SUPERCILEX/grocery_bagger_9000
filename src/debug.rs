@@ -57,6 +57,7 @@ impl Default for DebugOptions {
 
 #[derive(Default, Eq, PartialEq)]
 enum NominoType {
+    Straight3,
     #[default]
     Straight,
     Square,
@@ -79,6 +80,7 @@ impl Default for NominoColorWrapper {
 impl NominoType {
     fn name(&self) -> &str {
         match self {
+            NominoType::Straight3 => "Straight (3)",
             NominoType::Straight => "Straight",
             NominoType::Square => "Square",
             NominoType::T => "T",
@@ -158,6 +160,7 @@ fn debug_options(
                             }
 
                             match *nomino_to_spawn {
+                                NominoType::Straight3 => spawn!(Nomino::TrominoStraight),
                                 NominoType::Straight => spawn!(Nomino::TetrominoStraight),
                                 NominoType::Square => spawn!(Nomino::TetrominoSquare),
                                 NominoType::T => spawn!(Nomino::TetrominoT),
@@ -210,6 +213,7 @@ fn debug_options(
                             };
                         }
 
+                        option!(NominoType::Straight3);
                         option!(NominoType::Straight);
                         option!(NominoType::Square);
                         option!(NominoType::T);

@@ -11,6 +11,21 @@ pub static DEG_90: SyncLazy<Quat> = SyncLazy::new(|| Quat::from_rotation_z(-PI /
 pub static DEG_180: SyncLazy<Quat> = SyncLazy::new(|| Quat::from_rotation_z(PI));
 pub static DEG_MIRRORED: SyncLazy<Quat> = SyncLazy::new(|| Quat::from_rotation_y(PI));
 
+pub static TROMINO_STRAIGHT_PATH: SyncLazy<Path> = SyncLazy::new(|| {
+    let mut b = Builder::with_capacity(4, 5);
+
+    b.begin(Point::new(-0.5, -1.5));
+    b.line_to(Point::new(-0.5, 1.5));
+    b.line_to(Point::new(0.5, 1.5));
+    b.line_to(Point::new(0.5, -1.5));
+    b.close();
+
+    Path(b.build())
+});
+
+pub static TROMINO_STRAIGHT_COLLIDER: SyncLazy<Collider> =
+    SyncLazy::new(|| Collider::cuboid(0.49, 1.49, 0.1));
+
 pub static TETROMINO_STRAIGHT_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 5);
 

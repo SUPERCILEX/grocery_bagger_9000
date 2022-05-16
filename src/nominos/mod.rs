@@ -36,6 +36,7 @@ impl Plugin for PiecesPlugin {
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Nomino {
+    TrominoStraight,
     TetrominoStraight,
     TetrominoSquare,
     TetrominoT,
@@ -47,6 +48,7 @@ pub enum Nomino {
 impl Nomino {
     fn path(&self) -> &Path {
         match self {
+            Nomino::TrominoStraight => &TROMINO_STRAIGHT_PATH,
             Nomino::TetrominoStraight => &TETROMINO_STRAIGHT_PATH,
             Nomino::TetrominoSquare => &TETROMINO_SQUARE_PATH,
             Nomino::TetrominoT => &TETROMINO_T_PATH,
@@ -58,6 +60,7 @@ impl Nomino {
 
     fn collider(&self) -> &Collider {
         match self {
+            Nomino::TrominoStraight => &TROMINO_STRAIGHT_COLLIDER,
             Nomino::TetrominoStraight => &TETROMINO_STRAIGHT_COLLIDER,
             Nomino::TetrominoSquare => &TETROMINO_SQUARE_COLLIDER,
             Nomino::TetrominoT => &TETROMINO_T_COLLIDER,
