@@ -1589,6 +1589,7 @@ dependencies = [
  "rand",
  "smallvec",
  "tracing",
+ "wasm-bindgen",
 ]
 
 [[package]]
