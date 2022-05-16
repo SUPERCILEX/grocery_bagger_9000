@@ -5,8 +5,9 @@ use bevy_svg::prelude::SvgPlugin;
 use bevy_tweening::TweeningPlugin;
 
 use crate::{
-    animations::AnimationPlugin, bags::BagsPlugin, conveyor_belt::ConveyorBeltPlugin,
-    levels::LevelsPlugin, nominos::PiecesPlugin, robot::RobotPlugin, ui::UiPlugin,
+    analytics::AnalyticsPlugin, animations::AnimationPlugin, bags::BagsPlugin,
+    conveyor_belt::ConveyorBeltPlugin, levels::LevelsPlugin, nominos::PiecesPlugin,
+    robot::RobotPlugin, ui::UiPlugin,
 };
 
 pub struct GroceryBagger9000Plugin;
@@ -22,6 +23,7 @@ impl Plugin for GroceryBagger9000Plugin {
         app.add_plugin(AnimationPlugin);
         app.add_plugin(UiPlugin);
         app.add_plugin(RobotPlugin);
+        app.add_plugin(AnalyticsPlugin);
 
         app.add_plugin(ShapePlugin);
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
