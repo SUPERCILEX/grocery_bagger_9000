@@ -1,14 +1,18 @@
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta content="width=device-width,initial-scale=1,shrink-to-fit=no" name="viewport">
-    <meta content="light dark" name="color-scheme">
-    <link href="favicon.ico" rel="icon" type="image/x-icon">
-    <title>Grocery Bagger 9000</title>
-    <style>body, html { margin: 0; padding: 0; } canvas { display: block; }</style>
-    <script type="module">
-        import init from './grocery_bagger_9000.js';
-        init();
-    </script>
+  <meta charset="utf-8">
+  <meta content="width=device-width,initial-scale=1,shrink-to-fit=no" name="viewport">
+  <meta content="light dark" name="color-scheme">
+  <link href="favicon.ico" rel="icon" type="image/x-icon">
+  <title>Grocery Bagger 9000</title>
+  <style>body, html { margin: 0; padding: 0; } canvas { display: block; }</style>
+  <script type="module">
+    import init from './grocery_bagger_9000.js';
+    init();
+    document.body.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  </script>
 </head>
 </html>
