@@ -18,16 +18,16 @@ impl Plugin for AnalyticsPlugin {
 }
 
 #[derive(Copy, Clone)]
-enum ActionIDs {
+enum ActionIds {
     PiecePlaced = 0,
 }
 
 #[derive(Copy, Clone)]
-enum VersionIDs {
+enum VersionIds {
     FamilyFriends = 0,
 }
 
-pub fn log_level_start(
+fn log_level_start(
     mut level_start: EventReader<LevelLoaded>,
     thread_pool: Res<AsyncComputeTaskPool>,
     gb9000: Res<GroceryBagger9000>,
@@ -44,7 +44,7 @@ pub fn log_level_start(
         .detach();
 }
 
-pub fn log_level_end(
+fn log_level_end(
     mut level_end: EventReader<LevelFinished>,
     thread_pool: Res<AsyncComputeTaskPool>,
     gb9000: Res<GroceryBagger9000>,
@@ -61,16 +61,16 @@ pub fn log_level_end(
         .detach();
 }
 
-pub fn log_piece_placed(
+fn log_piece_placed(
     mut piece_placed: EventReader<PiecePlaced>,
     thread_pool: Res<AsyncComputeTaskPool>,
 ) {
     for _ in piece_placed.iter() {
         thread_pool
             .spawn(async {
-                logLevelAction(ActionIDs::PiecePlaced as u32);
+                logLevelAction(ActionIds::PiecePlaced as u32);
             })
-            .detach()
+            .detach();
     }
 }
 

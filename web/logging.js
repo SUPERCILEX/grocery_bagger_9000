@@ -166,7 +166,6 @@ class CapstoneLogger {
     prdUrl =
         "https://integration.centerforgamescience.org/cgs/apps/games/v2/index.php/";
     BUFFER_DURATION = 3000; // milliseconds for buffering level actions
-    lastTimeStamp;
     SESSION_TIMEOUT = 300000;
 
     constructor(gameId, gameName, gameKey, categoryId) {
@@ -428,7 +427,9 @@ function logLevelEnd(levelId) {
     if (window.logger.isNewSession()) {
         window.logger.startNewSession()
     }
-    window.logger.logLevelEnd(JSON.stringify({levelId}));
+    window.logger.logLevelEnd(JSON.stringify({
+        levelId
+    }));
 }
 
 function logLevelAction(actionId) {
@@ -445,7 +446,7 @@ function logActionWithNoLevel(actionId) {
     window.logger.logActionWithNoLevel(actionId, "");
 }
 
-function logLevelStart(levelId){
+function logLevelStart(levelId) {
     if (window.logger.isNewSession()) {
         window.logger.startNewSession()
     }
