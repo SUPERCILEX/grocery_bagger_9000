@@ -7,6 +7,7 @@ description = "A Tetris-like game with a twist"
 repository = "https://github.com/SUPERCILEX/grocery_bagger_9000"
 keywords = ["bevy", "tetris", "puzzle"]
 categories = ["games"]
+license = "GPL-3.0"
 
 [patch.crates-io]
 bevy = { git = "https://github.com/SUPERCILEX/bevy" }
