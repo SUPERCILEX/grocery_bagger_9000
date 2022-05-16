@@ -82,6 +82,41 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
+  deploy_web:
+    needs: [build, test, lint]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2022-05-11
+          target: wasm32-unknown-unknown
+          default: true
+      - name: Publish website
+        run: |
+          cargo install wasm-bindgen-cli
+          curl -L https://github.com/WebAssembly/binaryen/releases/download/version_108/binaryen-version_108-x86_64-linux.tar.gz -o opt.tar.gz && \
+            tar -xvf opt.tar.gz
+          git init web-build && \
+            git config --global user.name "${GITHUB_ACTOR}" && \
+            git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
+          cargo build --locked --profile=web-release --target=wasm32-unknown-unknown
+          wasm-bindgen --out-dir out --target web target/wasm32-unknown-unknown/web-release/grocery_bagger_9000.wasm
+          cp -r web/* assets/ web-build
+          mv out/grocery_bagger_9000.js web-build
+          ./binaryen-version_108/bin/wasm-opt -O -ol 100 -s 100 out/grocery_bagger_9000_bg.wasm -o web-build/grocery_bagger_9000_bg.wasm
+
+          cd web-build
+          git add . && \
+            git commit -m "Build for ${GITHUB_SHA}" && \
+            git push --force "https://${GH_PAT}@github.com/${GITHUB_REPOSITORY}.git" master:gh-pages
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+
   attach_binaries:
     strategy:
       matrix:
