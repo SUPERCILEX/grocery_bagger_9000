@@ -1,10 +1,10 @@
-use bevy::{prelude::*, transform::TransformSystem::TransformPropagate};
+use bevy::{prelude::*, transform::TransformSystem::TransformPropagate, window::WindowResized};
 use bevy_prototype_lyon::draw::DrawMode;
 use smallvec::SmallVec;
 
 use crate::{
     animations,
-    animations::GameSpeed,
+    animations::{GameSpeed, Target},
     conveyor_belt::{
         consts::{HEIGHT, LENGTH, MAX_NUM_PIECES, PIECE_WIDTH},
         spawn::{ConveyorBeltInstance, ConveyorBeltMarker},
@@ -34,6 +34,7 @@ impl Plugin for ConveyorBeltMovementPlugin {
             CoreStage::PostUpdate,
             move_pieces.before(TransformPropagate),
         );
+        app.add_system_to_stage(CoreStage::PostUpdate, reposition_pieces_on_window_resize);
     }
 }
 
@@ -149,12 +150,9 @@ fn replace_pieces(
                     .get_single()
                     .map(|r| r.time_left())
                     .unwrap_or(robot::PLACEMENT_TTL);
-                commands.entity(spawned).insert(animations::piece_movement(
-                    from,
-                    target,
-                    ttl,
-                    &game_speed,
-                ));
+                commands
+                    .entity(spawned)
+                    .insert_bundle(animations::piece_movement(from, target, ttl, &game_speed));
             }
         }
     }
@@ -212,12 +210,56 @@ fn move_pieces(
             .unwrap_or(robot::PLACEMENT_TTL);
         for (index, piece) in belt_pieces.iter().enumerate() {
             let position = positions.get(*piece).unwrap();
-            commands.entity(*piece).insert(animations::piece_movement(
-                *position,
-                Transform::from_translation(piece_position(&dips_window, &belt_options, index)),
-                ttl,
-                &game_speed,
-            ));
+            commands
+                .entity(*piece)
+                .insert_bundle(animations::piece_movement(
+                    *position,
+                    Transform::from_translation(piece_position(&dips_window, &belt_options, index)),
+                    ttl,
+                    &game_speed,
+                ));
+        }
+    }
+}
+
+fn reposition_pieces_on_window_resize(
+    mut commands: Commands,
+    mut resized_events: EventReader<WindowResized>,
+    dips_window: Res<DipsWindow>,
+    game_speed: Res<GameSpeed>,
+    belt_options: Res<ConveyorBeltOptions>,
+    belt_pieces: Query<&BeltPieceIds, With<ConveyorBeltMarker>>,
+    robot_timing: Query<&RobotTiming, With<RobotMarker>>,
+    mut piece_positions: Query<(&mut Transform, Option<&Target<Transform>>), With<NominoMarker>>,
+) {
+    if resized_events.iter().count() == 0 {
+        return;
+    }
+
+    if let Ok(pieces) = belt_pieces.get_single() {
+        for (index, piece) in pieces.iter().enumerate() {
+            let position = piece_position(&dips_window, &belt_options, index);
+            let (mut transform, target) = piece_positions.get_mut(*piece).unwrap();
+
+            if let Some(target) = target {
+                let diff = position - target.translation;
+                transform.translation += diff;
+
+                let ttl = robot_timing
+                    .get_single()
+                    .map(|r| r.time_left())
+                    .unwrap_or(robot::PLACEMENT_TTL);
+                commands
+                    .entity(*piece)
+                    .insert_bundle(animations::piece_movement(
+                        *transform,
+                        transform.with_translation(position),
+                        ttl,
+                        &game_speed,
+                    ));
+            } else {
+                transform.translation = position;
+            }
         }
     }
 }

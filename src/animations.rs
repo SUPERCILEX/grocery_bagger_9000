@@ -36,10 +36,19 @@ impl Default for GameSpeed {
 #[derive(Component, Deref)]
 pub struct Original<T: Component>(T);
 
+#[derive(Component, Deref)]
+pub struct Target<T: Component>(T);
+
 #[derive(Bundle)]
 pub struct UndoableAnimationBundle<T: Component> {
     animator: Animator<T>,
     original: Original<T>,
+}
+
+#[derive(Bundle)]
+pub struct RedoableAnimationBundle<T: Component> {
+    animator: Animator<T>,
+    original: Target<T>,
 }
 
 bitflags! {
@@ -254,8 +263,8 @@ pub fn piece_movement(
     to: Transform,
     duration: Duration,
     speed: &GameSpeed,
-) -> Animator<Transform> {
-    Animator::new(
+) -> RedoableAnimationBundle<Transform> {
+    let animator = Animator::new(
         Tween::new(
             EaseMethod::EaseFunction(EaseFunction::CircularOut),
             TweeningType::Once,
@@ -267,7 +276,12 @@ pub fn piece_movement(
         )
         .with_speed(**speed)
         .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
-    )
+    );
+
+    RedoableAnimationBundle {
+        animator,
+        original: Target(to),
+    }
 }
 
 pub fn mouse_tutorial_enter(target: Transform, speed: &GameSpeed) -> Animator<Transform> {
@@ -383,7 +397,9 @@ fn cleanup_animations<T: Component>(
         if *user_data & AnimationEvent::COMPLETED.bits() != 0 {
             commands
                 .entity(*entity)
-                .remove_bundle::<UndoableAnimationBundle<T>>();
+                .remove::<Animator<T>>()
+                .remove::<Target<T>>()
+                .remove::<Original<T>>();
         }
     }
 }
