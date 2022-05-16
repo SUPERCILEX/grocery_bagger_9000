@@ -68,7 +68,8 @@ jobs:
   deploy_release:
     needs: [build, test, lint]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
+#    if: startsWith(github.ref, 'refs/tags/')
+    if: false
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -83,7 +84,7 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
   deploy_web:
-    needs: [build, test, lint]
+    needs: [build_web, test, lint]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
@@ -145,19 +146,21 @@ jobs:
           use-cross: true
           command: build
           args: --release --locked --target=${{ matrix.target }}
-      - name: Upload binary
+      - name: Zip game
         if: matrix.os != 'windows-latest'
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/${{ matrix.target }}/release/ftzz
-          asset_name: ftzz-${{ matrix.target }}
-          tag: ${{ github.ref }}
-      - name: Upload binary
+        run: |
+          mv target/${{ matrix.target }}/release/grocery_bagger_9000 .
+          zip -r grocery_bagger_9000.zip assets/ grocery_bagger_9000
+      - name: Zip game
         if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          mv target/${{ matrix.target }}/release/grocery_bagger_9000.exe .
+          7z a grocery_bagger_9000.zip assets/ grocery_bagger_9000.exe
+      - name: Upload binary
         uses: svenstaro/upload-release-action@v2
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/${{ matrix.target }}/release/ftzz.exe
-          asset_name: ftzz-${{ matrix.target }}.exe
+          repo_token: ${{ secrets.GH_PAT }}
+          file: grocery_bagger_9000.zip
+          asset_name: grocery_bagger_9000-${{ matrix.target }}.zip
           tag: ${{ github.ref }}
