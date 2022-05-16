@@ -101,9 +101,9 @@ enum TutorialFsm {
     #[default]
     Ready,
     StartedLoad,
-    Loading(Handle<Svg>, Entity, Entity),
-    Loaded(Entity, Entity),
-    PickedUp(Entity, Entity, Quat),
+    Loading(Handle<Svg>, Entity),
+    Loaded(Entity),
+    PickedUp(Entity),
     Rotated,
 }
 
@@ -115,6 +115,7 @@ fn show_tutorial(
     asset_server: Res<AssetServer>,
     gb9000: ResMut<GroceryBagger9000>,
     game_speed: Res<GameSpeed>,
+    mouse_button_input: Res<Input<MouseButton>>,
     mut piece_selections: EventReader<PiecePickedUp>,
     mut fsm: Local<TutorialFsm>,
     first_piece: Query<
@@ -125,7 +126,6 @@ fn show_tutorial(
             Without<Animator<Transform>>,
         ),
     >,
-    pieces: Query<&GlobalTransform, With<NominoMarker>>,
 ) {
     const ICON_SCALE: Vec3 = const_vec3!([0.05, 0.05, 0.05]);
 
@@ -156,11 +156,11 @@ fn show_tutorial(
                         .insert(TutorialIconMarker)
                         .id();
 
-                    *fsm = TutorialFsm::Loading(handle, piece, icon);
+                    *fsm = TutorialFsm::Loading(handle, icon);
                 });
             }
         }
-        TutorialFsm::Loading(handle, piece, icon) => {
+        TutorialFsm::Loading(handle, icon) => {
             if asset_server.get_load_state(handle) == LoadState::Loaded {
                 commands
                     .entity(*icon)
@@ -169,10 +169,10 @@ fn show_tutorial(
                         &game_speed,
                     ));
 
-                *fsm = TutorialFsm::Loaded(*piece, *icon);
+                *fsm = TutorialFsm::Loaded(*icon);
             }
         }
-        TutorialFsm::Loaded(piece, icon) => {
+        TutorialFsm::Loaded(icon) => {
             if piece_selections.iter().count() > 0 {
                 let transform =
                     Transform::from_translation(Vec3::new(-0.5, 1.5, 0.)).with_scale(ICON_SCALE);
@@ -183,11 +183,11 @@ fn show_tutorial(
                         &game_speed,
                     ));
 
-                *fsm = TutorialFsm::PickedUp(*piece, *icon, pieces.get(*piece).unwrap().rotation);
+                *fsm = TutorialFsm::PickedUp(*icon);
             }
         }
-        TutorialFsm::PickedUp(piece, icon, rotation) => {
-            if pieces.get(*piece).unwrap().rotation != *rotation {
+        TutorialFsm::PickedUp(icon) => {
+            if mouse_button_input.just_pressed(MouseButton::Right) {
                 let transform =
                     Transform::from_translation(Vec3::new(-2., 0.5, 0.)).with_scale(ICON_SCALE);
                 commands
