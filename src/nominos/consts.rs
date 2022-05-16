@@ -26,6 +26,35 @@ pub static TROMINO_STRAIGHT_PATH: SyncLazy<Path> = SyncLazy::new(|| {
 pub static TROMINO_STRAIGHT_COLLIDER: SyncLazy<Collider> =
     SyncLazy::new(|| Collider::cuboid(0.49, 1.49, 0.1));
 
+pub static TROMINO_L_PATH: SyncLazy<Path> = SyncLazy::new(|| {
+    let mut b = Builder::with_capacity(6, 7);
+
+    b.begin(Point::new(-0.5, -0.5));
+    b.line_to(Point::new(-0.5, 1.5));
+    b.line_to(Point::new(0.5, 1.5));
+    b.line_to(Point::new(0.5, 0.5));
+    b.line_to(Point::new(1.5, 0.5));
+    b.line_to(Point::new(1.5, -0.5));
+    b.close();
+
+    Path(b.build())
+});
+
+pub static TROMINO_L_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
+    Collider::compound(vec![
+        (
+            const_vec3!([0., 0.5, 0.]),
+            Quat::IDENTITY,
+            Collider::cuboid(0.49, 0.99, 0.1),
+        ),
+        (
+            const_vec3!([0.99, 0., 0.]),
+            Quat::IDENTITY,
+            Collider::cuboid(0.5, 0.49, 0.1),
+        ),
+    ])
+});
+
 pub static TETROMINO_STRAIGHT_PATH: SyncLazy<Path> = SyncLazy::new(|| {
     let mut b = Builder::with_capacity(4, 5);
 
