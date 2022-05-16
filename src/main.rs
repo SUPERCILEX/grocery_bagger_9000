@@ -9,6 +9,7 @@ use bevy::{app::App, DefaultPlugins};
 
 use crate::{gb9000::GroceryBagger9000Plugin, window_management::WindowManager};
 
+mod analytics;
 mod animations;
 mod bags;
 mod colors;
