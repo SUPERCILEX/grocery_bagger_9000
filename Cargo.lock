@@ -1570,7 +1570,7 @@ dependencies = [
 
 [[package]]
 name = "grocery_bagger_9000"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
