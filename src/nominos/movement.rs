@@ -110,7 +110,7 @@ fn piece_selection_handler(
                     .insert(animations::piece_placed(*transform, &game_speed));
 
                 placed_events.send(PiecePlaced { piece, bag });
-            } else {
+            } else if just_pressed {
                 commands
                     .entity(piece)
                     .insert_bundle(animations::error_shake(*transform, &game_speed));
