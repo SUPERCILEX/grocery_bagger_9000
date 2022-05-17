@@ -72,11 +72,9 @@ fn piece_selection_handler(
     )>,
     #[cfg(feature = "debug")] debug_options: Res<crate::debug::DebugOptions>,
 ) {
-    if !mouse_button_input.just_pressed(MouseButton::Left) {
-        return;
-    }
+    let just_pressed = mouse_button_input.just_pressed(MouseButton::Left);
 
-    {
+    if just_pressed || mouse_button_input.just_released(MouseButton::Left) {
         let mut selected_shape = pieces_queries.p0();
         if let Ok((piece, global_transform, mut transform, collider, original)) =
             selected_shape.get_single_mut()
@@ -122,7 +120,9 @@ fn piece_selection_handler(
         }
     }
 
-    if let Some(cursor_position) = compute_cursor_position(windows, camera) {
+    if just_pressed &&
+    let Some(cursor_position) = compute_cursor_position(windows, camera)
+    {
         let mut failed_selection = None;
 
         rapier_context.intersections_with_point(
