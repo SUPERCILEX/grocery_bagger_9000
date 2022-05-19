@@ -71,9 +71,11 @@ fn piece_selection_handler(
     )>,
     #[cfg(feature = "debug")] debug_options: Res<crate::debug::DebugOptions>,
 ) {
-    let just_pressed = mouse_button_input.just_pressed(MouseButton::Left);
+    if !mouse_button_input.just_pressed(MouseButton::Left) {
+        return;
+    }
 
-    if just_pressed || mouse_button_input.just_released(MouseButton::Left) {
+    {
         let mut selected_shape = pieces_queries.p0();
         if let Ok((piece, mut transform, collider, original)) = selected_shape.get_single_mut() {
             if let Some(original) = original {
@@ -107,7 +109,7 @@ fn piece_selection_handler(
                     .insert(animations::piece_placed(*transform, &game_speed));
 
                 placed_events.send(PiecePlaced { piece, bag });
-            } else if just_pressed {
+            } else {
                 commands
                     .entity(piece)
                     .insert_bundle(animations::error_shake(*transform, &game_speed));
@@ -117,9 +119,7 @@ fn piece_selection_handler(
         }
     }
 
-    if just_pressed &&
-    let Some(cursor_position) = compute_cursor_position(windows, camera)
-    {
+    if let Some(cursor_position) = compute_cursor_position(windows, camera) {
         let mut failed_selection = None;
 
         rapier_context.intersections_with_point(
