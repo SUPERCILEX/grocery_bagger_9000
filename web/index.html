@@ -286,8 +286,8 @@ class CapstoneLogger {
         let sessionSuccess = false;
         if (data) {
             const parsedResults = JSON.parse(data.substring(5));
-            if (parsedResults.status === "t") {
-                this.currentSessionId = parsedResults.data.sessionid;
+            if (parsedResults.tstatus === "t") {
+                this.currentSessionId = parsedResults.r_data.sessionid;
                 sessionSuccess = true;
             }
         }
