@@ -23,6 +23,7 @@ impl Plugin for GroceryBagger9000Plugin {
         app.add_plugin(AnimationPlugin);
         app.add_plugin(UiPlugin);
         app.add_plugin(RobotPlugin);
+        #[cfg(not(debug_assertions))]
         app.add_plugin(AnalyticsPlugin);
 
         app.add_plugin(ShapePlugin);
