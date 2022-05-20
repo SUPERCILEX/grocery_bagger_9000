@@ -8,8 +8,6 @@ use crate::{
     window_management::DipsWindow,
 };
 
-const BAG_COLOR: Color = Color::rgb(0xE6 as f32 / 255., 0xE6 as f32 / 255., 0xE6 as f32 / 255.);
-
 #[derive(Component)]
 pub struct BagMarker;
 

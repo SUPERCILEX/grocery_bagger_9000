@@ -143,16 +143,15 @@ mod tests {
 
     #[test]
     fn random_pieces_returns_some() {
-        let mut belt =
-            RandomPiecesConveyorBelt::new(2, [Nomino::TetrominoL], [NominoColor::Orange]);
+        let mut belt = RandomPiecesConveyorBelt::new(2, [Nomino::TetrominoL], [NominoColor::Gold]);
 
         let a = belt.next().unwrap();
         assert_eq!(a.nomino, Nomino::TetrominoL);
-        assert_eq!(a.color, NominoColor::Orange);
+        assert_eq!(a.color, NominoColor::Gold);
 
         let b = belt.next().unwrap();
         assert_eq!(b.nomino, Nomino::TetrominoL);
-        assert_eq!(b.color, NominoColor::Orange);
+        assert_eq!(b.color, NominoColor::Gold);
 
         assert_eq!(belt.next(), None);
     }

@@ -21,7 +21,7 @@ use crate::{
     window_management::DipsWindow,
 };
 
-const LEVEL_COLOR: NominoColor = NominoColor::Orange;
+const LEVEL_COLOR: NominoColor = NominoColor::Gold;
 
 pub struct Level1Plugin;
 

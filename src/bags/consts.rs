@@ -78,3 +78,5 @@ pub static BAG_FLOOR_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
         Collider::cuboid(RADIUS, 0.009, 0.),
     )])
 });
+
+pub const BAG_COLOR: Color = Color::rgb(0xC3 as f32 / 255., 0xA9 as f32 / 255., 0x88 as f32 / 255.);
