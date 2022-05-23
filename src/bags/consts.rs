@@ -80,3 +80,5 @@ pub static BAG_FLOOR_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
 });
 
 pub const BAG_COLOR: Color = Color::rgb(0xC3 as f32 / 255., 0xA9 as f32 / 255., 0x88 as f32 / 255.);
+pub const BAG_OUTLINE_COLOR: Color =
+    Color::rgb(0x64 as f32 / 255., 0x56 as f32 / 255., 0x46 as f32 / 255.);

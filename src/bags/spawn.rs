@@ -49,7 +49,7 @@ fn spawn_bag<'w, 's, 'a>(
             options: FillOptions::default().with_intersections(false),
             color: BAG_COLOR,
         },
-        outline_mode: StrokeMode::new(Color::BLACK, 0.15),
+        outline_mode: StrokeMode::new(BAG_OUTLINE_COLOR, 0.15),
     };
 
     let mut commands =
