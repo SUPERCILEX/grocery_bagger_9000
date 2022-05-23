@@ -9,7 +9,7 @@ use crate::{
     },
     conveyor_belt,
     nominos::{NominoMarker, PiecePlaced},
-    window_management::DipsWindow,
+    window_management::{DipsWindow, WindowSystems},
 };
 
 pub struct BagPositioningPlugin;
@@ -21,7 +21,7 @@ impl Plugin for BagPositioningPlugin {
         //     CoreStage::PostUpdate,
         //     transfer_piece_ownership.after(TransformSystem::TransformPropagate),
         // );
-        app.add_system(center_bags);
+        app.add_system(center_bags.after(WindowSystems));
     }
 }
 

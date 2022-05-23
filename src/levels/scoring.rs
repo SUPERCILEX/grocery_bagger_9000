@@ -1,14 +1,14 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 
-use bevy::{math::const_vec3, prelude::*, transform::TransformSystem::TransformPropagate};
+use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
 use crate::{
     bags::{BagMarker, BAG_CAPACITY, BAG_ORIGIN},
     colors::NominoColor,
-    levels::{LevelInitLabel, LevelStarted},
-    nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
+    levels::{LevelSpawnStage, LevelStarted},
+    nominos::{NominoMarker, PiecePlaced, PieceSystems, NOMINO_COLLIDER_GROUP},
 };
 
 pub struct ScoringPlugin;
@@ -19,10 +19,13 @@ impl Plugin for ScoringPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CurrentScore>();
 
-        app.add_system_to_stage(CoreStage::PostUpdate, score_bags.after(TransformPropagate));
-        app.add_system_to_stage(CoreStage::PreUpdate, reset_score.after(LevelInitLabel));
+        app.add_system(score_bags.label(ScoringSystems).after(PieceSystems));
+        app.add_system_to_stage(LevelSpawnStage, reset_score.label(ScoringSystems));
     }
 }
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
+pub struct ScoringSystems;
 
 #[derive(Debug, Default)]
 pub struct CurrentScore {

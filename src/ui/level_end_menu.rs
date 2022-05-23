@@ -4,7 +4,7 @@ use crate::{
     animations,
     animations::GameSpeed,
     gb9000::{GameState::Playing, GroceryBagger9000},
-    levels::{CurrentScore, LevelFinished, LevelStarted, LevelTransitionLabel},
+    levels::{CurrentScore, LevelFinished, LevelStarted, LevelTransitionSystems, ScoringSystems},
     ui::consts::{MENU_FONT_SIZE, TITLE_FONT_SIZE},
     App,
 };
@@ -17,13 +17,13 @@ pub struct LevelEndMenuPlugin;
 
 impl Plugin for LevelEndMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(despawn_menu);
-
-        app.add_system_to_stage(
-            CoreStage::Last,
-            show_level_end_screen.after(LevelTransitionLabel),
+        app.add_system(despawn_menu.after(LevelTransitionSystems));
+        app.add_system(
+            show_level_end_screen
+                .after(LevelTransitionSystems)
+                .after(ScoringSystems),
         );
-        app.add_system_to_stage(CoreStage::Last, button_system.after(show_level_end_screen));
+        app.add_system(button_system.before(LevelTransitionSystems));
     }
 }
 

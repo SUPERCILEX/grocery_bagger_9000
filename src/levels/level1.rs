@@ -11,7 +11,7 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     gb9000::GroceryBagger9000,
-    levels::{transitions::LevelInitLabel, LevelMarker, LevelStarted},
+    levels::{transitions::LevelSpawnStage, LevelMarker, LevelStarted},
     nominos::{
         Nomino, NominoMarker, NominoSpawner, PiecePickedUp, PiecePlaced, Selectable, DEG_90,
     },
@@ -24,8 +24,8 @@ pub struct Level1Plugin;
 
 impl Plugin for Level1Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::PreUpdate, init_level.label(LevelInitLabel));
-        app.add_system(show_tutorial);
+        app.add_system_to_stage(LevelSpawnStage, init_level);
+        app.add_system_to_stage(LevelSpawnStage, show_tutorial.after(init_level));
     }
 }
 

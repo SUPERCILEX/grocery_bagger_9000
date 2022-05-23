@@ -14,31 +14,31 @@ pub struct LevelTransitionPlugin;
 
 impl Plugin for LevelTransitionPlugin {
     fn build(&self, app: &mut App) {
+        app.add_stage_before(
+            CoreStage::PostUpdate,
+            LevelSpawnStage,
+            SystemStage::parallel(),
+        );
+
         app.add_event::<LevelStarted>();
         app.add_event::<LevelFinished>();
 
-        app.add_system_to_stage(
-            CoreStage::Last,
-            level_start_handler.label(LevelTransitionLabel),
-        );
-        app.add_system_to_stage(
-            CoreStage::Last,
-            level_end_handler.label(LevelTransitionLabel),
-        );
-        app.add_system_to_stage(
-            CoreStage::Last,
+        app.add_system(level_start_handler.label(LevelTransitionSystems));
+        app.add_system(level_end_handler.label(LevelTransitionSystems));
+        app.add_system(
             level_unload_handler
-                .after(level_end_handler)
-                .label(LevelTransitionLabel),
+                .label(LevelTransitionSystems)
+                .after(level_end_handler),
         );
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
-pub struct LevelTransitionLabel;
+// TODO remove after stageless when we can do a command flush
+#[derive(Debug, Hash, PartialEq, Eq, Clone, StageLabel)]
+pub struct LevelSpawnStage;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
-pub struct LevelInitLabel;
+pub struct LevelTransitionSystems;
 
 #[derive(Component)]
 pub struct LevelMarker;

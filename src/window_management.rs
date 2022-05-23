@@ -31,13 +31,16 @@ impl Plugin for WindowManager {
         app.init_resource::<DipsWindow>();
 
         app.add_startup_system(setup);
-        app.add_system_to_stage(CoreStage::PreUpdate, window_scaling);
-        app.add_system(full_screen_toggle);
+        app.add_system(window_scaling.label(WindowSystems));
+        app.add_system(full_screen_toggle.label(WindowSystems));
 
         #[cfg(target_arch = "wasm32")]
         app.add_plugin(bevy_web_resizer::Plugin);
     }
 }
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
+pub struct WindowSystems;
 
 #[derive(Component)]
 pub struct MainCamera;

@@ -1,4 +1,4 @@
-use bevy::{math::const_vec3, prelude::*, transform::TransformSystem::TransformPropagate};
+use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
@@ -12,7 +12,7 @@ use crate::{
     },
     conveyor_belt,
     conveyor_belt::BeltEmptyEvent,
-    nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
+    nominos::{NominoMarker, PiecePlaced, PieceSystems, NOMINO_COLLIDER_GROUP},
 };
 
 pub struct BagReplacementPlugin;
@@ -23,23 +23,10 @@ impl Plugin for BagReplacementPlugin {
         app.add_event::<RemoveFilledBag>();
         app.add_event::<ReplaceFilledBag>();
 
-        app.add_system_to_stage(CoreStage::PostUpdate, detect_filled_bags);
-        app.add_system_to_stage(
-            CoreStage::PostUpdate,
-            replace_full_bags.after(detect_filled_bags),
-        );
-        app.add_system_to_stage(
-            CoreStage::PostUpdate,
-            remove_filled_bags
-                .after(replace_full_bags)
-                .after(TransformPropagate),
-        );
-        app.add_system_to_stage(
-            CoreStage::PostUpdate,
-            replace_filled_bags
-                .after(replace_full_bags)
-                .after(TransformPropagate),
-        );
+        app.add_system(detect_filled_bags.after(PieceSystems));
+        app.add_system(replace_full_bags.after(detect_filled_bags));
+        app.add_system(remove_filled_bags.after(replace_full_bags));
+        app.add_system(replace_filled_bags.after(replace_full_bags));
     }
 }
 

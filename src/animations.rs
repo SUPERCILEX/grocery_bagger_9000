@@ -18,9 +18,9 @@ impl Plugin for AnimationPlugin {
         );
         app.add_system(change_animation_speed::<Style>.before(AnimationSystem::AnimationUpdate));
 
-        app.add_system_to_stage(CoreStage::PostUpdate, cleanup_animations::<Transform>);
-        app.add_system_to_stage(CoreStage::PostUpdate, cleanup_animations::<Style>);
-        app.add_system_to_stage(CoreStage::PostUpdate, despawn_offscreen);
+        app.add_system(cleanup_animations::<Transform>.after(AnimationSystem::AnimationUpdate));
+        app.add_system(cleanup_animations::<Style>.after(AnimationSystem::AnimationUpdate));
+        app.add_system(despawn_offscreen.after(AnimationSystem::AnimationUpdate));
     }
 }
 

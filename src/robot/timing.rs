@@ -2,7 +2,10 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-use crate::{nominos::PiecePlaced, robot::spawn::RobotMarker};
+use crate::{
+    nominos::{PiecePlaced, PieceSystems},
+    robot::spawn::RobotMarker,
+};
 
 pub const PLACEMENT_TTL: Duration = Duration::from_secs(5);
 
@@ -10,8 +13,8 @@ pub struct RobotTimingPlugin;
 
 impl Plugin for RobotTimingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(accumulate_left_over_time);
-        app.add_system(place_piece);
+        app.add_system(accumulate_left_over_time.after(PieceSystems));
+        app.add_system(place_piece.after(PieceSystems));
     }
 }
 

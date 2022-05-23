@@ -4,7 +4,7 @@ use crate::{
     bags::BagContainerSpawner,
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    levels::{LevelInitLabel, LevelMarker, LevelStarted},
+    levels::{transitions::LevelSpawnStage, LevelMarker, LevelStarted},
     nominos::{Nomino, DEG_180, DEG_MIRRORED},
     robot::{RobotMarker, RobotTiming},
     window_management::DipsWindow,
@@ -16,7 +16,7 @@ pub struct Level5Plugin;
 
 impl Plugin for Level5Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(CoreStage::PreUpdate, init_level.label(LevelInitLabel));
+        app.add_system_to_stage(LevelSpawnStage, init_level);
     }
 }
 

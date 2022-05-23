@@ -4,7 +4,9 @@ use bevy_rapier3d::prelude::*;
 
 use consts::*;
 pub use consts::{DEG_180, DEG_90, DEG_MIRRORED};
-pub use movement::{AttemptedPlacement, PiecePickedUp, PiecePlaced, Selectable, Selected};
+pub use movement::{
+    AttemptedPlacement, PiecePickedUp, PiecePlaced, PieceSystems, Selectable, Selected,
+};
 pub use spawn::{NominoMarker, NominoSpawner};
 
 use crate::nominos::movement::PieceMovementPlugin;

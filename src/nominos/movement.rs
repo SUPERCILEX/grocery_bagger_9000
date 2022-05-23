@@ -7,7 +7,7 @@ use crate::{
     animations::{GameSpeed, Original, UndoableAnimationBundle},
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP, BAG_FLOOR_COLLIDER_GROUP},
     nominos::*,
-    window_management::{DipsWindow, MainCamera},
+    window_management::{DipsWindow, MainCamera, WindowSystems},
     window_utils::compute_cursor_position,
 };
 
@@ -19,15 +19,24 @@ impl Plugin for PieceMovementPlugin {
         app.add_event::<AttemptedPlacement>();
         app.add_event::<PiecePlaced>();
 
-        app.add_system(piece_selection_handler);
-        app.add_system(piece_rotation_handler.after(AnimationSystem::AnimationUpdate));
+        app.add_system(piece_selection_handler.label(PieceSystems));
+        app.add_system(
+            piece_rotation_handler
+                .label(PieceSystems)
+                .after(AnimationSystem::AnimationUpdate),
+        );
         app.add_system(
             selected_piece_mover
+                .label(PieceSystems)
+                .after(WindowSystems)
                 .before(piece_selection_handler)
                 .after(AnimationSystem::AnimationUpdate),
         );
     }
 }
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
+pub struct PieceSystems;
 
 #[derive(Component)]
 pub struct Selectable;

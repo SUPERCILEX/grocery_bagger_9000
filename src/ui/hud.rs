@@ -3,7 +3,10 @@ use std::fmt::Write;
 use bevy::{prelude::*, ui::PositionType::Absolute};
 
 use crate::{
-    levels::{CurrentScore, LevelFinished, LevelStarted},
+    levels::{
+        CurrentScore, LevelFinished, LevelSpawnStage, LevelStarted, LevelTransitionSystems,
+        ScoringSystems,
+    },
     ui::consts::HUD_FONT_SIZE,
 };
 
@@ -11,9 +14,10 @@ pub struct HudPlugin;
 
 impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(setup_hud);
-        app.add_system(update_score);
-        app.add_system(despawn_hud);
+        app.add_system(update_score.after(ScoringSystems));
+
+        app.add_system_to_stage(LevelSpawnStage, setup_hud);
+        app.add_system(despawn_hud.after(LevelTransitionSystems));
     }
 }
 

@@ -6,11 +6,11 @@ use level3::Level3Plugin;
 use level4::Level4Plugin;
 use level5::Level5Plugin;
 use level6::Level6Plugin;
-pub use scoring::CurrentScore;
 use scoring::ScoringPlugin;
+pub use scoring::{CurrentScore, ScoringSystems};
 use transitions::LevelTransitionPlugin;
 pub use transitions::{
-    LevelFinished, LevelInitLabel, LevelMarker, LevelStarted, LevelTransitionLabel,
+    LevelFinished, LevelMarker, LevelSpawnStage, LevelStarted, LevelTransitionSystems,
 };
 
 mod level1;

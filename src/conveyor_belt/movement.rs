@@ -1,4 +1,4 @@
-use bevy::{prelude::*, transform::TransformSystem::TransformPropagate, window::WindowResized};
+use bevy::{prelude::*, window::WindowResized};
 use bevy_prototype_lyon::draw::DrawMode;
 use smallvec::SmallVec;
 
@@ -11,10 +11,13 @@ use crate::{
         ConveyorBelt, ConveyorBeltOptions,
     },
     levels::LevelStarted,
-    nominos::{AttemptedPlacement, NominoMarker, NominoSpawner, PiecePlaced, Selectable, Selected},
+    nominos::{
+        AttemptedPlacement, NominoMarker, NominoSpawner, PiecePlaced, PieceSystems, Selectable,
+        Selected,
+    },
     robot,
     robot::{RobotMarker, RobotTiming},
-    window_management::DipsWindow,
+    window_management::{DipsWindow, WindowSystems},
 };
 
 const SELECTABLE_SEPARATION: f32 = 2.;
@@ -26,15 +29,17 @@ impl Plugin for ConveyorBeltMovementPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<BeltEmptyEvent>();
 
-        app.add_system(init_pieces);
-        app.add_system(replace_pieces.after(init_pieces));
+        app.add_system_to_stage(CoreStage::PostUpdate, init_pieces);
+        app.add_system(replace_pieces.after(WindowSystems).after(PieceSystems));
         app.add_system(belt_empty_check.after(replace_pieces));
-        app.add_system(check_for_piece_selection_undos);
-        app.add_system_to_stage(
-            CoreStage::PostUpdate,
-            move_pieces.before(TransformPropagate),
+        app.add_system(
+            check_for_piece_selection_undos
+                .after(WindowSystems)
+                .after(PieceSystems)
+                .after(replace_pieces),
         );
-        app.add_system_to_stage(CoreStage::PostUpdate, reposition_pieces_on_window_resize);
+        app.add_system(move_pieces.after(WindowSystems).after(replace_pieces));
+        app.add_system(reposition_pieces_on_window_resize.after(WindowSystems));
     }
 }
 
