@@ -51,12 +51,19 @@ impl<'w, 's, 'a> NominoSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
         color: NominoColor,
         render_color: Color,
     ) -> EntityCommands<'w, 's, '_> {
+        let mut outline_color = color.render().as_hsla();
+        if let Color::Hsla { lightness, .. } = &mut outline_color {
+            *lightness = 0.28;
+        } else {
+            unreachable!()
+        }
+
         let draw_mode = DrawMode::Outlined {
             fill_mode: FillMode {
                 options: FillOptions::default().with_intersections(false),
                 color: render_color,
             },
-            outline_mode: StrokeMode::new(Color::BLACK, 0.1),
+            outline_mode: StrokeMode::new(outline_color, 0.1),
         };
 
         let mut commands = self.spawn_bundle(GeometryBuilder::build_as(
