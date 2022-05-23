@@ -1,11 +1,11 @@
+use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
+use wasm_bindgen::prelude::*;
+
 use crate::{
     gb9000::GroceryBagger9000,
     levels::{LevelFinished, LevelLoaded},
     nominos::PiecePlaced,
 };
-use bevy::{prelude::*, tasks::AsyncComputeTaskPool};
-use std::time::{Duration, Instant};
-use wasm_bindgen::prelude::*;
 
 pub struct AnalyticsPlugin;
 
