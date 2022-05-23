@@ -148,6 +148,8 @@ fn debug_options(
             ui.separator();
             ui.horizontal(|ui| {
                 if ui.button("Spawn").clicked() {
+                    debug_options.unrestricted_pieces = true;
+
                     commands
                         .spawn_bundle(TransformBundle::default())
                         .insert(LevelMarker)
