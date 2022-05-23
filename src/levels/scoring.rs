@@ -5,7 +5,7 @@ use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
 use crate::{
-    bags::{BagMarker, BagSize, BAG_CAPACITY_LARGE, LARGEST_BAG_HEIGHT, LARGEST_BAG_WIDTH},
+    bags::{BagMarker, BagSize, LARGEST_BAG_CAPACITY, LARGEST_BAG_HEIGHT, LARGEST_BAG_WIDTH},
     colors::NominoColor,
     levels::{LevelSpawnStage, LevelStarted},
     nominos::{NominoMarker, PiecePlaced, PieceSystems, NOMINO_COLLIDER_GROUP},
@@ -42,6 +42,7 @@ fn score_bags(
 ) {
     for PiecePlaced { bag, .. } in piece_placements.iter() {
         let (bag_coords, bag_size) = bags.get(*bag).unwrap();
+
         let width = bag_size.width();
         let height = bag_size.height();
         let block_origin = bag_coords.translation - bag_size.origin() + const_vec3!([0.5, 0.5, 0.]);
@@ -68,10 +69,9 @@ fn score_bags(
         }
         color_block_count_map.sort_unstable_by(|a, b| b.cmp(a));
 
-        // use .take() between iter() and collect(), probably after map()
         let resized_bag_matrix = bag_matrix
             .iter()
-            .map(|row| &row[0..width])
+            .map(|row| &row[..width])
             .take(height)
             .collect::<SmallVec<[&[bool]; LARGEST_BAG_HEIGHT]>>();
         let total_bag_score = score_bag(
@@ -170,10 +170,12 @@ impl RowCol {
 
 /// Generates a vector containing the coordinates of all the empty spaces in the
 /// bag that are connected to an empty space on the top row.
-fn get_connected_empties(matrix: &[impl AsRef<[bool]>]) -> SmallVec<[RowCol; BAG_CAPACITY_LARGE]> {
-    let mut connected_to_top = SmallVec::<[RowCol; BAG_CAPACITY_LARGE]>::new();
-    let mut touched = HashSet::<RowCol>::with_capacity(BAG_CAPACITY_LARGE);
-    let mut frontier = VecDeque::<RowCol>::with_capacity(BAG_CAPACITY_LARGE);
+fn get_connected_empties(
+    matrix: &[impl AsRef<[bool]>],
+) -> SmallVec<[RowCol; LARGEST_BAG_CAPACITY]> {
+    let mut connected_to_top = SmallVec::<[RowCol; LARGEST_BAG_CAPACITY]>::new();
+    let mut touched = HashSet::<RowCol>::with_capacity(LARGEST_BAG_CAPACITY);
+    let mut frontier = VecDeque::<RowCol>::with_capacity(LARGEST_BAG_CAPACITY);
     let top_row = matrix.len() - 1;
 
     for (i, filled) in matrix.last().unwrap().as_ref().iter().enumerate() {
@@ -396,14 +398,41 @@ mod tests {
         assert_eq!(1325, score_bag(&bag, block_count, &color_map, 36));
     }
 
-    fn to_matrix(bag: &str) -> ([[bool; 6]; 6], u8) {
+    #[test]
+    fn small_full_bag_returns_max_score() {
+        let (bag, block_count) = to_matrix(
+            "
+            000 000
+            000 000
+            000 000
+            000 000
+            111 100
+            111 100
+        ",
+        );
+        let mut color_map = [0; NominoColor::COUNT];
+        color_map[0] = block_count;
+
+        assert_eq!(
+            6000,
+            score_bag(
+                &bag.iter().map(|row| &row[..4]).take(2).collect::<Vec<_>>(),
+                block_count,
+                &color_map,
+                8,
+            )
+        );
+    }
+
+    fn to_matrix(bag: &str) -> ([[bool; LARGEST_BAG_WIDTH]; LARGEST_BAG_HEIGHT], u8) {
         let bag: String = bag.chars().filter(|c| !c.is_whitespace()).rev().collect();
-        let mut matrix = [[false; 6]; 6];
+        let mut matrix = [[false; LARGEST_BAG_WIDTH]; LARGEST_BAG_HEIGHT];
 
         let mut count = 0;
         for (i, c) in bag.chars().enumerate() {
             if c == '1' {
-                matrix[i / matrix.len()][i % matrix.len()] = true;
+                let row = &mut matrix[i / matrix.len()];
+                row[row.len() - (i % row.len()) - 1] = true;
                 count += 1;
             }
         }

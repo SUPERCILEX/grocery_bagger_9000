@@ -11,20 +11,20 @@ impl BagSize {
         Self { width, height }
     }
 
-    pub const fn height(&self) -> usize {
-        self.height as usize
-    }
-
     pub const fn width(&self) -> usize {
         self.width as usize
     }
 
-    pub const fn half_height(&self) -> f32 {
-        self.height as f32 / 2.
+    pub const fn height(&self) -> usize {
+        self.height as usize
     }
 
     pub const fn half_width(&self) -> f32 {
         self.width as f32 / 2.
+    }
+
+    pub const fn half_height(&self) -> f32 {
+        self.height as f32 / 2.
     }
 
     pub const fn origin(&self) -> Vec3 {

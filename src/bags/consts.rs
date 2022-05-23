@@ -1,7 +1,7 @@
-use crate::bags::bag_size::BagSize;
 use bevy::prelude::*;
-
 use bevy_rapier3d::prelude::*;
+
+use crate::bags::bag_size::BagSize;
 
 pub const BAG_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
     memberships: 0b10,
@@ -27,11 +27,10 @@ pub const BAG_BOUNDARY_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
 pub const BAG_SIZE_LARGE: BagSize = BagSize::new(6, 6);
 pub const BAG_SIZE_SMALL: BagSize = BagSize::new(3, 4);
 
-pub const LARGEST_BAG_HEIGHT: usize = 6;
 pub const LARGEST_BAG_WIDTH: usize = 6;
-
+pub const LARGEST_BAG_HEIGHT: usize = 6;
+pub const LARGEST_BAG_CAPACITY: usize = LARGEST_BAG_WIDTH * LARGEST_BAG_HEIGHT;
 pub const LARGEST_RADIUS: f32 = 3.;
-pub const BAG_CAPACITY_LARGE: usize = 36;
 
 pub const BAG_SPACING: f32 = 2.;
 
