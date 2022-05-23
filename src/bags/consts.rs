@@ -1,5 +1,5 @@
 use crate::bags::bag_size::BagSize;
-use bevy::{math::const_vec3, prelude::*};
+use bevy::prelude::*;
 
 use bevy_rapier3d::prelude::*;
 
