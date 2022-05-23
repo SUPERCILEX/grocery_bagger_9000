@@ -12,7 +12,7 @@ use crate::{
     },
     gb9000::GroceryBagger9000,
     levels::LevelLoaded,
-    nominos::{NominoMarker, NominoSpawner, PiecePickedUp, Selectable},
+    nominos::{NominoMarker, NominoSpawner, PiecePlaced, Selectable, Selected},
     robot,
     robot::{RobotMarker, RobotTiming},
     window_management::DipsWindow,
@@ -94,18 +94,21 @@ fn replace_pieces(
         With<ConveyorBeltMarker>,
     >,
     mut colors: Query<&mut DrawMode, (With<NominoMarker>, Without<Selectable>)>,
-    mut picked_up_pieces: EventReader<PiecePickedUp>,
+    mut placed_pieces: EventReader<PiecePlaced>,
     belt_options: Res<ConveyorBeltOptions>,
     dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
     robot_timing: Query<&RobotTiming, With<RobotMarker>>,
 ) {
-    for piece_id in picked_up_pieces.iter() {
+    for PiecePlaced {
+        piece: piece_id, ..
+    } in placed_pieces.iter()
+    {
         let (mut conveyor_belt, mut belt_pieces) = conveyor_belt.single_mut();
 
-        let picked_up_position = belt_pieces.iter().position(|id| *id == **piece_id);
-        if let Some(picked_up_position) = picked_up_position {
-            belt_pieces.remove(picked_up_position);
+        let placed_position = belt_pieces.iter().position(|id| *id == *piece_id);
+        if let Some(placed_position) = placed_position {
+            belt_pieces.remove(placed_position);
             if belt_options.num_pieces_selectable > 1 &&
             let Some(id) = belt_pieces.get(belt_options.num_pieces_selectable as usize - 1)
             {
@@ -188,7 +191,7 @@ fn move_pieces(
     belt_pieces: Query<(&BeltPieceIds, ChangeTrackers<BeltPieceIds>), With<ConveyorBeltMarker>>,
     mut fsm: Local<PieceMovementFsm>,
     mut level_loaded: EventReader<LevelLoaded>,
-    positions: Query<&Transform, With<NominoMarker>>,
+    positions: Query<&Transform, (With<NominoMarker>, Without<Selected>)>,
     robot_timing: Query<&RobotTiming, With<RobotMarker>>,
 ) {
     if level_loaded.iter().count() > 0 {
@@ -209,15 +212,20 @@ fn move_pieces(
             .map(|r| r.time_left())
             .unwrap_or(robot::PLACEMENT_TTL);
         for (index, piece) in belt_pieces.iter().enumerate() {
-            let position = positions.get(*piece).unwrap();
-            commands
-                .entity(*piece)
-                .insert_bundle(animations::piece_movement(
-                    *position,
-                    Transform::from_translation(piece_position(&dips_window, &belt_options, index)),
-                    ttl,
-                    &game_speed,
-                ));
+            if let Ok(position) = positions.get(*piece) {
+                commands
+                    .entity(*piece)
+                    .insert_bundle(animations::piece_movement(
+                        *position,
+                        Transform::from_translation(piece_position(
+                            &dips_window,
+                            &belt_options,
+                            index,
+                        )),
+                        ttl,
+                        &game_speed,
+                    ));
+            }
         }
     }
 }
@@ -230,7 +238,10 @@ fn reposition_pieces_on_window_resize(
     belt_options: Res<ConveyorBeltOptions>,
     belt_pieces: Query<&BeltPieceIds, With<ConveyorBeltMarker>>,
     robot_timing: Query<&RobotTiming, With<RobotMarker>>,
-    mut piece_positions: Query<(&mut Transform, Option<&Target<Transform>>), With<NominoMarker>>,
+    mut piece_positions: Query<
+        (&mut Transform, Option<&Target<Transform>>),
+        (With<NominoMarker>, Without<Selected>),
+    >,
 ) {
     if resized_events.iter().count() == 0 {
         return;
@@ -239,26 +250,26 @@ fn reposition_pieces_on_window_resize(
     if let Ok(pieces) = belt_pieces.get_single() {
         for (index, piece) in pieces.iter().enumerate() {
             let position = piece_position(&dips_window, &belt_options, index);
-            let (mut transform, target) = piece_positions.get_mut(*piece).unwrap();
+            if let Ok((mut transform, target)) = piece_positions.get_mut(*piece) {
+                if let Some(target) = target {
+                    let diff = position - target.translation;
+                    transform.translation += diff;
 
-            if let Some(target) = target {
-                let diff = position - target.translation;
-                transform.translation += diff;
-
-                let ttl = robot_timing
-                    .get_single()
-                    .map(|r| r.time_left())
-                    .unwrap_or(robot::PLACEMENT_TTL);
-                commands
-                    .entity(*piece)
-                    .insert_bundle(animations::piece_movement(
-                        *transform,
-                        transform.with_translation(position),
-                        ttl,
-                        &game_speed,
-                    ));
-            } else {
-                transform.translation = position;
+                    let ttl = robot_timing
+                        .get_single()
+                        .map(|r| r.time_left())
+                        .unwrap_or(robot::PLACEMENT_TTL);
+                    commands
+                        .entity(*piece)
+                        .insert_bundle(animations::piece_movement(
+                            *transform,
+                            transform.with_translation(position),
+                            ttl,
+                            &game_speed,
+                        ));
+                } else {
+                    transform.translation = position;
+                }
             }
         }
     }

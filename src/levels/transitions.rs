@@ -5,7 +5,6 @@ use crate::{
     animations::AnimationEvent,
     conveyor_belt::BeltEmptyEvent,
     gb9000::{GameState::LevelEnded, GroceryBagger9000},
-    nominos::PiecePlaced,
 };
 
 pub struct LevelTransitionPlugin;
@@ -40,19 +39,16 @@ pub struct LevelLoaded(pub Entity);
 pub enum LevelChangeFsm {
     #[default]
     Ready,
-    BeltEmpty,
     PiecePlaced,
 }
 
 fn transition_handler(
     mut belt_empty_events: EventReader<BeltEmptyEvent>,
-    mut piece_placements: EventReader<PiecePlaced>,
     mut bag_offscreen: EventReader<TweenCompleted>,
     mut level_finished: EventWriter<LevelFinished>,
     mut level_fsm: Local<LevelChangeFsm>,
 ) {
     let belt_empty = belt_empty_events.iter().count() > 0;
-    let piece_placed = piece_placements.iter().count() > 0;
     let bag_offscreen = bag_offscreen
         .iter()
         .filter(|t| t.user_data & (AnimationEvent::BAG | AnimationEvent::OFFSCREEN).bits() != 0)
@@ -62,11 +58,6 @@ fn transition_handler(
     match *level_fsm {
         LevelChangeFsm::Ready => {
             if belt_empty {
-                *level_fsm = LevelChangeFsm::BeltEmpty;
-            }
-        }
-        LevelChangeFsm::BeltEmpty => {
-            if piece_placed {
                 *level_fsm = LevelChangeFsm::PiecePlaced;
             }
         }

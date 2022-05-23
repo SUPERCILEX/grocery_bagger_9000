@@ -31,6 +31,9 @@ impl Plugin for PieceMovementPlugin {
 #[derive(Component)]
 pub struct Selectable;
 
+#[derive(Component)]
+pub struct Selected;
+
 pub struct PiecePlaced {
     pub piece: Entity,
     pub bag: Entity,
@@ -38,9 +41,6 @@ pub struct PiecePlaced {
 
 #[derive(Deref)]
 pub struct PiecePickedUp(Entity);
-
-#[derive(Component)]
-struct SelectedPiece;
 
 const FLOATING_PIECE_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
     memberships: BAG_FLOOR_COLLIDER_GROUP.memberships | NOMINO_COLLIDER_GROUP.memberships,
@@ -65,7 +65,7 @@ fn piece_selection_handler(
                 &Collider,
                 Option<&Original<Transform>>,
             ),
-            (With<NominoMarker>, With<SelectedPiece>),
+            (With<NominoMarker>, With<Selected>),
         >,
         Query<(&mut Transform, Option<&Original<Transform>>), With<NominoMarker>>,
     )>,
@@ -87,7 +87,7 @@ fn piece_selection_handler(
 
             #[cfg(feature = "debug")]
             if debug_options.unrestricted_pieces {
-                commands.entity(piece).remove::<SelectedPiece>();
+                commands.entity(piece).remove::<Selected>();
                 return;
             }
 
@@ -105,7 +105,7 @@ fn piece_selection_handler(
                 commands
                     .entity(piece)
                     .remove::<Selectable>()
-                    .remove::<SelectedPiece>()
+                    .remove::<Selected>()
                     .insert(animations::piece_placed(*transform, &game_speed));
 
                 placed_events.send(PiecePlaced { piece, bag });
@@ -140,7 +140,7 @@ fn piece_selection_handler(
 
                     commands
                         .entity(id)
-                        .insert(SelectedPiece)
+                        .insert(Selected)
                         .remove_bundle::<UndoableAnimationBundle<Transform>>();
                 }
                 failed_selection = if selectable { None } else { Some(id) };
@@ -169,7 +169,7 @@ fn piece_rotation_handler(
     mouse_button_input: Res<Input<MouseButton>>,
     mut selected_piece: Query<
         (Entity, &mut Transform, Option<&Original<Transform>>),
-        (With<NominoMarker>, With<SelectedPiece>),
+        (With<NominoMarker>, With<Selected>),
     >,
 ) {
     if !mouse_button_input.just_pressed(MouseButton::Right) {
@@ -205,7 +205,7 @@ fn selected_piece_mover(
             &Collider,
             Option<&Original<Transform>>,
         ),
-        (With<NominoMarker>, With<SelectedPiece>),
+        (With<NominoMarker>, With<Selected>),
     >,
     rapier_context: Res<RapierContext>,
 ) {

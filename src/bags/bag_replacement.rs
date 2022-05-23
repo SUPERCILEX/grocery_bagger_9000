@@ -123,13 +123,11 @@ fn replace_full_bags(
     mut replacement_fsm: Local<BagReplacementFsm>,
     mut filled_events: EventReader<BagFilled>,
     mut belt_empty_events: EventReader<BeltEmptyEvent>,
-    mut piece_placements: EventReader<PiecePlaced>,
     mut remove_events: EventWriter<RemoveFilledBag>,
     mut replace_events: EventWriter<ReplaceFilledBag>,
     bags: Query<Entity, With<BagMarker>>,
 ) {
     let belt_empty = belt_empty_events.iter().count() > 0;
-    let piece_placed = piece_placements.iter().count() > 0;
 
     match *replacement_fsm {
         BagReplacementFsm::Ready => {
@@ -146,12 +144,10 @@ fn replace_full_bags(
             // Consume pending events
             filled_events.iter().count();
 
-            if piece_placed {
-                for bag in bags.iter() {
-                    remove_events.send(RemoveFilledBag(bag));
-                }
-                *replacement_fsm = default();
+            for bag in bags.iter() {
+                remove_events.send(RemoveFilledBag(bag));
             }
+            *replacement_fsm = default();
         }
     }
 }
