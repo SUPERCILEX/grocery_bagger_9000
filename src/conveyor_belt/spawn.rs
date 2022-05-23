@@ -1,6 +1,9 @@
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
-use crate::conveyor_belt::{movement::BeltPieceIds, ConveyorBelt};
+use crate::{
+    conveyor_belt::{movement::BeltPieceIds, ConveyorBelt},
+    levels::LevelMarker,
+};
 
 pub type BoxedConveyorBelt = Box<dyn ConveyorBelt + Send + Sync>;
 
@@ -14,9 +17,10 @@ pub trait ConveyorBeltSpawner<'w, 's> {
     fn spawn_belt(&mut self, belt: BoxedConveyorBelt) -> EntityCommands<'w, 's, '_>;
 }
 
-impl<'w, 's, 'a> ConveyorBeltSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
+impl<'w, 's> ConveyorBeltSpawner<'w, 's> for Commands<'w, 's> {
     fn spawn_belt(&mut self, belt: BoxedConveyorBelt) -> EntityCommands<'w, 's, '_> {
-        let mut commands = self.spawn();
+        let mut commands = self.spawn_bundle(TransformBundle::default());
+        commands.insert(LevelMarker);
         commands.insert(ConveyorBeltInstance(belt));
         commands.insert(BeltPieceIds::default());
         commands.insert(ConveyorBeltMarker);

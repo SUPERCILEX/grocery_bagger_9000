@@ -9,8 +9,9 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::ConveyorBeltOptions,
     gb9000::{GameState::Playing, GroceryBagger9000},
-    levels::LevelInitLabel,
+    levels::LevelMarker,
     nominos::*,
+    ui::HudMarker,
 };
 
 pub struct DebugPlugin;
@@ -33,11 +34,6 @@ impl Plugin for DebugPlugin {
 
         app.add_system(debug_options);
         app.add_system(open_debug_menu);
-
-        app.add_system_to_stage(
-            CoreStage::PreUpdate,
-            level_change_handler.before(LevelInitLabel),
-        );
     }
 }
 
@@ -104,14 +100,26 @@ fn debug_options(
     mut gb9000: ResMut<GroceryBagger9000>,
     mut conveyor_belt_options: ResMut<ConveyorBeltOptions>,
     mut game_speed: ResMut<GameSpeed>,
+    level: Query<Entity, Or<(With<LevelMarker>, With<HudMarker>)>>,
 ) {
     let debug_options = &mut *debug_options;
     egui::Window::new("Debug options")
         .open(&mut debug_options.open)
         .show(egui_context.ctx_mut(), |ui| {
             ui.horizontal(|ui| {
+                let mut level_num = gb9000.current_level;
+
                 ui.label("Level");
-                ui.add(egui::DragValue::new(&mut gb9000.current_level).speed(0.025));
+                ui.add(egui::DragValue::new(&mut level_num).speed(0.025));
+
+                if level_num != gb9000.current_level {
+                    for entity in level.iter() {
+                        commands.entity(entity).despawn_recursive();
+                    }
+
+                    gb9000.current_level = level_num;
+                    gb9000.state = Playing;
+                }
             });
 
             ui.horizontal(|ui| {
@@ -140,8 +148,10 @@ fn debug_options(
             ui.separator();
             ui.horizontal(|ui| {
                 if ui.button("Spawn").clicked() {
-                    if let Some(root) = gb9000.level_root {
-                        commands.entity(root).with_children(|parent| {
+                    commands
+                        .spawn_bundle(TransformBundle::default())
+                        .insert(LevelMarker)
+                        .with_children(|parent| {
                             let position = Transform::from_xyz(3., 3., 0.);
 
                             macro_rules! spawn {
@@ -183,7 +193,6 @@ fn debug_options(
                                 }
                             };
                         });
-                    }
                 }
 
                 egui::ComboBox::from_id_source("Nomino color to spawn")
@@ -237,22 +246,5 @@ fn debug_options(
 fn open_debug_menu(keys: Res<Input<KeyCode>>, mut debug_options: ResMut<DebugOptions>) {
     if keys.just_pressed(KeyCode::Semicolon) {
         debug_options.open = true;
-    }
-}
-
-fn level_change_handler(
-    mut commands: Commands,
-    mut gb9000: ResMut<GroceryBagger9000>,
-    mut prev_level: Local<u16>,
-) {
-    if *prev_level != gb9000.current_level {
-        *prev_level = gb9000.current_level;
-
-        if let Some(initialized) = gb9000.level_root {
-            commands.entity(initialized).despawn_recursive();
-            gb9000.level_root = None;
-        } else {
-            gb9000.state = Playing;
-        }
     }
 }

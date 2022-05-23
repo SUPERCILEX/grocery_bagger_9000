@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 
-pub use init::LevelInitLabel;
 use level1::Level1Plugin;
 use level2::Level2Plugin;
 use level3::Level3Plugin;
@@ -10,9 +9,10 @@ use level6::Level6Plugin;
 pub use scoring::CurrentScore;
 use scoring::ScoringPlugin;
 use transitions::LevelTransitionPlugin;
-pub use transitions::{LevelFinished, LevelLoaded, LevelTransitionLabel};
+pub use transitions::{
+    LevelFinished, LevelInitLabel, LevelMarker, LevelStarted, LevelTransitionLabel,
+};
 
-mod init;
 mod level1;
 mod level2;
 mod level3;

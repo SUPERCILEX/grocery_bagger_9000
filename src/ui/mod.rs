@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
-use crate::ui::{hud::HudPlugin, level_end_menu::LevelEndMenuPlugin};
+pub use hud::HudMarker;
+use hud::HudPlugin;
+use level_end_menu::LevelEndMenuPlugin;
 
 mod consts;
 mod hud;

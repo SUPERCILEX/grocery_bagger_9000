@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     gb9000::GroceryBagger9000,
-    levels::{LevelFinished, LevelLoaded},
+    levels::{LevelFinished, LevelStarted},
     nominos::PiecePlaced,
 };
 
@@ -28,7 +28,7 @@ enum VersionIds {
 }
 
 fn log_level_start(
-    mut level_start: EventReader<LevelLoaded>,
+    mut level_start: EventReader<LevelStarted>,
     thread_pool: Res<AsyncComputeTaskPool>,
     gb9000: Res<GroceryBagger9000>,
 ) {

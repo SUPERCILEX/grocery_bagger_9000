@@ -4,24 +4,31 @@ use bevy_tweening::TweenCompleted;
 use crate::{
     animations::AnimationEvent,
     conveyor_belt::BeltEmptyEvent,
-    gb9000::{GameState::LevelEnded, GroceryBagger9000},
+    gb9000::{
+        GameState::{LevelEnded, Playing},
+        GroceryBagger9000,
+    },
 };
 
 pub struct LevelTransitionPlugin;
 
 impl Plugin for LevelTransitionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<LevelLoaded>();
+        app.add_event::<LevelStarted>();
         app.add_event::<LevelFinished>();
 
         app.add_system_to_stage(
             CoreStage::Last,
-            transition_handler.label(LevelTransitionLabel),
+            level_start_handler.label(LevelTransitionLabel),
+        );
+        app.add_system_to_stage(
+            CoreStage::Last,
+            level_end_handler.label(LevelTransitionLabel),
         );
         app.add_system_to_stage(
             CoreStage::Last,
             level_unload_handler
-                .after(transition_handler)
+                .after(level_end_handler)
                 .label(LevelTransitionLabel),
         );
     }
@@ -30,10 +37,26 @@ impl Plugin for LevelTransitionPlugin {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
 pub struct LevelTransitionLabel;
 
-pub struct LevelFinished;
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
+pub struct LevelInitLabel;
+
+#[derive(Component)]
+pub struct LevelMarker;
 
 #[derive(Deref)]
-pub struct LevelLoaded(pub Entity);
+pub struct LevelStarted(u16);
+
+pub struct LevelFinished;
+
+fn level_start_handler(
+    gb9000: ResMut<GroceryBagger9000>,
+    mut level_started: EventWriter<LevelStarted>,
+    level: Query<(), With<LevelMarker>>,
+) {
+    if gb9000.state == Playing && level.is_empty() {
+        level_started.send(LevelStarted(gb9000.current_level));
+    }
+}
 
 #[derive(Debug, Default, Eq, PartialEq)]
 pub enum LevelChangeFsm {
@@ -42,12 +65,17 @@ pub enum LevelChangeFsm {
     PiecePlaced,
 }
 
-fn transition_handler(
+fn level_end_handler(
     mut belt_empty_events: EventReader<BeltEmptyEvent>,
     mut bag_offscreen: EventReader<TweenCompleted>,
+    mut level_started: EventReader<LevelStarted>,
     mut level_finished: EventWriter<LevelFinished>,
     mut level_fsm: Local<LevelChangeFsm>,
 ) {
+    if level_started.iter().count() > 0 {
+        *level_fsm = LevelChangeFsm::Ready;
+    }
+
     let belt_empty = belt_empty_events.iter().count() > 0;
     let bag_offscreen = bag_offscreen
         .iter()
@@ -74,11 +102,11 @@ fn level_unload_handler(
     mut commands: Commands,
     mut gb9000: ResMut<GroceryBagger9000>,
     mut level_finished: EventReader<LevelFinished>,
+    level: Query<Entity, With<LevelMarker>>,
 ) {
     if level_finished.iter().count() > 0 {
-        if let Some(initialized) = gb9000.level_root {
-            commands.entity(initialized).despawn_recursive();
-            gb9000.level_root = None;
+        for entity in level.iter() {
+            commands.entity(entity).despawn_recursive();
         }
         gb9000.state = LevelEnded;
     }

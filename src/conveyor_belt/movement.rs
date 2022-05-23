@@ -10,8 +10,7 @@ use crate::{
         spawn::{ConveyorBeltInstance, ConveyorBeltMarker},
         ConveyorBelt, ConveyorBeltOptions,
     },
-    gb9000::GroceryBagger9000,
-    levels::LevelLoaded,
+    levels::LevelStarted,
     nominos::{AttemptedPlacement, NominoMarker, NominoSpawner, PiecePlaced, Selectable, Selected},
     robot,
     robot::{RobotMarker, RobotTiming},
@@ -46,52 +45,53 @@ pub struct BeltPieceIds(SmallVec<[Entity; MAX_NUM_PIECES]>);
 
 fn init_pieces(
     mut commands: Commands,
-    mut level_loaded: EventReader<LevelLoaded>,
+    mut level_loaded: EventReader<LevelStarted>,
     mut conveyor_belt: Query<
-        (&mut ConveyorBeltInstance, &mut BeltPieceIds),
+        (Entity, &mut ConveyorBeltInstance, &mut BeltPieceIds),
         With<ConveyorBeltMarker>,
     >,
     dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
     belt_options: Res<ConveyorBeltOptions>,
 ) {
-    if let Some(initialized_level) = level_loaded.iter().last() {
-        let (mut conveyor_belt, mut belt_pieces) = conveyor_belt.single_mut();
-        for i in 0..MAX_NUM_PIECES {
-            let start = Transform::from_xyz(
-                dips_window.width + PIECE_WIDTH,
-                dips_window.height - HEIGHT + PIECE_WIDTH,
-                0.,
-            );
-            let spawned = maybe_spawn_piece(
-                &mut commands,
-                start,
-                i,
-                **initialized_level,
-                &mut ***conveyor_belt,
-                &belt_options,
-            );
+    if level_loaded.iter().count() == 0 {
+        return;
+    }
 
-            if let Some(spawned) = spawned {
-                belt_pieces.push(spawned);
-                commands.entity(spawned).insert(animations::piece_loaded(
-                    i,
-                    start,
-                    Transform::from_translation(piece_position(&dips_window, &belt_options, i)),
-                    &game_speed,
-                ));
-            } else {
-                break;
-            }
+    let (id, mut conveyor_belt, mut belt_pieces) = conveyor_belt.single_mut();
+    for i in 0..MAX_NUM_PIECES {
+        let start = Transform::from_xyz(
+            dips_window.width + PIECE_WIDTH,
+            dips_window.height - HEIGHT + PIECE_WIDTH,
+            0.,
+        );
+        let spawned = maybe_spawn_piece(
+            &mut commands,
+            start,
+            i,
+            id,
+            &mut ***conveyor_belt,
+            &belt_options,
+        );
+
+        if let Some(spawned) = spawned {
+            belt_pieces.push(spawned);
+            commands.entity(spawned).insert(animations::piece_loaded(
+                i,
+                start,
+                Transform::from_translation(piece_position(&dips_window, &belt_options, i)),
+                &game_speed,
+            ));
+        } else {
+            break;
         }
     }
 }
 
 fn replace_pieces(
     mut commands: Commands,
-    gb9000: Res<GroceryBagger9000>,
     mut conveyor_belt: Query<
-        (&mut ConveyorBeltInstance, &mut BeltPieceIds),
+        (Entity, &mut ConveyorBeltInstance, &mut BeltPieceIds),
         With<ConveyorBeltMarker>,
     >,
     mut colors: Query<&mut DrawMode, (With<NominoMarker>, Without<Selectable>)>,
@@ -105,7 +105,7 @@ fn replace_pieces(
         piece: piece_id, ..
     } in placed_pieces.iter()
     {
-        let (mut conveyor_belt, mut belt_pieces) = conveyor_belt.single_mut();
+        let (id, mut conveyor_belt, mut belt_pieces) = conveyor_belt.single_mut();
 
         let placed_position = belt_pieces.iter().position(|id| *id == *piece_id);
         if let Some(placed_position) = placed_position {
@@ -143,7 +143,7 @@ fn replace_pieces(
                 &mut commands,
                 from,
                 position,
-                gb9000.level_root.unwrap(),
+                id,
                 &mut ***conveyor_belt,
                 &belt_options,
             );
@@ -217,7 +217,7 @@ fn move_pieces(
     game_speed: Res<GameSpeed>,
     belt_pieces: Query<(&BeltPieceIds, ChangeTrackers<BeltPieceIds>), With<ConveyorBeltMarker>>,
     mut fsm: Local<PieceMovementFsm>,
-    mut level_loaded: EventReader<LevelLoaded>,
+    mut level_loaded: EventReader<LevelStarted>,
     positions: Query<&Transform, (With<NominoMarker>, Without<Selected>)>,
     robot_timing: Query<&RobotTiming, With<RobotMarker>>,
 ) {

@@ -5,8 +5,12 @@ use smallvec::SmallVec;
 
 use crate::{
     bags::{bag_replacement::BagPieces, consts::*, positioning::compute_bag_coordinates},
+    levels::LevelMarker,
     window_management::DipsWindow,
 };
+
+#[derive(Component)]
+pub struct BagContainerMarker;
 
 #[derive(Component)]
 pub struct BagMarker;
@@ -20,21 +24,32 @@ pub struct BagWallsMarker;
 #[derive(Component)]
 pub struct BagFloorMarker;
 
-pub trait BagSpawner<'w, 's> {
+pub trait BagContainerSpawner {
     fn spawn_bag<const N: usize>(&mut self, window: &DipsWindow) -> SmallVec<[Entity; 3]>;
+}
 
+pub trait BagSpawner<'w, 's> {
     fn spawn_bag_into(&mut self, transform: Transform) -> EntityCommands<'w, 's, '_>;
 }
 
-impl<'w, 's, 'a> BagSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
+impl<'w, 's> BagContainerSpawner for Commands<'w, 's> {
     fn spawn_bag<const N: usize>(&mut self, window: &DipsWindow) -> SmallVec<[Entity; 3]> {
         let mut spawned_bags = SmallVec::new();
-        for position in compute_bag_coordinates(window, N) {
-            spawned_bags.push(spawn_bag(self, Transform::from_translation(position)).id())
-        }
+
+        self.spawn_bundle(TransformBundle::default())
+            .insert(LevelMarker)
+            .insert(BagContainerMarker)
+            .with_children(|parent| {
+                for position in compute_bag_coordinates(window, N) {
+                    spawned_bags.push(spawn_bag(parent, Transform::from_translation(position)).id())
+                }
+            });
+
         spawned_bags
     }
+}
 
+impl<'w, 's, 'a> BagSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
     fn spawn_bag_into(&mut self, transform: Transform) -> EntityCommands<'w, 's, '_> {
         spawn_bag(self, transform)
     }

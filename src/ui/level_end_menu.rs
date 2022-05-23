@@ -4,7 +4,7 @@ use crate::{
     animations,
     animations::GameSpeed,
     gb9000::{GameState::Playing, GroceryBagger9000},
-    levels::{CurrentScore, LevelFinished, LevelLoaded, LevelTransitionLabel},
+    levels::{CurrentScore, LevelFinished, LevelStarted, LevelTransitionLabel},
     ui::consts::{MENU_FONT_SIZE, TITLE_FONT_SIZE},
     App,
 };
@@ -173,7 +173,7 @@ fn button_system(
 
 fn despawn_menu(
     mut commands: Commands,
-    mut level_started: EventReader<LevelLoaded>,
+    mut level_started: EventReader<LevelStarted>,
     menus: Query<Entity, With<MenuMarker>>,
     game_speed: Res<GameSpeed>,
 ) {

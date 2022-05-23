@@ -1,14 +1,10 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags::BagSpawner,
+    bags::BagContainerSpawner,
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
-    gb9000::GroceryBagger9000,
-    levels::{
-        init::{level_init_chrome, LevelInitLabel},
-        LevelLoaded,
-    },
+    levels::{LevelInitLabel, LevelStarted},
     nominos::TETROMINOS,
     window_management::DipsWindow,
 };
@@ -25,22 +21,18 @@ impl Plugin for Level6Plugin {
 
 fn init_level(
     mut commands: Commands,
-    gb9000: ResMut<GroceryBagger9000>,
-    level_loaded: EventWriter<LevelLoaded>,
+    mut level_started: EventReader<LevelStarted>,
     dips_window: Res<DipsWindow>,
 ) {
-    level_init_chrome(6, gb9000, level_loaded, || {
-        commands
-            .spawn_bundle(TransformBundle::default())
-            .with_children(|parent| {
-                parent.spawn_bag::<2>(&dips_window);
+    if !level_started.iter().last().map(|l| **l).contains(&5) {
+        return;
+    }
 
-                parent.spawn_belt(Box::new(RandomPiecesConveyorBelt::new(
-                    NUM_PIECES,
-                    TETROMINOS,
-                    [NominoColor::Blue, NominoColor::Green],
-                )));
-            })
-            .id()
-    });
+    commands.spawn_bag::<2>(&dips_window);
+
+    commands.spawn_belt(Box::new(RandomPiecesConveyorBelt::new(
+        NUM_PIECES,
+        TETROMINOS,
+        [NominoColor::Blue, NominoColor::Green],
+    )));
 }

@@ -3,7 +3,7 @@ use std::fmt::Write;
 use bevy::{prelude::*, ui::PositionType::Absolute};
 
 use crate::{
-    levels::{CurrentScore, LevelFinished, LevelLoaded},
+    levels::{CurrentScore, LevelFinished, LevelStarted},
     ui::consts::HUD_FONT_SIZE,
 };
 
@@ -18,14 +18,14 @@ impl Plugin for HudPlugin {
 }
 
 #[derive(Component)]
-struct HudMarker;
+pub struct HudMarker;
 
 #[derive(Component)]
 struct ScoreText;
 
 fn setup_hud(
     mut commands: Commands,
-    mut level_loaded: EventReader<LevelLoaded>,
+    mut level_loaded: EventReader<LevelStarted>,
     asset_server: Res<AssetServer>,
 ) {
     if level_loaded.iter().count() == 0 {

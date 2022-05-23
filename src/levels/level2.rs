@@ -1,14 +1,10 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags::{compute_bag_coordinates, BagSpawner, BAG_ORIGIN},
+    bags::{compute_bag_coordinates, BagContainerSpawner, BAG_ORIGIN},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    gb9000::GroceryBagger9000,
-    levels::{
-        init::{level_init_chrome, LevelInitLabel},
-        LevelLoaded,
-    },
+    levels::{LevelInitLabel, LevelMarker, LevelStarted},
     nominos::{Nomino, NominoSpawner, PiecePlaced, DEG_90, DEG_MIRRORED},
     window_management::DipsWindow,
 };
@@ -25,35 +21,34 @@ impl Plugin for Level2Plugin {
 
 fn init_level(
     mut commands: Commands,
-    gb9000: ResMut<GroceryBagger9000>,
-    level_loaded: EventWriter<LevelLoaded>,
+    mut level_started: EventReader<LevelStarted>,
     mut placed_pieces: EventWriter<PiecePlaced>,
     dips_window: Res<DipsWindow>,
 ) {
-    level_init_chrome(2, gb9000, level_loaded, || {
-        let (root, bag) = commands
-            .spawn_bundle(TransformBundle::default())
-            .with_children(|parent| {
-                parent.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([
-                    Piece {
-                        nomino: Nomino::TetrominoStraight,
-                        color: LEVEL_COLOR,
-                        rotation: Quat::IDENTITY,
-                    },
-                    Piece {
-                        nomino: Nomino::TetrominoT,
-                        color: LEVEL_COLOR,
-                        rotation: Quat::IDENTITY,
-                    },
-                ])));
+    if !level_started.iter().last().map(|l| **l).contains(&1) {
+        return;
+    }
 
-                let bag_id = parent.spawn_bag::<1>(&dips_window)[0];
-                (parent.parent_entity(), bag_id)
-            })
-            .out;
+    commands.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([
+        Piece {
+            nomino: Nomino::TetrominoStraight,
+            color: LEVEL_COLOR,
+            rotation: Quat::IDENTITY,
+        },
+        Piece {
+            nomino: Nomino::TetrominoT,
+            color: LEVEL_COLOR,
+            rotation: Quat::IDENTITY,
+        },
+    ])));
 
-        // TODO use local coordinates after https://github.com/dimforge/bevy_rapier/issues/172
-        commands.entity(root).with_children(|parent| {
+    let bag = commands.spawn_bag::<1>(&dips_window)[0];
+
+    // TODO use local coordinates after https://github.com/dimforge/bevy_rapier/issues/172
+    commands
+        .spawn_bundle(TransformBundle::default())
+        .insert(LevelMarker)
+        .with_children(|parent| {
             let origin = Transform::from_translation(
                 compute_bag_coordinates(&dips_window, 1)[0] - BAG_ORIGIN,
             );
@@ -89,7 +84,4 @@ fn init_level(
                 placed_pieces.send(PiecePlaced { piece, bag })
             }
         });
-
-        root
-    });
 }
