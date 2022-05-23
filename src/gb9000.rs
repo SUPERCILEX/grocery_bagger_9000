@@ -48,5 +48,4 @@ pub struct GroceryBagger9000 {
     pub state: GameState,
     pub current_level: u16,
     pub level_root: Option<Entity>,
-    pub menu_root: Option<Entity>,
 }

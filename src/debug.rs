@@ -251,11 +251,7 @@ fn level_change_handler(
         if let Some(initialized) = gb9000.level_root {
             commands.entity(initialized).despawn_recursive();
             gb9000.level_root = None;
-        }
-
-        if let Some(initialized) = gb9000.menu_root {
-            commands.entity(initialized).despawn_recursive();
-            gb9000.menu_root = None;
+        } else {
             gb9000.state = Playing;
         }
     }

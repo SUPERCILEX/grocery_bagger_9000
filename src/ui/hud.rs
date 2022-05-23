@@ -13,12 +13,12 @@ impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(setup_hud);
         app.add_system(update_score);
-        app.add_system(despawn_huds);
+        app.add_system(despawn_hud);
     }
 }
 
 #[derive(Component)]
-struct Hud;
+struct HudMarker;
 
 #[derive(Component)]
 struct ScoreText;
@@ -45,7 +45,7 @@ fn setup_hud(
             color: Color::NONE.into(),
             ..default()
         })
-        .insert(Hud)
+        .insert(HudMarker)
         .with_children(|parent| {
             parent
                 .spawn_bundle(TextBundle {
@@ -79,10 +79,10 @@ fn update_score(score: Res<CurrentScore>, mut text_query: Query<&mut Text, With<
     }
 }
 
-fn despawn_huds(
+fn despawn_hud(
     mut commands: Commands,
     mut level_finished: EventReader<LevelFinished>,
-    huds: Query<Entity, With<Hud>>,
+    huds: Query<Entity, With<HudMarker>>,
 ) {
     if level_finished.iter().count() == 0 {
         return;

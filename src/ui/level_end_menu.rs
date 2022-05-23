@@ -4,7 +4,7 @@ use crate::{
     animations,
     animations::GameSpeed,
     gb9000::{GameState::Playing, GroceryBagger9000},
-    levels::{CurrentScore, LevelFinished, LevelTransitionLabel},
+    levels::{CurrentScore, LevelFinished, LevelLoaded, LevelTransitionLabel},
     ui::consts::{MENU_FONT_SIZE, TITLE_FONT_SIZE},
     App,
 };
@@ -17,6 +17,8 @@ pub struct LevelEndMenuPlugin;
 
 impl Plugin for LevelEndMenuPlugin {
     fn build(&self, app: &mut App) {
+        app.add_system(despawn_menu);
+
         app.add_system_to_stage(
             CoreStage::Last,
             show_level_end_screen.after(LevelTransitionLabel),
@@ -25,12 +27,15 @@ impl Plugin for LevelEndMenuPlugin {
     }
 }
 
+#[derive(Component)]
+struct MenuMarker;
+
 fn show_level_end_screen(
     mut commands: Commands,
     mut level_end: EventReader<LevelFinished>,
     score: Res<CurrentScore>,
     game_speed: Res<GameSpeed>,
-    mut gb9000: ResMut<GroceryBagger9000>,
+    gb9000: ResMut<GroceryBagger9000>,
     asset_server: Res<AssetServer>,
 ) {
     if level_end.iter().count() == 0 {
@@ -47,7 +52,7 @@ fn show_level_end_screen(
     };
 
     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
-    let root = commands
+    commands
         .spawn_bundle(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
@@ -61,6 +66,7 @@ fn show_level_end_screen(
             color: Color::NONE.into(),
             ..default()
         })
+        .insert(MenuMarker)
         .insert(animations::level_complete_menu_ui_enter(
             from,
             to,
@@ -139,38 +145,21 @@ fn show_level_end_screen(
                         ..default()
                     });
                 });
-        })
-        .id();
-    gb9000.menu_root = Some(root);
+        });
 }
 
 fn button_system(
-    mut commands: Commands,
+    mut gb9000: ResMut<GroceryBagger9000>,
     mut interaction_query: Query<
         (&Interaction, &mut UiColor),
         (Changed<Interaction>, With<Button>),
     >,
-    mut gb9000: ResMut<GroceryBagger9000>,
-    game_speed: Res<GameSpeed>,
 ) {
     for (interaction, mut color) in interaction_query.iter_mut() {
         match *interaction {
             Interaction::Clicked => {
-                let from = Rect {
-                    top: Val::Percent(0.),
-                    ..default()
-                };
-                let to = Rect {
-                    top: Val::Percent(100.),
-                    ..default()
-                };
-                commands.entity(gb9000.menu_root.unwrap()).insert(
-                    animations::level_complete_menu_ui_exit(from, to, &game_speed),
-                );
-
                 gb9000.state = Playing;
                 gb9000.current_level += 1;
-                gb9000.menu_root = None;
             }
             Interaction::Hovered => {
                 *color = HOVERED_BUTTON.into();
@@ -179,5 +168,29 @@ fn button_system(
                 *color = NORMAL_BUTTON.into();
             }
         }
+    }
+}
+
+fn despawn_menu(
+    mut commands: Commands,
+    mut level_started: EventReader<LevelLoaded>,
+    menus: Query<Entity, With<MenuMarker>>,
+    game_speed: Res<GameSpeed>,
+) {
+    if level_started.iter().count() == 0 {
+        return;
+    }
+
+    let from = Rect {
+        top: Val::Percent(0.),
+        ..default()
+    };
+    let to = Rect {
+        top: Val::Percent(100.),
+        ..default()
+    };
+    for menu in menus.iter() {
+        let animator = animations::level_complete_menu_ui_exit(from, to, &game_speed);
+        commands.entity(menu).insert(animator);
     }
 }
