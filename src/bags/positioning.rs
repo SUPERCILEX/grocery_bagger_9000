@@ -4,7 +4,7 @@ use smallvec::SmallVec;
 use crate::{
     bags::{
         bag_replacement::BagPieces,
-        consts::{BAG_SPACING, RADIUS},
+        consts::{BAG_SPACING, LARGEST_RADIUS},
         BagMarker,
     },
     conveyor_belt,
@@ -41,15 +41,17 @@ impl BagSnapper<f32> for BagCoord {
 pub fn compute_bag_coordinates(window: &DipsWindow, num_bags: usize) -> SmallVec<[Vec3; 3]> {
     debug_assert!(num_bags != 0);
 
-    let space_needed = 2. * RADIUS * num_bags as f32 + (num_bags - 1) as f32 * BAG_SPACING;
-    let starting_position = (window.width - space_needed) / 2. + RADIUS;
+    let space_needed = 2. * LARGEST_RADIUS * num_bags as f32 + (num_bags - 1) as f32 * BAG_SPACING;
+    let starting_position = (window.width - space_needed) / 2. + LARGEST_RADIUS;
     debug_assert!(starting_position >= 0. && starting_position <= window.width);
 
     let mut bags = SmallVec::new();
     for bag in 0..num_bags {
         bags.push(Vec3::new(
-            BagCoord(starting_position + (2. * RADIUS * bag as f32 + bag as f32 * BAG_SPACING))
-                .snap_to_grid(),
+            BagCoord(
+                starting_position + (2. * LARGEST_RADIUS * bag as f32 + bag as f32 * BAG_SPACING),
+            )
+            .snap_to_grid(),
             BagCoord((window.height - conveyor_belt::HEIGHT) / 2.).snap_to_grid(),
             0.,
         ))

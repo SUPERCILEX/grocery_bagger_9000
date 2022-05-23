@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags::BagContainerSpawner,
+    bags::{BagContainerSpawner, BAG_SIZE_LARGE},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
     levels::{transitions::LevelSpawnStage, LevelStarted},
@@ -28,7 +28,7 @@ fn init_level(
         return;
     }
 
-    commands.spawn_bag::<2>(&dips_window);
+    commands.spawn_bag::<2>(&dips_window, [BAG_SIZE_LARGE, BAG_SIZE_LARGE]);
 
     commands.spawn_belt(Box::new(RandomPiecesConveyorBelt::new(
         NUM_PIECES,

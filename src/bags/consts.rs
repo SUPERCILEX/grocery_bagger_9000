@@ -1,10 +1,6 @@
-use std::lazy::SyncLazy;
-
+use crate::bags::bag_size::BagSize;
 use bevy::{math::const_vec3, prelude::*};
-use bevy_prototype_lyon::prelude::{
-    tess::{math::Point, path::path::Builder},
-    *,
-};
+
 use bevy_rapier3d::prelude::*;
 
 pub const BAG_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
@@ -28,56 +24,20 @@ pub const BAG_BOUNDARY_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
     filters: BAG_WALLS_COLLIDER_GROUP.filters | BAG_FLOOR_COLLIDER_GROUP.filters,
 };
 
-pub const RADIUS: f32 = 3.;
-pub const BAG_ORIGIN: Vec3 = const_vec3!([RADIUS, RADIUS, 0.]);
+pub const BAG_SIZE_LARGE: BagSize = BagSize::new(6, 6);
+pub const BAG_SIZE_SMALL: BagSize = BagSize::new(3, 4);
+
+pub const LARGEST_BAG_HEIGHT: usize = 6;
+pub const LARGEST_BAG_WIDTH: usize = 6;
+
+pub const LARGEST_RADIUS: f32 = 3.;
+pub const BAG_CAPACITY_LARGE: usize = 36;
+
 pub const BAG_SPACING: f32 = 2.;
-pub const BAG_CAPACITY: usize = 36;
 
-pub static BAG_PATH: SyncLazy<Path> = SyncLazy::new(|| {
-    let mut b = Builder::with_capacity(4, 4);
-
-    b.begin(Point::new(-RADIUS, RADIUS));
-    b.line_to(Point::new(-RADIUS, -RADIUS));
-    b.line_to(Point::new(RADIUS, -RADIUS));
-    b.line_to(Point::new(RADIUS, RADIUS));
-    b.end(false);
-
-    Path(b.build())
-});
-
-pub static BAG_MAIN_COLLIDER: SyncLazy<Collider> =
-    SyncLazy::new(|| Collider::cuboid(RADIUS, RADIUS, 0.));
-
-pub static BAG_LID_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
-    Collider::compound(vec![(
-        const_vec3!([0., RADIUS + 0.5, 0.]),
-        Quat::IDENTITY,
-        Collider::cuboid(RADIUS, 0.49, 0.),
-    )])
-});
-
-pub static BAG_WALLS_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
-    Collider::compound(vec![
-        (
-            const_vec3!([-RADIUS, 0., 0.]),
-            Quat::IDENTITY,
-            Collider::cuboid(0.009, RADIUS, 0.),
-        ),
-        (
-            const_vec3!([RADIUS, 0., 0.]),
-            Quat::IDENTITY,
-            Collider::cuboid(0.009, RADIUS, 0.),
-        ),
-    ])
-});
-
-pub static BAG_FLOOR_COLLIDER: SyncLazy<Collider> = SyncLazy::new(|| {
-    Collider::compound(vec![(
-        const_vec3!([0., -RADIUS, 0.]),
-        Quat::IDENTITY,
-        Collider::cuboid(RADIUS, 0.009, 0.),
-    )])
-});
+pub const LID_HALFHEIGHT: f32 = 0.49;
+pub const LID_OFFSET: f32 = 0.5;
+pub const BOUNDARY_HALFWIDTH: f32 = 0.009;
 
 pub const BAG_COLOR: Color = Color::rgb(0xC3 as f32 / 255., 0xA9 as f32 / 255., 0x88 as f32 / 255.);
 pub const BAG_OUTLINE_COLOR: Color =

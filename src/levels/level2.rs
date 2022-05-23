@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags::{compute_bag_coordinates, BagContainerSpawner, BAG_ORIGIN},
+    bags::{compute_bag_coordinates, BagContainerSpawner, BAG_SIZE_LARGE},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     levels::{transitions::LevelSpawnStage, LevelMarker, LevelStarted},
@@ -42,7 +42,7 @@ fn init_level(
         },
     ])));
 
-    let bag = commands.spawn_bag::<1>(&dips_window)[0];
+    let bag = commands.spawn_bag::<1>(&dips_window, [BAG_SIZE_LARGE])[0];
 
     // TODO use local coordinates after https://github.com/dimforge/bevy_rapier/issues/172
     commands
@@ -50,7 +50,7 @@ fn init_level(
         .insert(LevelMarker)
         .with_children(|parent| {
             let origin = Transform::from_translation(
-                compute_bag_coordinates(&dips_window, 1)[0] - BAG_ORIGIN,
+                compute_bag_coordinates(&dips_window, 1)[0] - BAG_SIZE_LARGE.origin(),
             );
             macro_rules! spawn {
                 ($nomino:expr, $transform:expr) => {{

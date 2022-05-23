@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags::BagContainerSpawner,
+    bags::{BagContainerSpawner, BAG_SIZE_LARGE},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     levels::{transitions::LevelSpawnStage, LevelMarker, LevelStarted},
@@ -29,7 +29,7 @@ fn init_level(
         return;
     }
 
-    commands.spawn_bag::<1>(&dips_window);
+    commands.spawn_bag::<1>(&dips_window, [BAG_SIZE_LARGE]);
 
     // TODO remove
     commands

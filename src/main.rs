@@ -1,3 +1,4 @@
+#![feature(const_fn_floating_point_arithmetic)]
 #![feature(let_chains)]
 #![feature(once_cell)]
 #![feature(option_result_contains)]

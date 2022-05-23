@@ -1,14 +1,13 @@
-use bevy::{math::const_vec3, prelude::*};
+use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
 use crate::{
     animations,
     animations::GameSpeed,
-    bags,
     bags::{
         spawn::{BagContainerMarker, BagLidMarker, BagMarker},
-        BagSpawner, BAG_LID_COLLIDER_GROUP, RADIUS,
+        BagSize, BagSpawner, BAG_LID_COLLIDER_GROUP, LARGEST_RADIUS,
     },
     conveyor_belt,
     conveyor_belt::BeltEmptyEvent,
@@ -44,14 +43,14 @@ pub struct BagPieces(pub SmallVec<[Entity; conveyor_belt::MAX_NUM_PIECES]>);
 
 fn detect_filled_bags(
     mut piece_placements: EventReader<PiecePlaced>,
-    mut bags: Query<(&GlobalTransform, &mut BagPieces), With<BagMarker>>,
+    mut bags: Query<(&GlobalTransform, &mut BagPieces, &BagSize), With<BagMarker>>,
     mut filled_events: EventWriter<BagFilled>,
     rapier_context: Res<RapierContext>,
     piece_colliders: Query<(&GlobalTransform, &Collider), With<NominoMarker>>,
     lid_collider_bag: Query<&Parent, With<BagLidMarker>>,
 ) {
     for PiecePlaced { piece, bag } in piece_placements.iter() {
-        let (bag_coords, mut bag_pieces) = bags.get_mut(*bag).unwrap();
+        let (bag_coords, mut bag_pieces, bag_size) = bags.get_mut(*bag).unwrap();
         bag_pieces.push(*piece);
 
         {
@@ -72,10 +71,14 @@ fn detect_filled_bags(
         }
 
         let mut bag_coords = *bag_coords;
-        bag_coords.translation += const_vec3!([0.5 - bags::RADIUS, bags::RADIUS - 0.5, 0.]);
+        bag_coords.translation += Vec3::new(
+            0.5 - bag_size.half_width(),
+            bag_size.half_height() - 0.5,
+            0.,
+        );
 
         let mut top_row_full = true;
-        for i in 0..6 {
+        for i in 0..bag_size.width() {
             let mut intersection = false;
             rapier_context.intersections_with_point(
                 bag_coords.translation + Vec3::new(i as f32, 0., 0.),
@@ -153,7 +156,7 @@ fn remove_filled_bags(
         let current_bag_position = bag_positions.get(**removed_bag).unwrap();
         let exit_bag_position = {
             let mut p = *current_bag_position;
-            p.translation.y = -(RADIUS + 0.5);
+            p.translation.y = -(LARGEST_RADIUS + 0.5);
             p
         };
 
@@ -178,11 +181,11 @@ fn replace_filled_bags(
     mut commands: Commands,
     mut replace_events: EventReader<ReplaceFilledBag>,
     game_speed: Res<GameSpeed>,
-    bag_positions: Query<&Transform, With<BagMarker>>,
+    bags: Query<(&Transform, &BagSize), With<BagMarker>>,
     bag_container: Query<Entity, With<BagContainerMarker>>,
 ) {
     for replaced_bag in replace_events.iter() {
-        let current_bag_position = bag_positions.get(**replaced_bag).unwrap();
+        let (current_bag_position, bag_size) = bags.get(**replaced_bag).unwrap();
         let new_bag_start = {
             let mut p = *current_bag_position;
             p.scale = Vec3::ZERO;
@@ -193,7 +196,7 @@ fn replace_filled_bags(
             .entity(bag_container.single())
             .with_children(|parent| {
                 parent
-                    .spawn_bag_into(new_bag_start)
+                    .spawn_replacement_bag(new_bag_start, *bag_size)
                     .insert(animations::bag_enter(
                         new_bag_start,
                         *current_bag_position,

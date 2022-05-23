@@ -5,7 +5,7 @@ use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
 use crate::{
-    bags::{BagMarker, BAG_CAPACITY, BAG_ORIGIN},
+    bags::{BagMarker, BagSize, BAG_CAPACITY_LARGE, LARGEST_BAG_HEIGHT, LARGEST_BAG_WIDTH},
     colors::NominoColor,
     levels::{LevelSpawnStage, LevelStarted},
     nominos::{NominoMarker, PiecePlaced, PieceSystems, NOMINO_COLLIDER_GROUP},
@@ -35,21 +35,22 @@ pub struct CurrentScore {
 
 fn score_bags(
     mut piece_placements: EventReader<PiecePlaced>,
-    bags: Query<&GlobalTransform, With<BagMarker>>,
+    bags: Query<(&GlobalTransform, &BagSize), With<BagMarker>>,
     color_wrapper: Query<&NominoColor, With<NominoMarker>>,
     rapier_context: Res<RapierContext>,
     mut current_score: ResMut<CurrentScore>,
 ) {
     for PiecePlaced { bag, .. } in piece_placements.iter() {
-        let bag_coords = *bags.get(*bag).unwrap();
+        let (bag_coords, bag_size) = bags.get(*bag).unwrap();
+        let width = bag_size.width();
+        let height = bag_size.height();
+        let block_origin = bag_coords.translation - bag_size.origin() + const_vec3!([0.5, 0.5, 0.]);
 
-        let block_origin = bag_coords.translation - BAG_ORIGIN + const_vec3!([0.5, 0.5, 0.]);
-
-        let mut bag_matrix = [[false; 6]; 6];
+        let mut bag_matrix = [[false; LARGEST_BAG_WIDTH]; LARGEST_BAG_HEIGHT];
         let mut block_count = 0u8;
         let mut color_block_count_map = [0u8; NominoColor::COUNT];
-        for (row_num, row) in bag_matrix.iter_mut().enumerate() {
-            for (col, cell) in row.iter_mut().enumerate() {
+        for (row_num, row) in bag_matrix[..height].iter_mut().enumerate() {
+            for (col, cell) in row[..width].iter_mut().enumerate() {
                 rapier_context.intersections_with_point(
                     block_origin + Vec3::new(col as f32, row_num as f32, 0.),
                     NOMINO_COLLIDER_GROUP.into(),
@@ -67,7 +68,18 @@ fn score_bags(
         }
         color_block_count_map.sort_unstable_by(|a, b| b.cmp(a));
 
-        let total_bag_score = score_bag(&bag_matrix, block_count, &color_block_count_map);
+        // use .take() between iter() and collect(), probably after map()
+        let resized_bag_matrix = bag_matrix
+            .iter()
+            .map(|row| &row[0..width])
+            .take(height)
+            .collect::<SmallVec<[&[bool]; LARGEST_BAG_HEIGHT]>>();
+        let total_bag_score = score_bag(
+            &resized_bag_matrix,
+            block_count,
+            &color_block_count_map,
+            bag_size.capacity(),
+        );
         let bag_score = current_score.score_map.entry(*bag).or_insert(0);
         let diff = total_bag_score as i16 - *bag_score as i16;
 
@@ -90,6 +102,7 @@ fn score_bag(
     bag_matrix: &[impl AsRef<[bool]>],
     block_count: u8,
     color_block_count_map: &[u8; NominoColor::COUNT],
+    capacity: u8,
 ) -> u16 {
     debug_assert!(color_block_count_map.is_sorted_by(|a, b| Some(b.cmp(a))));
     debug_assert_eq!(color_block_count_map.iter().sum::<u8>(), block_count);
@@ -101,17 +114,21 @@ fn score_bag(
             .sum::<u8>(),
         block_count
     );
+    debug_assert_eq!(
+        capacity as usize,
+        bag_matrix.len() * bag_matrix[0].as_ref().len()
+    );
 
-    let num_holes = count_holes(bag_matrix, block_count);
-    let base_score = calculate_base_score(color_block_count_map);
-    let multiplier = calculate_bag_fill_multiplier(block_count);
+    let num_holes = count_holes(bag_matrix, block_count, capacity);
+    let base_score = calculate_base_score(color_block_count_map, capacity);
+    let multiplier = calculate_bag_fill_multiplier(block_count, capacity);
     let hole_penalty = num_holes as u16 * BLOCK_POINT_VALUE;
 
     (multiplier as f32 * (base_score - hole_penalty as f32)).round() as u16
 }
 
-fn count_holes(matrix: &[impl AsRef<[bool]>], block_count: u8) -> u8 {
-    BAG_CAPACITY as u8 - block_count - get_connected_empties(matrix).len() as u8
+fn count_holes(matrix: &[impl AsRef<[bool]>], block_count: u8, capacity: u8) -> u8 {
+    capacity - block_count - get_connected_empties(matrix).len() as u8
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -153,10 +170,10 @@ impl RowCol {
 
 /// Generates a vector containing the coordinates of all the empty spaces in the
 /// bag that are connected to an empty space on the top row.
-fn get_connected_empties(matrix: &[impl AsRef<[bool]>]) -> SmallVec<[RowCol; BAG_CAPACITY]> {
-    let mut connected_to_top = SmallVec::<[RowCol; BAG_CAPACITY]>::new();
-    let mut touched = HashSet::<RowCol>::with_capacity(BAG_CAPACITY);
-    let mut frontier = VecDeque::<RowCol>::with_capacity(BAG_CAPACITY);
+fn get_connected_empties(matrix: &[impl AsRef<[bool]>]) -> SmallVec<[RowCol; BAG_CAPACITY_LARGE]> {
+    let mut connected_to_top = SmallVec::<[RowCol; BAG_CAPACITY_LARGE]>::new();
+    let mut touched = HashSet::<RowCol>::with_capacity(BAG_CAPACITY_LARGE);
+    let mut frontier = VecDeque::<RowCol>::with_capacity(BAG_CAPACITY_LARGE);
     let top_row = matrix.len() - 1;
 
     for (i, filled) in matrix.last().unwrap().as_ref().iter().enumerate() {
@@ -193,18 +210,17 @@ fn get_connected_empties(matrix: &[impl AsRef<[bool]>]) -> SmallVec<[RowCol; BAG
     connected_to_top
 }
 
-fn calculate_base_score(color_map: &[u8; NominoColor::COUNT]) -> f32 {
+fn calculate_base_score(color_map: &[u8; NominoColor::COUNT], capacity: u8) -> f32 {
     let mut score = 0.;
 
     for (i, color_count) in color_map.iter().enumerate() {
-        let color_count = *color_count as u16;
-        if color_count == 0 {
+        if *color_count == 0 {
             break;
         }
 
-        let perfect_bag_bonus = color_count == BAG_CAPACITY as u16;
+        let perfect_bag_bonus = *color_count == capacity;
 
-        let mut raw_points = color_count * BLOCK_POINT_VALUE;
+        let mut raw_points = *color_count as u16 * BLOCK_POINT_VALUE;
         if perfect_bag_bonus {
             raw_points += 100;
         }
@@ -214,13 +230,20 @@ fn calculate_base_score(color_map: &[u8; NominoColor::COUNT]) -> f32 {
     score
 }
 
-const fn calculate_bag_fill_multiplier(block_count: u8) -> u16 {
-    match block_count {
-        0..=19 => 1,
-        20..=27 => 2,
-        28..=35 => 5,
-        36 => 10,
-        _ => panic!("More blocks than can fit in a bag"),
+fn calculate_bag_fill_multiplier(block_count: u8, capacity: u8) -> u16 {
+    debug_assert_eq!(capacity % 4, 0);
+    debug_assert!(block_count <= capacity);
+
+    let threshold_1 = capacity / 2 + 2;
+    let threshold_2 = (capacity / 4) * 3 + 2;
+    if (0..threshold_1).contains(&block_count) {
+        1
+    } else if (threshold_1..threshold_2).contains(&block_count) {
+        2
+    } else if (threshold_2..capacity).contains(&block_count) {
+        5
+    } else {
+        10
     }
 }
 
@@ -243,7 +266,7 @@ mod tests {
         let mut color_map = [0; NominoColor::COUNT];
         color_map[0] = block_count;
 
-        assert_eq!(0, score_bag(&bag, block_count, &color_map));
+        assert_eq!(0, score_bag(&bag, block_count, &color_map, 36));
     }
 
     #[test]
@@ -261,7 +284,7 @@ mod tests {
         let mut color_map = [0; NominoColor::COUNT];
         color_map[0] = block_count;
 
-        assert_eq!(20000, score_bag(&bag, block_count, &color_map));
+        assert_eq!(20000, score_bag(&bag, block_count, &color_map, 36));
     }
 
     #[test]
@@ -279,7 +302,7 @@ mod tests {
         let mut color_map = [0; NominoColor::COUNT];
         color_map[0] = block_count;
 
-        assert_eq!(950, score_bag(&bag, block_count, &color_map));
+        assert_eq!(950, score_bag(&bag, block_count, &color_map, 36));
     }
 
     #[test]
@@ -297,7 +320,7 @@ mod tests {
         let mut color_map = [0; NominoColor::COUNT];
         color_map[0] = block_count;
 
-        assert_eq!(2700, score_bag(&bag, block_count, &color_map));
+        assert_eq!(2700, score_bag(&bag, block_count, &color_map, 36));
     }
 
     #[test]
@@ -315,7 +338,7 @@ mod tests {
         let mut color_map = [0; NominoColor::COUNT];
         color_map[0] = block_count;
 
-        assert_eq!(8750, score_bag(&bag, block_count, &color_map));
+        assert_eq!(8750, score_bag(&bag, block_count, &color_map, 36));
     }
 
     #[test]
@@ -333,7 +356,7 @@ mod tests {
         let mut color_map = [0; NominoColor::COUNT];
         color_map[0] = block_count;
 
-        assert_eq!(2100, score_bag(&bag, block_count, &color_map));
+        assert_eq!(2100, score_bag(&bag, block_count, &color_map, 36));
     }
 
     #[test]
@@ -351,7 +374,7 @@ mod tests {
         let mut color_map = [0; NominoColor::COUNT];
         color_map[0] = block_count;
 
-        assert_eq!(1500, score_bag(&bag, block_count, &color_map));
+        assert_eq!(1500, score_bag(&bag, block_count, &color_map, 36));
     }
 
     #[test]
@@ -370,7 +393,7 @@ mod tests {
         color_map[0] = 15;
         color_map[1] = 7;
 
-        assert_eq!(1325, score_bag(&bag, block_count, &color_map));
+        assert_eq!(1325, score_bag(&bag, block_count, &color_map, 36));
     }
 
     fn to_matrix(bag: &str) -> ([[bool; 6]; 6], u8) {
