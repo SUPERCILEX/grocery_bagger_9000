@@ -87,14 +87,18 @@ fn reset_score(
 }
 
 fn score_bag(
-    bag_matrix: &[[bool; 6]; 6],
+    bag_matrix: &[impl AsRef<[bool]>],
     block_count: u8,
     color_block_count_map: &[u8; NominoColor::COUNT],
 ) -> u16 {
     debug_assert!(color_block_count_map.is_sorted_by(|a, b| Some(b.cmp(a))));
     debug_assert_eq!(color_block_count_map.iter().sum::<u8>(), block_count);
     debug_assert_eq!(
-        bag_matrix.iter().flatten().map(|b| *b as u8).sum::<u8>(),
+        bag_matrix
+            .iter()
+            .flat_map(|row| row.as_ref())
+            .map(|b| *b as u8)
+            .sum::<u8>(),
         block_count
     );
 
@@ -106,7 +110,7 @@ fn score_bag(
     (multiplier as f32 * (base_score - hole_penalty as f32)).round() as u16
 }
 
-fn count_holes(matrix: &[[bool; 6]; 6], block_count: u8) -> u8 {
+fn count_holes(matrix: &[impl AsRef<[bool]>], block_count: u8) -> u8 {
     BAG_CAPACITY as u8 - block_count - get_connected_empties(matrix).len() as u8
 }
 
@@ -149,13 +153,13 @@ impl RowCol {
 
 /// Generates a vector containing the coordinates of all the empty spaces in the
 /// bag that are connected to an empty space on the top row.
-fn get_connected_empties(matrix: &[[bool; 6]; 6]) -> SmallVec<[RowCol; BAG_CAPACITY]> {
+fn get_connected_empties(matrix: &[impl AsRef<[bool]>]) -> SmallVec<[RowCol; BAG_CAPACITY]> {
     let mut connected_to_top = SmallVec::<[RowCol; BAG_CAPACITY]>::new();
     let mut touched = HashSet::<RowCol>::with_capacity(BAG_CAPACITY);
     let mut frontier = VecDeque::<RowCol>::with_capacity(BAG_CAPACITY);
     let top_row = matrix.len() - 1;
 
-    for (i, filled) in matrix.last().unwrap().iter().enumerate() {
+    for (i, filled) in matrix.last().unwrap().as_ref().iter().enumerate() {
         if !filled {
             connected_to_top.push(RowCol(top_row, i));
             frontier.push_back(RowCol(top_row - 1, i));
@@ -168,7 +172,7 @@ fn get_connected_empties(matrix: &[[bool; 6]; 6]) -> SmallVec<[RowCol; BAG_CAPAC
     while let Some(block) = frontier.pop_front() {
         let row = block.0;
         let col = block.1;
-        let filled = matrix[row][col];
+        let filled = matrix[row].as_ref()[col];
 
         if filled {
             continue;
