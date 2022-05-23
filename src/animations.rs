@@ -284,6 +284,22 @@ pub fn piece_movement(
     }
 }
 
+pub fn undo_selection(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<Transform> {
+    Animator::new(
+        Tween::new(
+            EaseMethod::EaseFunction(EaseFunction::ExponentialInOut),
+            TweeningType::Once,
+            Duration::from_millis(250),
+            TransformPositionLens {
+                start: from.translation,
+                end: to.translation,
+            },
+        )
+        .with_speed(**speed)
+        .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+    )
+}
+
 pub fn mouse_tutorial_enter(target: Transform, speed: &GameSpeed) -> Animator<Transform> {
     Animator::new(
         Tween::new(

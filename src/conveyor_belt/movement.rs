@@ -12,7 +12,7 @@ use crate::{
     },
     gb9000::GroceryBagger9000,
     levels::LevelLoaded,
-    nominos::{NominoMarker, NominoSpawner, PiecePlaced, Selectable, Selected},
+    nominos::{AttemptedPlacement, NominoMarker, NominoSpawner, PiecePlaced, Selectable, Selected},
     robot,
     robot::{RobotMarker, RobotTiming},
     window_management::DipsWindow,
@@ -30,6 +30,7 @@ impl Plugin for ConveyorBeltMovementPlugin {
         app.add_system(init_pieces);
         app.add_system(replace_pieces.after(init_pieces));
         app.add_system(belt_empty_check.after(replace_pieces));
+        app.add_system(check_for_piece_selection_undos);
         app.add_system_to_stage(
             CoreStage::PostUpdate,
             move_pieces.before(TransformPropagate),
@@ -173,6 +174,32 @@ fn belt_empty_check(
         if belt_pieces.is_empty() {
             belt_empty.send(BeltEmptyEvent);
         }
+    }
+}
+
+fn check_for_piece_selection_undos(
+    mut commands: Commands,
+    mut attempted_placement_events: EventReader<AttemptedPlacement>,
+    belt_pieces: Query<&BeltPieceIds, With<ConveyorBeltMarker>>,
+    piece_positions: Query<&Transform, (With<NominoMarker>, With<Selected>)>,
+    belt_options: Res<ConveyorBeltOptions>,
+    dips_window: Res<DipsWindow>,
+    game_speed: Res<GameSpeed>,
+) {
+    for attempted in attempted_placement_events.iter() {
+        let position = belt_pieces
+            .single()
+            .iter()
+            .position(|p| *p == **attempted)
+            .unwrap();
+        let transform =
+            Transform::from_translation(piece_position(&dips_window, &belt_options, position));
+        let from = piece_positions.get(**attempted).unwrap();
+
+        commands
+            .entity(**attempted)
+            .remove::<Selected>()
+            .insert(animations::undo_selection(*from, transform, &game_speed));
     }
 }
 

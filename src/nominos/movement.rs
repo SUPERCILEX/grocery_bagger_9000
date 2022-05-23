@@ -15,8 +15,9 @@ pub struct PieceMovementPlugin;
 
 impl Plugin for PieceMovementPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<PiecePlaced>();
         app.add_event::<PiecePickedUp>();
+        app.add_event::<AttemptedPlacement>();
+        app.add_event::<PiecePlaced>();
 
         app.add_system(piece_selection_handler);
         app.add_system(piece_rotation_handler.after(AnimationSystem::AnimationUpdate));
@@ -34,13 +35,16 @@ pub struct Selectable;
 #[derive(Component)]
 pub struct Selected;
 
+#[derive(Deref)]
+pub struct PiecePickedUp(Entity);
+
+#[derive(Deref)]
+pub struct AttemptedPlacement(Entity);
+
 pub struct PiecePlaced {
     pub piece: Entity,
     pub bag: Entity,
 }
-
-#[derive(Deref)]
-pub struct PiecePickedUp(Entity);
 
 const FLOATING_PIECE_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
     memberships: BAG_FLOOR_COLLIDER_GROUP.memberships | NOMINO_COLLIDER_GROUP.memberships,
@@ -52,6 +56,7 @@ fn piece_selection_handler(
     mouse_button_input: Res<Input<MouseButton>>,
     mut picked_up_events: EventWriter<PiecePickedUp>,
     mut placed_events: EventWriter<PiecePlaced>,
+    mut attempted_placement_events: EventWriter<AttemptedPlacement>,
     selectables: Query<&Selectable, With<NominoMarker>>,
     game_speed: Res<GameSpeed>,
     windows: Res<Windows>,
@@ -99,20 +104,24 @@ fn piece_selection_handler(
                 None,
             );
 
-            if let Some(bag) = intersects_with_bag
-                && !straddles_bag_or_overlaps_pieces(&rapier_context, *transform, collider, piece)
-                && !piece_is_floating(&rapier_context, *transform, collider, piece) {
-                commands
-                    .entity(piece)
-                    .remove::<Selectable>()
-                    .remove::<Selected>()
-                    .insert(animations::piece_placed(*transform, &game_speed));
+            if let Some(bag) = intersects_with_bag {
+                if !straddles_bag_or_overlaps_pieces(&rapier_context, *transform, collider, piece)
+                    && !piece_is_floating(&rapier_context, *transform, collider, piece)
+                {
+                    commands
+                        .entity(piece)
+                        .remove::<Selectable>()
+                        .remove::<Selected>()
+                        .insert(animations::piece_placed(*transform, &game_speed));
 
-                placed_events.send(PiecePlaced { piece, bag });
+                    placed_events.send(PiecePlaced { piece, bag });
+                } else {
+                    commands
+                        .entity(piece)
+                        .insert_bundle(animations::error_shake(*transform, &game_speed));
+                }
             } else {
-                commands
-                    .entity(piece)
-                    .insert_bundle(animations::error_shake(*transform, &game_speed));
+                attempted_placement_events.send(AttemptedPlacement(piece));
             }
 
             return;
