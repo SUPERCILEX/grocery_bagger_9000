@@ -110,6 +110,7 @@ fn show_tutorial(
     gb9000: ResMut<GroceryBagger9000>,
     game_speed: Res<GameSpeed>,
     mouse_button_input: Res<Input<MouseButton>>,
+    mut level_started: EventReader<LevelStarted>,
     mut piece_selections: EventReader<PiecePickedUp>,
     mut fsm: Local<TutorialFsm>,
     first_piece: Query<
@@ -123,7 +124,7 @@ fn show_tutorial(
 ) {
     const ICON_SCALE: Vec3 = const_vec3!([0.05, 0.05, 0.05]);
 
-    if gb9000.current_level != 0 {
+    if gb9000.current_level != 0 || level_started.iter().count() > 0 {
         *fsm = TutorialFsm::Ready;
         return;
     }
