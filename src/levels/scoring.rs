@@ -136,22 +136,6 @@ struct RowCol(usize, usize);
 
 impl RowCol {
     fn left(&self) -> Option<Self> {
-        if self.0 > 0 {
-            Some(RowCol(self.0 - 1, self.1))
-        } else {
-            None
-        }
-    }
-
-    fn right(&self, max: usize) -> Option<Self> {
-        if self.0 < max {
-            Some(RowCol(self.0 + 1, self.1))
-        } else {
-            None
-        }
-    }
-
-    fn up(&self) -> Option<Self> {
         if self.1 > 0 {
             Some(RowCol(self.0, self.1 - 1))
         } else {
@@ -159,9 +143,25 @@ impl RowCol {
         }
     }
 
-    fn down(&self, max: usize) -> Option<Self> {
+    fn right(&self, max: usize) -> Option<Self> {
         if self.1 < max {
             Some(RowCol(self.0, self.1 + 1))
+        } else {
+            None
+        }
+    }
+
+    fn up(&self, max: usize) -> Option<Self> {
+        if self.0 < max {
+            Some(RowCol(self.0 + 1, self.1))
+        } else {
+            None
+        }
+    }
+
+    fn down(&self) -> Option<Self> {
+        if self.0 > 0 {
+            Some(RowCol(self.0 - 1, self.1))
         } else {
             None
         }
@@ -180,18 +180,21 @@ fn get_connected_empties(
 
     for (i, filled) in matrix.last().unwrap().as_ref().iter().enumerate() {
         if !filled {
-            connected_to_top.push(RowCol(top_row, i));
-            frontier.push_back(RowCol(top_row - 1, i));
-            touched.insert(RowCol(top_row - 1, i));
+            let block = RowCol(top_row, i);
+            connected_to_top.push(block);
+
+            if let Some(neighbor) = block.down() {
+                frontier.push_back(neighbor);
+                touched.insert(neighbor);
+            }
         }
 
         touched.insert(RowCol(top_row, i));
     }
 
     while let Some(block) = frontier.pop_front() {
-        let row = block.0;
-        let col = block.1;
-        let filled = matrix[row].as_ref()[col];
+        let row = matrix[block.0].as_ref();
+        let filled = row[block.1];
 
         if filled {
             continue;
@@ -204,9 +207,9 @@ fn get_connected_empties(
             }
         };
         block.left().map(&mut touch_neighbor);
-        block.right(top_row).map(&mut touch_neighbor);
-        block.up().map(&mut touch_neighbor);
-        block.down(top_row).map(&mut touch_neighbor);
+        block.right(row.len() - 1).map(&mut touch_neighbor);
+        block.up(top_row).map(&mut touch_neighbor);
+        block.down().map(&mut touch_neighbor);
     }
 
     connected_to_top
