@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use level10::Level10Plugin;
 use level17::Level17Plugin;
 use level8::Level8Plugin;
-use level9::Level4Plugin;
+use level9::Level9Plugin;
 use scoring::ScoringPlugin;
 pub use scoring::{CurrentScore, ScoringSystems};
 use transitions::LevelTransitionPlugin;
@@ -27,7 +27,7 @@ impl Plugin for LevelsPlugin {
         app.add_plugin(ScoringPlugin);
 
         app.add_plugin(Level8Plugin);
-        app.add_plugin(Level4Plugin);
+        app.add_plugin(Level9Plugin);
         app.add_plugin(Level10Plugin);
         app.add_plugin(Level17Plugin);
     }
