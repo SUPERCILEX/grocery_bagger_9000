@@ -49,7 +49,7 @@ pub struct LevelStarted(u16);
 pub struct LevelFinished;
 
 fn level_start_handler(
-    gb9000: ResMut<GroceryBagger9000>,
+    gb9000: Res<GroceryBagger9000>,
     mut level_started: EventWriter<LevelStarted>,
     level: Query<(), With<LevelMarker>>,
 ) {

@@ -107,7 +107,7 @@ struct TutorialIconMarker;
 fn show_tutorial(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    gb9000: ResMut<GroceryBagger9000>,
+    gb9000: Res<GroceryBagger9000>,
     game_speed: Res<GameSpeed>,
     mouse_button_input: Res<Input<MouseButton>>,
     mut level_started: EventReader<LevelStarted>,
