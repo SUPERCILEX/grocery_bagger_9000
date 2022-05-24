@@ -10,7 +10,6 @@ use crate::{
     bags::{compute_bag_coordinates, BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    gb9000::GroceryBagger9000,
     levels::{transitions::LevelSpawnStage, LevelMarker, LevelStarted},
     nominos::{
         Nomino, NominoMarker, NominoSpawner, PiecePickedUp, PiecePlaced, Selectable, DEG_90,
