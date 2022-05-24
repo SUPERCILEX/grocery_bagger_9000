@@ -22,12 +22,15 @@ impl Plugin for BagReplacementPlugin {
         app.add_event::<RemoveFilledBag>();
         app.add_event::<ReplaceFilledBag>();
 
-        app.add_system(detect_filled_bags.after(PieceSystems));
+        app.add_system(detect_filled_bags.label(BagSetupSystem).after(PieceSystems));
         app.add_system(replace_full_bags.after(detect_filled_bags));
         app.add_system(remove_filled_bags.after(replace_full_bags));
         app.add_system(replace_filled_bags.after(replace_full_bags));
     }
 }
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
+pub struct BagSetupSystem;
 
 #[derive(Deref)]
 struct BagFilled(Entity);

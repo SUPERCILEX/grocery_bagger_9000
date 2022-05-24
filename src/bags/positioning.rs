@@ -2,7 +2,11 @@ use bevy::{prelude::*, window::WindowResized};
 use smallvec::SmallVec;
 
 use crate::{
-    bags::{bag_replacement::BagPieces, consts::BAG_SPACING, BagMarker, BagSize},
+    bags::{
+        bag_replacement::{BagPieces, BagSetupSystem},
+        consts::BAG_SPACING,
+        BagMarker, BagSize,
+    },
     conveyor_belt,
     nominos::{NominoMarker, PiecePlaced},
     window_management::{DipsWindow, WindowSystems},
@@ -17,7 +21,7 @@ impl Plugin for BagPositioningPlugin {
         //     CoreStage::PostUpdate,
         //     transfer_piece_ownership.after(TransformSystem::TransformPropagate),
         // );
-        app.add_system(center_bags.after(WindowSystems));
+        app.add_system(center_bags.after(WindowSystems).after(BagSetupSystem));
     }
 }
 
