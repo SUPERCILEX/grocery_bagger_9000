@@ -2,11 +2,7 @@ use bevy::{prelude::*, window::WindowResized};
 use smallvec::SmallVec;
 
 use crate::{
-    bags::{
-        bag_replacement::BagPieces,
-        consts::{BAG_SPACING, LARGEST_RADIUS},
-        BagMarker,
-    },
+    bags::{bag_replacement::BagPieces, consts::BAG_SPACING, BagMarker, BagSize},
     conveyor_belt,
     nominos::{NominoMarker, PiecePlaced},
     window_management::{DipsWindow, WindowSystems},
@@ -38,23 +34,34 @@ impl BagSnapper<f32> for BagCoord {
     }
 }
 
-pub fn compute_bag_coordinates(window: &DipsWindow, num_bags: usize) -> SmallVec<[Vec3; 3]> {
-    debug_assert!(num_bags != 0);
+pub fn compute_bag_coordinates(
+    window: &DipsWindow,
+    bag_sizes: impl IntoIterator<Item = BagSize> + Clone,
+) -> SmallVec<[Vec3; 3]> {
+    let mut space_needed = 0;
+    let mut max_half_height = 0.;
+    for size in bag_sizes.clone() {
+        space_needed += size.width() + BAG_SPACING;
+        if size.half_height() > max_half_height {
+            max_half_height = size.half_height();
+        }
+    }
+    space_needed -= BAG_SPACING;
 
-    let space_needed = 2. * LARGEST_RADIUS * num_bags as f32 + (num_bags - 1) as f32 * BAG_SPACING;
-    let starting_position = (window.width - space_needed) / 2. + LARGEST_RADIUS;
+    let mut starting_position = BagCoord((window.width - space_needed as f32) / 2.).snap_to_grid();
     debug_assert!(starting_position >= 0. && starting_position <= window.width);
 
+    let base_y = BagCoord((window.height - conveyor_belt::HEIGHT) / 2.).snap_to_grid();
+
     let mut bags = SmallVec::new();
-    for bag in 0..num_bags {
+    for bag in bag_sizes {
+        starting_position += bag.half_width();
         bags.push(Vec3::new(
-            BagCoord(
-                starting_position + (2. * LARGEST_RADIUS * bag as f32 + bag as f32 * BAG_SPACING),
-            )
-            .snap_to_grid(),
-            BagCoord((window.height - conveyor_belt::HEIGHT) / 2.).snap_to_grid(),
+            starting_position,
+            base_y - (max_half_height - bag.half_height()),
             0.,
-        ))
+        ));
+        starting_position += bag.half_width() + BAG_SPACING as f32;
     }
     bags
 }
@@ -84,19 +91,24 @@ fn center_bags(
     mut resized_events: EventReader<WindowResized>,
     dips_window: Res<DipsWindow>,
     mut piece_positions: Query<&mut Transform, (With<NominoMarker>, Without<BagMarker>)>,
-    mut bags: Query<(&mut Transform, &BagPieces), (With<BagMarker>, Without<NominoMarker>)>,
+    mut bags: Query<
+        (&mut Transform, &BagPieces, &BagSize),
+        (With<BagMarker>, Without<NominoMarker>),
+    >,
 ) {
     if resized_events.iter().count() == 0 {
         return;
     }
-    let bag_count = bags.iter().count();
-    if bag_count == 0 {
+    if bags.is_empty() {
         return;
     }
 
-    let bag_positions = compute_bag_coordinates(&dips_window, bag_count);
+    let bag_positions = compute_bag_coordinates(
+        &dips_window,
+        bags.iter().map(|bag| *bag.2).collect::<SmallVec<[_; 3]>>(),
+    );
 
-    for (index, (mut bag_position, bag_pieces)) in bags.iter_mut().enumerate() {
+    for (index, (mut bag_position, bag_pieces, _)) in bags.iter_mut().enumerate() {
         let old_position = bag_position.translation;
         bag_position.translation = bag_positions[index];
         let diff = bag_position.translation - old_position;

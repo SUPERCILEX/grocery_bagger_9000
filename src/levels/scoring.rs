@@ -73,7 +73,7 @@ fn score_bags(
             .iter()
             .map(|row| &row[..width])
             .take(height)
-            .collect::<SmallVec<[&[bool]; LARGEST_BAG_HEIGHT]>>();
+            .collect::<SmallVec<[_; LARGEST_BAG_HEIGHT]>>();
         let total_bag_score = score_bag(
             &resized_bag_matrix,
             block_count,

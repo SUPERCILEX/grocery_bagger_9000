@@ -7,7 +7,7 @@ use crate::{
     animations::GameSpeed,
     bags::{
         spawn::{BagContainerMarker, BagLidMarker, BagMarker},
-        BagSize, BagSpawner, BAG_LID_COLLIDER_GROUP, LARGEST_RADIUS,
+        BagSize, BagSpawner, BAG_LID_COLLIDER_GROUP,
     },
     conveyor_belt,
     conveyor_belt::BeltEmptyEvent,
@@ -145,7 +145,7 @@ fn remove_filled_bags(
     mut commands: Commands,
     mut remove_events: EventReader<RemoveFilledBag>,
     game_speed: Res<GameSpeed>,
-    bag_positions: Query<&Transform, With<BagMarker>>,
+    bags: Query<(&Transform, &BagSize), With<BagMarker>>,
     bag_pieces: Query<&BagPieces, With<BagMarker>>,
     mut piece_positions: Query<
         (&GlobalTransform, &mut Transform),
@@ -153,10 +153,10 @@ fn remove_filled_bags(
     >,
 ) {
     for removed_bag in remove_events.iter() {
-        let current_bag_position = bag_positions.get(**removed_bag).unwrap();
+        let (current_bag_position, bag_size) = bags.get(**removed_bag).unwrap();
         let exit_bag_position = {
             let mut p = *current_bag_position;
-            p.translation.y = -(LARGEST_RADIUS + 0.5);
+            p.translation.y = -(bag_size.half_height() + 0.5);
             p
         };
 

@@ -31,10 +31,10 @@ pub struct BagWallsMarker;
 pub struct BagFloorMarker;
 
 pub trait BagContainerSpawner {
-    fn spawn_bag<const N: usize>(
+    fn spawn_bag(
         &mut self,
         window: &DipsWindow,
-        sizes: [BagSize; N],
+        sizes: impl IntoIterator<Item = BagSize> + Copy,
     ) -> SmallVec<[Entity; 3]>;
 }
 
@@ -47,10 +47,10 @@ pub trait BagSpawner<'w, 's> {
 }
 
 impl<'w, 's> BagContainerSpawner for Commands<'w, 's> {
-    fn spawn_bag<const N: usize>(
+    fn spawn_bag(
         &mut self,
         window: &DipsWindow,
-        sizes: [BagSize; N],
+        sizes: impl IntoIterator<Item = BagSize> + Copy,
     ) -> SmallVec<[Entity; 3]> {
         let mut spawned_bags = SmallVec::new();
 
@@ -58,7 +58,7 @@ impl<'w, 's> BagContainerSpawner for Commands<'w, 's> {
             .insert(LevelMarker)
             .insert(BagContainerMarker)
             .with_children(|parent| {
-                for (position, size) in compute_bag_coordinates(window, N).iter().zip(sizes) {
+                for (position, size) in compute_bag_coordinates(window, sizes).iter().zip(sizes) {
                     spawned_bags
                         .push(spawn_bag(parent, Transform::from_translation(*position), size).id())
                 }

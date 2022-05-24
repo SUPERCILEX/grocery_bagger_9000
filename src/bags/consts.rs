@@ -30,9 +30,7 @@ pub const BAG_SIZE_SMALL: BagSize = BagSize::new(3, 4);
 pub const LARGEST_BAG_WIDTH: usize = 6;
 pub const LARGEST_BAG_HEIGHT: usize = 6;
 pub const LARGEST_BAG_CAPACITY: usize = LARGEST_BAG_WIDTH * LARGEST_BAG_HEIGHT;
-pub const LARGEST_RADIUS: f32 = 3.;
-
-pub const BAG_SPACING: f32 = 2.;
+pub const BAG_SPACING: usize = 2;
 
 pub const LID_HALFHEIGHT: f32 = 0.49;
 pub const LID_OFFSET: f32 = 0.5;

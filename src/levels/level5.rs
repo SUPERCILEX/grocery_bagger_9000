@@ -29,7 +29,7 @@ fn init_level(
         return;
     }
 
-    commands.spawn_bag::<1>(&dips_window, [BAG_SIZE_LARGE]);
+    commands.spawn_bag(&dips_window, [BAG_SIZE_LARGE]);
 
     // TODO remove
     commands

@@ -28,7 +28,7 @@ fn init_level(
         return;
     }
 
-    commands.spawn_bag::<2>(&dips_window, [BAG_SIZE_LARGE, BAG_SIZE_LARGE]);
+    commands.spawn_bag(&dips_window, [BAG_SIZE_LARGE, BAG_SIZE_LARGE]);
 
     commands.spawn_belt(Box::new(RandomPiecesConveyorBelt::new(
         NUM_PIECES,
