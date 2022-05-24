@@ -10,6 +10,7 @@ use crate::{
     bags::{compute_bag_coordinates, BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
+    gb9000::GroceryBagger9000,
     levels::{transitions::LevelSpawnStage, LevelMarker, LevelStarted},
     nominos::{
         Nomino, NominoMarker, NominoSpawner, PiecePickedUp, PiecePlaced, Selectable, DEG_90,
@@ -91,6 +92,7 @@ struct TutorialIconMarker;
 fn show_tutorial(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    gb9000: Res<GroceryBagger9000>,
     game_speed: Res<GameSpeed>,
     mouse_button_input: Res<Input<MouseButton>>,
     mut level_started: EventReader<LevelStarted>,
@@ -107,7 +109,7 @@ fn show_tutorial(
 ) {
     const ICON_SCALE: Vec3 = const_vec3!([0.05, 0.05, 0.05]);
 
-    if let Some(started) = level_started.iter().last() && **started == 0 {
+    if gb9000.current_level != 0 || level_started.iter().count() > 0 {
         *fsm = TutorialFsm::Ready;
         return;
     }
