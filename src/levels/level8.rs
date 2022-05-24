@@ -4,30 +4,17 @@ use crate::{
     bags::{BagContainerSpawner, BAG_SIZE_LARGE},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    levels::{transitions::LevelSpawnStage, LevelStarted},
-    nominos::{Nomino, DEG_180, DEG_MIRRORED},
+    nominos::{Nomino, PiecePlaced, DEG_180, DEG_MIRRORED},
     window_management::DipsWindow,
 };
 
 const LEVEL_COLOR: NominoColor = NominoColor::Blue;
 
-pub struct Level8Plugin;
-
-impl Plugin for Level8Plugin {
-    fn build(&self, app: &mut App) {
-        app.add_system_to_stage(LevelSpawnStage, init_level);
-    }
-}
-
-fn init_level(
+pub fn init_level(
     mut commands: Commands,
-    mut level_started: EventReader<LevelStarted>,
     dips_window: Res<DipsWindow>,
+    _: EventWriter<PiecePlaced>,
 ) {
-    if !level_started.iter().last().map(|l| **l).contains(&7) {
-        return;
-    }
-
     commands.spawn_bag(&dips_window, [BAG_SIZE_LARGE]);
 
     commands.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([

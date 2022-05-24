@@ -24,21 +24,15 @@ pub struct Level1Plugin;
 
 impl Plugin for Level1Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(LevelSpawnStage, init_level);
-        app.add_system_to_stage(LevelSpawnStage, show_tutorial.after(init_level));
+        app.add_system_to_stage(LevelSpawnStage, show_tutorial.after(super::init_levels));
     }
 }
 
-fn init_level(
+pub fn init_level(
     mut commands: Commands,
-    mut level_started: EventReader<LevelStarted>,
-    mut placed_pieces: EventWriter<PiecePlaced>,
     dips_window: Res<DipsWindow>,
+    mut placed_pieces: EventWriter<PiecePlaced>,
 ) {
-    if !level_started.iter().last().map(|l| **l).contains(&0) {
-        return;
-    }
-
     commands.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([Piece {
         nomino: Nomino::TetrominoStraight,
         color: LEVEL_COLOR,
