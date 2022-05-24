@@ -11,9 +11,9 @@ use crate::{
 
 const NUM_PIECES: usize = 18;
 
-pub struct Level6Plugin;
+pub struct Level17Plugin;
 
-impl Plugin for Level6Plugin {
+impl Plugin for Level17Plugin {
     fn build(&self, app: &mut App) {
         app.add_system_to_stage(LevelSpawnStage, init_level);
     }
@@ -24,7 +24,7 @@ fn init_level(
     mut level_started: EventReader<LevelStarted>,
     dips_window: Res<DipsWindow>,
 ) {
-    if !level_started.iter().last().map(|l| **l).contains(&5) {
+    if !level_started.iter().last().map(|l| **l).contains(&16) {
         return;
     }
 

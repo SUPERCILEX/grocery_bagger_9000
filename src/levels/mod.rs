@@ -1,11 +1,9 @@
 use bevy::prelude::*;
 
-use level1::Level1Plugin;
-use level2::Level2Plugin;
-use level3::Level3Plugin;
-use level4::Level4Plugin;
-use level5::Level5Plugin;
-use level6::Level6Plugin;
+use level10::Level10Plugin;
+use level17::Level17Plugin;
+use level8::Level8Plugin;
+use level9::Level4Plugin;
 use scoring::ScoringPlugin;
 pub use scoring::{CurrentScore, ScoringSystems};
 use transitions::LevelTransitionPlugin;
@@ -13,12 +11,11 @@ pub use transitions::{
     LevelFinished, LevelMarker, LevelSpawnStage, LevelStarted, LevelTransitionSystems,
 };
 
-mod level1;
-mod level2;
-mod level3;
-mod level4;
-mod level5;
-mod level6;
+mod level10;
+
+mod level17;
+mod level8;
+mod level9;
 mod scoring;
 mod transitions;
 
@@ -29,11 +26,9 @@ impl Plugin for LevelsPlugin {
         app.add_plugin(LevelTransitionPlugin);
         app.add_plugin(ScoringPlugin);
 
-        app.add_plugin(Level1Plugin);
-        app.add_plugin(Level2Plugin);
-        app.add_plugin(Level3Plugin);
+        app.add_plugin(Level8Plugin);
         app.add_plugin(Level4Plugin);
-        app.add_plugin(Level5Plugin);
-        app.add_plugin(Level6Plugin);
+        app.add_plugin(Level10Plugin);
+        app.add_plugin(Level17Plugin);
     }
 }

@@ -12,9 +12,9 @@ use crate::{
 
 const LEVEL_COLOR: NominoColor = NominoColor::Pink;
 
-pub struct Level5Plugin;
+pub struct Level10Plugin;
 
-impl Plugin for Level5Plugin {
+impl Plugin for Level10Plugin {
     fn build(&self, app: &mut App) {
         app.add_system_to_stage(LevelSpawnStage, init_level);
     }
@@ -25,7 +25,7 @@ fn init_level(
     mut level_started: EventReader<LevelStarted>,
     dips_window: Res<DipsWindow>,
 ) {
-    if !level_started.iter().last().map(|l| **l).contains(&4) {
+    if !level_started.iter().last().map(|l| **l).contains(&9) {
         return;
     }
 
