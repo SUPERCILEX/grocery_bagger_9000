@@ -66,6 +66,7 @@ pub enum LevelChangeFsm {
 }
 
 fn level_end_handler(
+    mut gb9000: ResMut<GroceryBagger9000>,
     mut belt_empty_events: EventReader<BeltEmptyEvent>,
     mut bag_offscreen: EventReader<TweenCompleted>,
     mut level_started: EventReader<LevelStarted>,
@@ -91,6 +92,7 @@ fn level_end_handler(
         }
         LevelChangeFsm::PiecePlaced => {
             if bag_offscreen {
+                gb9000.state = LevelEnded;
                 level_finished.send(LevelFinished);
                 *level_fsm = default();
             }
@@ -100,7 +102,6 @@ fn level_end_handler(
 
 fn level_unload_handler(
     mut commands: Commands,
-    mut gb9000: ResMut<GroceryBagger9000>,
     mut level_finished: EventReader<LevelFinished>,
     level: Query<Entity, With<LevelMarker>>,
 ) {
@@ -108,6 +109,5 @@ fn level_unload_handler(
         for entity in level.iter() {
             commands.entity(entity).despawn_recursive();
         }
-        gb9000.state = LevelEnded;
     }
 }

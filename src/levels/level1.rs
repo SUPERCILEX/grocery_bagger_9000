@@ -145,7 +145,7 @@ fn show_tutorial(
                             svg: handle.clone(),
                             transform,
                             origin: Origin::Center,
-                            ..Default::default()
+                            ..default()
                         })
                         .insert(TutorialIconMarker)
                         .id();

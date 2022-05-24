@@ -1,5 +1,5 @@
 use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
-use bevy_egui::{egui, EguiContext, EguiPlugin};
+use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSystem};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
 use bevy_screen_diags::ScreenDiagsPlugin;
@@ -9,9 +9,8 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::ConveyorBeltOptions,
     gb9000::{GameState::Playing, GroceryBagger9000},
-    levels::LevelMarker,
+    levels::{LevelFinished, LevelMarker},
     nominos::*,
-    ui::HudMarker,
 };
 
 pub struct DebugPlugin;
@@ -32,7 +31,10 @@ impl Plugin for DebugPlugin {
         app.add_plugin(ScreenDiagsPlugin);
         app.add_plugin(FrameTimeDiagnosticsPlugin::default());
 
-        app.add_system(debug_options);
+        app.add_system_to_stage(
+            CoreStage::PreUpdate,
+            debug_options.after(EguiSystem::BeginFrame),
+        );
         app.add_system(open_debug_menu);
     }
 }
@@ -100,7 +102,7 @@ fn debug_options(
     mut gb9000: ResMut<GroceryBagger9000>,
     mut conveyor_belt_options: ResMut<ConveyorBeltOptions>,
     mut game_speed: ResMut<GameSpeed>,
-    level: Query<Entity, Or<(With<LevelMarker>, With<HudMarker>)>>,
+    mut level_finished: EventWriter<LevelFinished>,
 ) {
     let debug_options = &mut *debug_options;
     egui::Window::new("Debug options")
@@ -113,12 +115,9 @@ fn debug_options(
                 ui.add(egui::DragValue::new(&mut level_num).speed(0.025));
 
                 if level_num != gb9000.current_level {
-                    for entity in level.iter() {
-                        commands.entity(entity).despawn_recursive();
-                    }
-
                     gb9000.current_level = level_num;
                     gb9000.state = Playing;
+                    level_finished.send(LevelFinished);
                 }
             });
 

@@ -3,15 +3,14 @@ use bevy::{app::Plugin, prelude::*, ui::PositionType::Absolute};
 use crate::{
     animations,
     animations::GameSpeed,
-    gb9000::{GameState::Playing, GroceryBagger9000},
+    gb9000::{
+        GameState::{LevelEnded, Playing},
+        GroceryBagger9000,
+    },
     levels::{CurrentScore, LevelFinished, LevelStarted, LevelTransitionSystems, ScoringSystems},
-    ui::consts::{MENU_FONT_SIZE, TITLE_FONT_SIZE},
+    ui::consts::{BUTTON_COLOR, MENU_FONT_SIZE, NORMAL_BUTTON, TITLE_FONT_SIZE},
     App,
 };
-
-const BUTTON_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 
 pub struct LevelEndMenuPlugin;
 
@@ -23,12 +22,15 @@ impl Plugin for LevelEndMenuPlugin {
                 .after(LevelTransitionSystems)
                 .after(ScoringSystems),
         );
-        app.add_system(button_system.before(LevelTransitionSystems));
+        app.add_system(handle_next_level_click.before(LevelTransitionSystems));
     }
 }
 
 #[derive(Component)]
 struct MenuMarker;
+
+#[derive(Component)]
+struct NextLevelButton;
 
 fn show_level_end_screen(
     mut commands: Commands,
@@ -38,7 +40,7 @@ fn show_level_end_screen(
     gb9000: ResMut<GroceryBagger9000>,
     asset_server: Res<AssetServer>,
 ) {
-    if level_end.iter().count() == 0 {
+    if level_end.iter().count() == 0 || gb9000.state != LevelEnded {
         return;
     }
 
@@ -75,17 +77,15 @@ fn show_level_end_screen(
         .with_children(|parent| {
             // level text
             parent.spawn_bundle(TextBundle {
-                text: Text {
-                    sections: vec![TextSection {
-                        value: format!("Level {} complete", gb9000.current_level + 1),
-                        style: TextStyle {
-                            font: font.clone(),
-                            font_size: TITLE_FONT_SIZE,
-                            color: Color::BLACK,
-                        },
-                    }],
-                    ..Default::default()
-                },
+                text: Text::with_section(
+                    format!("Level {} complete", gb9000.current_level + 1),
+                    TextStyle {
+                        font: font.clone(),
+                        font_size: TITLE_FONT_SIZE,
+                        color: Color::BLACK,
+                    },
+                    default(),
+                ),
                 style: Style {
                     margin: Rect {
                         bottom: Val::Px(20.),
@@ -93,22 +93,20 @@ fn show_level_end_screen(
                     },
                     ..default()
                 },
-                ..Default::default()
+                ..default()
             });
 
             // score text
             parent.spawn_bundle(TextBundle {
-                text: Text {
-                    sections: vec![TextSection {
-                        value: format!("Score: {}", score.points),
-                        style: TextStyle {
-                            font,
-                            font_size: MENU_FONT_SIZE,
-                            color: Color::BLUE,
-                        },
-                    }],
-                    ..Default::default()
-                },
+                text: Text::with_section(
+                    format!("Score: {}", score.points),
+                    TextStyle {
+                        font: font.clone(),
+                        font_size: MENU_FONT_SIZE,
+                        color: Color::BLUE,
+                    },
+                    default(),
+                ),
                 style: Style {
                     margin: Rect {
                         bottom: Val::Px(40.),
@@ -116,14 +114,19 @@ fn show_level_end_screen(
                     },
                     ..default()
                 },
-                ..Default::default()
+                ..default()
             });
 
             // next level button
             parent
                 .spawn_bundle(ButtonBundle {
                     style: Style {
-                        size: Size::new(Val::Px(200.0), Val::Px(65.0)),
+                        padding: Rect {
+                            left: Val::Px(30.),
+                            right: Val::Px(30.),
+                            top: Val::Px(15.),
+                            bottom: Val::Px(15.),
+                        },
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..default()
@@ -131,16 +134,17 @@ fn show_level_end_screen(
                     color: NORMAL_BUTTON.into(),
                     ..default()
                 })
+                .insert(NextLevelButton)
                 .with_children(|parent| {
                     parent.spawn_bundle(TextBundle {
                         text: Text::with_section(
                             "Next Level",
                             TextStyle {
-                                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                                font,
                                 font_size: MENU_FONT_SIZE,
                                 color: BUTTON_COLOR,
                             },
-                            Default::default(),
+                            default(),
                         ),
                         ..default()
                     });
@@ -148,26 +152,13 @@ fn show_level_end_screen(
         });
 }
 
-fn button_system(
+fn handle_next_level_click(
     mut gb9000: ResMut<GroceryBagger9000>,
-    mut interaction_query: Query<
-        (&Interaction, &mut UiColor),
-        (Changed<Interaction>, With<Button>),
-    >,
+    interaction_query: Query<&Interaction, (Changed<Interaction>, With<NextLevelButton>)>,
 ) {
-    for (interaction, mut color) in interaction_query.iter_mut() {
-        match *interaction {
-            Interaction::Clicked => {
-                gb9000.state = Playing;
-                gb9000.current_level += 1;
-            }
-            Interaction::Hovered => {
-                *color = HOVERED_BUTTON.into();
-            }
-            Interaction::None => {
-                *color = NORMAL_BUTTON.into();
-            }
-        }
+    if let Ok(interaction) = interaction_query.get_single() && *interaction == Interaction::Clicked {
+        gb9000.state = Playing;
+        gb9000.current_level += 1;
     }
 }
 

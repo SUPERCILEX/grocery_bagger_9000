@@ -3,10 +3,7 @@ use std::fmt::Write;
 use bevy::{prelude::*, ui::PositionType::Absolute};
 
 use crate::{
-    levels::{
-        CurrentScore, LevelFinished, LevelSpawnStage, LevelStarted, LevelTransitionSystems,
-        ScoringSystems,
-    },
+    levels::{CurrentScore, LevelMarker, LevelSpawnStage, LevelStarted, ScoringSystems},
     ui::consts::HUD_FONT_SIZE,
 };
 
@@ -17,12 +14,8 @@ impl Plugin for HudPlugin {
         app.add_system(update_score.after(ScoringSystems));
 
         app.add_system_to_stage(LevelSpawnStage, setup_hud);
-        app.add_system(despawn_hud.after(LevelTransitionSystems));
     }
 }
-
-#[derive(Component)]
-pub struct HudMarker;
 
 #[derive(Component)]
 struct ScoreText;
@@ -49,22 +42,20 @@ fn setup_hud(
             color: Color::NONE.into(),
             ..default()
         })
-        .insert(HudMarker)
+        .insert(LevelMarker)
         .with_children(|parent| {
             parent
                 .spawn_bundle(TextBundle {
-                    text: Text {
-                        sections: vec![TextSection {
-                            value: String::new(),
-                            style: TextStyle {
-                                font,
-                                font_size: HUD_FONT_SIZE,
-                                color: Color::BLUE,
-                            },
-                        }],
-                        ..Default::default()
-                    },
-                    ..Default::default()
+                    text: Text::with_section(
+                        "Score: 0",
+                        TextStyle {
+                            font,
+                            font_size: HUD_FONT_SIZE,
+                            color: Color::BLUE,
+                        },
+                        default(),
+                    ),
+                    ..default()
                 })
                 .insert(ScoreText);
         });
@@ -80,19 +71,5 @@ fn update_score(score: Res<CurrentScore>, mut text_query: Query<&mut Text, With<
 
         text.clear();
         write!(text, "Score: {}", score.points).unwrap();
-    }
-}
-
-fn despawn_hud(
-    mut commands: Commands,
-    mut level_finished: EventReader<LevelFinished>,
-    huds: Query<Entity, With<HudMarker>>,
-) {
-    if level_finished.iter().count() == 0 {
-        return;
-    }
-
-    for hud in huds.iter() {
-        commands.entity(hud).despawn_recursive();
     }
 }
