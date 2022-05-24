@@ -1584,7 +1584,6 @@ dependencies = [
  "bevy_svg",
  "bevy_tweening",
  "bitflags",
- "console_error_panic_hook",
  "log",
  "rand",
  "smallvec",

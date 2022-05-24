@@ -44,7 +44,6 @@ bevy = { version = "0.7.0", default-features = false, features = ["bevy_render",
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 bevy = { version = "0.7.0", default-features = false, features = ["bevy_render", "bevy_ui", "bevy_text"] }
 bevy-web-resizer = "2.0.0"
-console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.80"
 
 [profile.release]
