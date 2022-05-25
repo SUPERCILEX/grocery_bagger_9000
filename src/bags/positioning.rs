@@ -34,7 +34,11 @@ pub struct BagCoord(pub f32);
 
 impl BagSnapper<f32> for BagCoord {
     fn snap_to_grid(&self) -> f32 {
-        self.round() + 0.5
+        if self.0 % 0.5 < 1e-5 {
+            self.round() - 0.5
+        } else {
+            self.round() + 0.5
+        }
     }
 }
 
