@@ -1,5 +1,6 @@
 use bevy::{prelude::*, window::WindowResized};
 use bevy_prototype_lyon::draw::DrawMode;
+use bevy_tweening::{AnimationSystem, Animator};
 use smallvec::SmallVec;
 
 use crate::{
@@ -39,7 +40,11 @@ impl Plugin for ConveyorBeltMovementPlugin {
                 .after(replace_pieces),
         );
         app.add_system(move_pieces.after(WindowSystems).after(replace_pieces));
-        app.add_system(reposition_pieces_on_window_resize.after(WindowSystems));
+        app.add_system(
+            reposition_pieces_on_window_resize
+                .after(WindowSystems)
+                .after(AnimationSystem::AnimationUpdate),
+        );
     }
 }
 
@@ -271,7 +276,11 @@ fn reposition_pieces_on_window_resize(
     belt_pieces: Query<&BeltPieceIds, With<ConveyorBeltMarker>>,
     robot_timing: Query<&RobotTiming, With<RobotMarker>>,
     mut piece_positions: Query<
-        (&mut Transform, Option<&Target<Transform>>),
+        (
+            &mut Transform,
+            Option<&Animator<Transform>>,
+            Option<&Target<Transform>>,
+        ),
         (With<NominoMarker>, Without<Selected>),
     >,
 ) {
@@ -282,7 +291,7 @@ fn reposition_pieces_on_window_resize(
     if let Ok(pieces) = belt_pieces.get_single() {
         for (index, piece) in pieces.iter().enumerate() {
             let position = piece_position(&dips_window, &belt_options, index);
-            if let Ok((mut transform, target)) = piece_positions.get_mut(*piece) {
+            if let Ok((mut transform, animator, target)) = piece_positions.get_mut(*piece) {
                 if let Some(target) = target {
                     let diff = position - target.translation;
                     transform.translation += diff;
@@ -299,6 +308,25 @@ fn reposition_pieces_on_window_resize(
                             ttl,
                             &game_speed,
                         ));
+                } else if let Some(old_animator) = animator {
+                    if old_animator.progress() > 1. - 1e-5 {
+                        transform.translation = position;
+                    } else {
+                        let start = Transform::from_xyz(
+                            dips_window.width + PIECE_WIDTH,
+                            dips_window.height - HEIGHT + PIECE_WIDTH,
+                            0.,
+                        );
+                        let mut animator = animations::piece_loaded(
+                            index,
+                            start,
+                            Transform::from_translation(position),
+                            &game_speed,
+                        );
+                        animator.set_progress(old_animator.progress());
+
+                        commands.entity(*piece).insert(animator);
+                    }
                 } else {
                     transform.translation = position;
                 }
