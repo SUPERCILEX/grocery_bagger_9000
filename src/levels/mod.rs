@@ -49,6 +49,7 @@ impl Plugin for LevelsPlugin {
     }
 }
 
+pub const LAST_LEVEL: u16 = (LEVELS.len() - 1) as u16;
 const LEVELS: &[fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<AssetServer>)] = &[
     level01::init_level,
     level02::init_level,

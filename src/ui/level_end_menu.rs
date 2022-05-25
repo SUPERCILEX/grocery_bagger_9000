@@ -7,7 +7,10 @@ use crate::{
         GameState::{LevelEnded, Playing},
         GroceryBagger9000,
     },
-    levels::{CurrentScore, LevelFinished, LevelStarted, LevelTransitionSystems, ScoringSystems},
+    levels::{
+        CurrentScore, LevelFinished, LevelStarted, LevelTransitionSystems, ScoringSystems,
+        LAST_LEVEL,
+    },
     ui::consts::{BUTTON_COLOR, MENU_FONT_SIZE, NORMAL_BUTTON, TITLE_FONT_SIZE},
     App,
 };
@@ -81,7 +84,7 @@ fn show_level_end_screen(
         ))
         .with_children(|parent| {
             spawn_level_completed_summary(parent, &gb9000, font.clone());
-            spawn_score_recap(parent, &score, font.clone());
+            spawn_score_recap(parent, &gb9000, &score, font.clone());
             spawn_restart_and_next_level_buttons(parent, font);
         });
 }
@@ -93,7 +96,11 @@ fn spawn_level_completed_summary(
 ) {
     parent.spawn_bundle(TextBundle {
         text: Text::with_section(
-            format!("Level {} complete", gb9000.current_level + 1),
+            if gb9000.current_level == LAST_LEVEL {
+                "Game complete!".to_string()
+            } else {
+                format!("Level {} complete", gb9000.current_level + 1)
+            },
             TextStyle {
                 font,
                 font_size: TITLE_FONT_SIZE,
@@ -112,16 +119,33 @@ fn spawn_level_completed_summary(
     });
 }
 
-fn spawn_score_recap(parent: &mut ChildBuilder, score: &CurrentScore, font: Handle<Font>) {
+fn spawn_score_recap(
+    parent: &mut ChildBuilder,
+    gb9000: &GroceryBagger9000,
+    score: &CurrentScore,
+    font: Handle<Font>,
+) {
+    let text = if gb9000.current_level == LAST_LEVEL {
+        format!(
+            "Score: {}\nAll time score: {}",
+            score.points, score.all_time_points
+        )
+    } else {
+        format!("Score: {}", score.points)
+    };
+
     parent.spawn_bundle(TextBundle {
         text: Text::with_section(
-            format!("Score: {}", score.points),
+            text,
             TextStyle {
                 font,
                 font_size: MENU_FONT_SIZE,
                 color: Color::BLUE,
             },
-            default(),
+            TextAlignment {
+                horizontal: HorizontalAlign::Center,
+                ..default()
+            },
         ),
         style: Style {
             margin: Rect {

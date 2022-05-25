@@ -29,7 +29,8 @@ pub struct ScoringSystems;
 
 #[derive(Debug, Default)]
 pub struct CurrentScore {
-    pub points: u16,
+    pub points: usize,
+    pub all_time_points: usize,
     score_map: HashMap<Entity, u16>,
 }
 
@@ -81,10 +82,11 @@ fn score_bags(
             bag_size.capacity(),
         );
         let bag_score = current_score.score_map.entry(*bag).or_insert(0);
-        let diff = total_bag_score as i16 - *bag_score as i16;
+        let diff = (total_bag_score as i16 - *bag_score as i16) as isize;
 
         *bag_score = total_bag_score;
-        current_score.points = (current_score.points as i16 + diff) as u16;
+        current_score.points = (current_score.points as isize + diff) as usize;
+        current_score.all_time_points = (current_score.all_time_points as isize + diff) as usize;
     }
 }
 
