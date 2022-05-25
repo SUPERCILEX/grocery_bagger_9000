@@ -2,7 +2,7 @@ use bevy::{prelude::*, window::WindowResized};
 
 use crate::{
     conveyor_belt::{
-        consts::{LENGTH, SELECTABLE_SEPARATION},
+        consts::{LENGTH, PIECE_WIDTH, SELECTABLE_SEPARATION},
         spawn::ConveyorBeltHackMarker,
         HEIGHT,
     },
@@ -21,6 +21,16 @@ pub fn compute_belt_position(dips_window: &DipsWindow) -> Transform {
     Transform::from_xyz(
         dips_window.width - (LENGTH + 2. * SELECTABLE_SEPARATION + 0.5),
         dips_window.height - HEIGHT,
+        0.,
+    )
+}
+
+pub fn compute_selectable_background(num_pieces_selectable: u8) -> Transform {
+    Transform::from_xyz(
+        num_pieces_selectable as f32 * PIECE_WIDTH
+            + SELECTABLE_SEPARATION
+            + SELECTABLE_SEPARATION / 2.,
+        0.,
         0.,
     )
 }

@@ -1,5 +1,5 @@
 use bevy::{prelude::*, window::WindowResized};
-use bevy_prototype_lyon::draw::DrawMode;
+use bevy_prototype_lyon::{draw::DrawMode, entity::Path};
 use bevy_tweening::{AnimationSystem, Animator};
 use smallvec::SmallVec;
 
@@ -11,7 +11,10 @@ use crate::{
             HEIGHT, LENGTH, MAX_NUM_PIECES, NON_SELECTABLE_LIGHTNESS, PIECE_WIDTH,
             SELECTABLE_SEPARATION,
         },
+        positioning::compute_selectable_background,
         spawn::{
+            nonselectable_background_path, selectable_background_path,
+            BeltNonselectableBackgroundMarker, BeltSelectableBackgroundMarker,
             ConveyorBeltBackgroundSpawner, ConveyorBeltHackMarker, ConveyorBeltInstance,
             ConveyorBeltMarker,
         },
@@ -46,6 +49,7 @@ impl Plugin for ConveyorBeltMovementPlugin {
                 .after(WindowSystems)
                 .after(AnimationSystem::AnimationUpdate),
         );
+        app.add_system(update_background_on_num_selectable_pieces_changed);
     }
 }
 
@@ -211,6 +215,37 @@ fn check_for_piece_selection_undos(
             .entity(**attempted)
             .remove::<Selected>()
             .insert(animations::undo_selection(*from, transform, &game_speed));
+    }
+}
+
+fn update_background_on_num_selectable_pieces_changed(
+    belt_options: Res<ConveyorBeltOptions>,
+    mut selectable: Query<
+        &mut Path,
+        (
+            With<BeltSelectableBackgroundMarker>,
+            Without<BeltNonselectableBackgroundMarker>,
+        ),
+    >,
+    mut nonselectable: Query<
+        (&mut Path, &mut Transform),
+        (
+            With<BeltNonselectableBackgroundMarker>,
+            Without<BeltSelectableBackgroundMarker>,
+        ),
+    >,
+) {
+    if !belt_options.is_changed() {
+        return;
+    }
+
+    let num_pieces_selectable = belt_options.num_pieces_selectable;
+    if let Ok(mut path) = selectable.get_single_mut() {
+        *path = selectable_background_path(num_pieces_selectable);
+    }
+    if let Ok((mut path, mut transform)) = nonselectable.get_single_mut() {
+        *path = nonselectable_background_path(num_pieces_selectable);
+        *transform = compute_selectable_background(num_pieces_selectable);
     }
 }
 

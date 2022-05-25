@@ -14,7 +14,7 @@ use crate::{
             SELECTABLE_SEPARATION,
         },
         movement::BeltPieceIds,
-        positioning::compute_belt_position,
+        positioning::{compute_belt_position, compute_selectable_background},
         ConveyorBelt, HEIGHT, MAX_NUM_PIECES,
     },
     levels::LevelMarker,
@@ -96,18 +96,16 @@ impl<'w, 's, 'a> ConveyorBeltBackgroundSpawner for ChildBuilder<'w, 's, 'a> {
         self.spawn_bundle(GeometryBuilder::build_as(
             &nonselectable_background_path(num_pieces_selectable),
             draw_mode,
-            Transform::from_xyz(selectable_width(num_pieces_selectable), 0., 0.),
+            compute_selectable_background(num_pieces_selectable),
         ))
         .insert(BeltNonselectableBackgroundMarker);
     }
 }
 
-fn selectable_width(num_pieces_selectable: u8) -> f32 {
-    num_pieces_selectable as f32 * PIECE_WIDTH + SELECTABLE_SEPARATION + SELECTABLE_SEPARATION / 2.
-}
-
-fn selectable_background_path(num_pieces_selectable: u8) -> Path {
-    let selectable_width = selectable_width(num_pieces_selectable);
+pub fn selectable_background_path(num_pieces_selectable: u8) -> Path {
+    let selectable_width = compute_selectable_background(num_pieces_selectable)
+        .translation
+        .x;
 
     let mut b = Builder::with_capacity(4, 5);
 
@@ -120,7 +118,7 @@ fn selectable_background_path(num_pieces_selectable: u8) -> Path {
     Path(b.build())
 }
 
-fn nonselectable_background_path(num_pieces_selectable: u8) -> Path {
+pub fn nonselectable_background_path(num_pieces_selectable: u8) -> Path {
     let selectable_width =
         (MAX_NUM_PIECES as u8 - num_pieces_selectable) as f32 * PIECE_WIDTH + SELECTABLE_SEPARATION;
 
