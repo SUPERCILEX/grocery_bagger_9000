@@ -16,6 +16,7 @@ pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
     _: EventWriter<PiecePlaced>,
+    _asset_server: Res<AssetServer>,
 ) {
     commands.spawn_bag(&dips_window, [BAG_SIZE_LARGE]);
 

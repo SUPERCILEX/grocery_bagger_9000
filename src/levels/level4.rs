@@ -1,40 +1,42 @@
-use bevy::prelude::*;
+use bevy::{prelude::*};
 
 use crate::{
-    bags::{BagContainerSpawner, BAG_SIZE_LARGE},
+    bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    nominos::{Nomino, PiecePlaced, DEG_180, DEG_MIRRORED},
+    levels::{
+        tutorials::{spawn_text_tutorial},
+    },
+    nominos::{Nomino, PiecePlaced, DEG_MIRRORED},
     window_management::DipsWindow,
 };
 
-const LEVEL_COLOR: NominoColor = NominoColor::Blue;
+const LEVEL_COLOR: NominoColor = NominoColor::Green;
 
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
     _: EventWriter<PiecePlaced>,
+    asset_server: Res<AssetServer>,
 ) {
-    commands.spawn_bag(&dips_window, [BAG_SIZE_LARGE]);
+    spawn_belt(&mut commands);
+    commands.spawn_bag(&dips_window, [BAG_SIZE_SMALL]);
+    spawn_text_tutorial(
+        &mut commands,
+        asset_server,
+        "Only the leftmost three items are selectable\nAfter filling a bag, a replacement bag will appear",
+    )
+}
 
+fn spawn_belt(commands: &mut Commands) {
     commands.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([
-        Piece {
-            nomino: Nomino::TetrominoStraight,
-            color: LEVEL_COLOR,
-            rotation: Quat::IDENTITY,
-        },
         Piece {
             nomino: Nomino::TetrominoL,
             color: LEVEL_COLOR,
-            rotation: *DEG_180,
-        },
-        Piece {
-            nomino: Nomino::TetrominoSquare,
-            color: LEVEL_COLOR,
             rotation: Quat::IDENTITY,
         },
         Piece {
-            nomino: Nomino::TetrominoStraight,
+            nomino: Nomino::TetrominoSquare,
             color: LEVEL_COLOR,
             rotation: Quat::IDENTITY,
         },
@@ -50,6 +52,11 @@ pub fn init_level(
         },
         Piece {
             nomino: Nomino::TetrominoSquare,
+            color: LEVEL_COLOR,
+            rotation: Quat::IDENTITY,
+        },
+        Piece {
+            nomino: Nomino::TetrominoStraight,
             color: LEVEL_COLOR,
             rotation: Quat::IDENTITY,
         },

@@ -11,14 +11,19 @@ pub use transitions::{
 use crate::{nominos::PiecePlaced, window_management::DipsWindow};
 
 mod level1;
-mod level10;
-
-mod level17;
+mod level11;
+mod level12;
+mod level13;
 mod level2;
-mod level8;
-mod level9;
+mod level20;
+mod level3;
+mod level4;
+mod level5;
+mod level6;
+mod level7;
 mod scoring;
 mod transitions;
+mod tutorials;
 
 pub struct LevelsPlugin;
 
@@ -33,13 +38,18 @@ impl Plugin for LevelsPlugin {
     }
 }
 
-const LEVELS: [fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>); 6] = [
+const LEVELS: [fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<AssetServer>); 11] = [
     level1::init_level,
     level2::init_level,
-    level8::init_level,
-    level9::init_level,
-    level10::init_level,
-    level17::init_level,
+    level3::init_level,
+    level4::init_level,
+    level5::init_level,
+    level6::init_level,
+    level7::init_level,
+    level11::init_level,
+    level12::init_level,
+    level13::init_level,
+    level20::init_level,
 ];
 
 fn init_levels(
@@ -48,8 +58,9 @@ fn init_levels(
     // TODO shouldn't need after https://github.com/dimforge/bevy_rapier/issues/172
     placed_pieces: EventWriter<PiecePlaced>,
     dips_window: Res<DipsWindow>,
+    asset_server: Res<AssetServer>,
 ) {
     if let Some(started) = level_started.iter().last() {
-        LEVELS[**started as usize](commands, dips_window, placed_pieces);
+        LEVELS[**started as usize](commands, dips_window, placed_pieces, asset_server);
     }
 }

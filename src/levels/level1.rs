@@ -1,6 +1,10 @@
 use std::f32::consts::PI;
 
-use bevy::{asset::LoadState, math::const_vec3, prelude::*};
+use bevy::{
+    asset::LoadState,
+    math::const_vec3,
+    prelude::*,
+};
 use bevy_svg::prelude::{Origin, Svg, Svg2dBundle};
 use bevy_tweening::Animator;
 
@@ -11,7 +15,14 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     gb9000::GroceryBagger9000,
-    levels::{transitions::LevelSpawnStage, LevelMarker, LevelStarted},
+    levels::{
+        transitions::LevelSpawnStage,
+        tutorials::{
+            TUTORIAL_FONT_COLOR, TUTORIAL_FONT_SIZE_LARGE, TUTORIAL_FONT_SIZE_SMALL,
+            TUTORIAL_STYLE,
+        },
+        LevelMarker, LevelStarted,
+    },
     nominos::{
         Nomino, NominoMarker, NominoSpawner, PiecePickedUp, PiecePlaced, Selectable, DEG_90,
     },
@@ -31,15 +42,28 @@ impl Plugin for Level1Plugin {
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
-    mut placed_pieces: EventWriter<PiecePlaced>,
+    placed_pieces: EventWriter<PiecePlaced>,
+    asset_server: Res<AssetServer>,
 ) {
+    spawn_belt(&mut commands);
+    spawn_bag(&mut commands, &dips_window, placed_pieces);
+    spawn_tutorial(&mut commands, asset_server);
+}
+
+fn spawn_belt(commands: &mut Commands) {
     commands.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([Piece {
         nomino: Nomino::TetrominoStraight,
         color: LEVEL_COLOR,
         rotation: *DEG_90,
     }])));
+}
 
-    let bag = commands.spawn_bag(&dips_window, [BAG_SIZE_SMALL])[0];
+fn spawn_bag(
+    commands: &mut Commands,
+    dips_window: &Res<DipsWindow>,
+    mut placed_pieces: EventWriter<PiecePlaced>,
+) {
+    let bag = commands.spawn_bag(dips_window, [BAG_SIZE_SMALL])[0];
 
     // TODO use local coordinates after https://github.com/dimforge/bevy_rapier/issues/172
     commands
@@ -47,7 +71,7 @@ pub fn init_level(
         .insert(LevelMarker)
         .with_children(|parent| {
             let origin = Transform::from_translation(
-                compute_bag_coordinates(&dips_window, [BAG_SIZE_SMALL])[0]
+                compute_bag_coordinates(dips_window, [BAG_SIZE_SMALL])[0]
                     - BAG_SIZE_SMALL.origin(),
             );
             macro_rules! spawn {
@@ -66,6 +90,51 @@ pub fn init_level(
             for piece in pieces {
                 placed_pieces.send(PiecePlaced { piece, bag })
             }
+        });
+}
+
+fn spawn_tutorial(commands: &mut Commands, asset_server: Res<AssetServer>) {
+    let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+    commands
+        .spawn_bundle(NodeBundle {
+            style: TUTORIAL_STYLE(),
+            color: Color::NONE.into(),
+            ..default()
+        })
+        .insert(LevelMarker)
+        .with_children(|parent| {
+            parent.spawn_bundle(TextBundle {
+                text: Text::with_section(
+                    "Welcome to Grocery Bagger 9000!",
+                    TextStyle {
+                        font: font.clone(),
+                        font_size: TUTORIAL_FONT_SIZE_LARGE,
+                        color: TUTORIAL_FONT_COLOR,
+                    },
+                    default(),
+                ),
+                style: Style {
+                    margin: Rect {
+                        bottom: Val::Px(20.),
+                        ..default()
+                    },
+                    ..default()
+                },
+                ..default()
+            });
+
+            parent.spawn_bundle(TextBundle {
+                text: Text::with_section(
+                    "Left click to pick up and place pieces\nRight click to rotate",
+                    TextStyle {
+                        font,
+                        font_size: TUTORIAL_FONT_SIZE_SMALL,
+                        color: TUTORIAL_FONT_COLOR,
+                    },
+                    default(),
+                ),
+                ..default()
+            });
         });
 }
 

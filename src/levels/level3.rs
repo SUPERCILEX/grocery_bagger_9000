@@ -1,51 +1,50 @@
-use bevy::{prelude::*};
+use bevy::prelude::*;
 
 use crate::{
     bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    levels::{
-        tutorials::{
-            spawn_text_tutorial,
-        },
-    },
-    nominos::{Nomino, PiecePlaced},
+    levels::{transitions::LevelSpawnStage},
+    nominos::{Nomino, PiecePlaced, DEG_180, DEG_MIRRORED},
     window_management::DipsWindow,
 };
 
 const LEVEL_COLOR: NominoColor = NominoColor::Green;
 
+pub struct Level3Plugin;
+
+impl Plugin for Level3Plugin {
+    fn build(&self, app: &mut App) {
+        app.add_system_to_stage(LevelSpawnStage, init_level);
+    }
+}
+
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
     _: EventWriter<PiecePlaced>,
-    asset_server: Res<AssetServer>,
+    _: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands);
     commands.spawn_bag(&dips_window, [BAG_SIZE_SMALL]);
-    spawn_text_tutorial(
-        &mut commands,
-        asset_server,
-        "Try to completely fill the bags",
-    );
 }
 
 fn spawn_belt(commands: &mut Commands) {
     commands.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([
         Piece {
-            nomino: Nomino::TetrominoSquare,
+            nomino: Nomino::TetrominoL,
             color: LEVEL_COLOR,
             rotation: Quat::IDENTITY,
         },
         Piece {
-            nomino: Nomino::TetrominoSquare,
+            nomino: Nomino::TetrominoSkew,
             color: LEVEL_COLOR,
-            rotation: Quat::IDENTITY,
+            rotation: *DEG_MIRRORED,
         },
         Piece {
-            nomino: Nomino::TetrominoStraight,
+            nomino: Nomino::TetrominoL,
             color: LEVEL_COLOR,
-            rotation: Quat::IDENTITY,
+            rotation: *DEG_180,
         },
     ])));
 }

@@ -1,0 +1,86 @@
+
+
+use bevy::{
+    prelude::*,
+};
+
+
+
+use crate::{
+    bags::{compute_bag_coordinates, BagContainerSpawner, BAG_SIZE_SMALL},
+    colors::NominoColor,
+    conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
+    levels::{
+        tutorials::{
+            spawn_text_tutorial,
+        },
+        LevelMarker,
+    },
+    nominos::{
+        Nomino, NominoSpawner, PiecePlaced, DEG_90,
+    },
+    window_management::DipsWindow,
+};
+
+const LEVEL_COLOR: NominoColor = NominoColor::Gold;
+
+pub fn init_level(
+    mut commands: Commands,
+    dips_window: Res<DipsWindow>,
+    placed_pieces: EventWriter<PiecePlaced>,
+    asset_server: Res<AssetServer>,
+) {
+    spawn_belt(&mut commands);
+    spawn_bag(&mut commands, &dips_window, placed_pieces);
+    spawn_text_tutorial(
+        &mut commands,
+        asset_server,
+        "Avoid leaving holes under items when possible",
+    );
+}
+
+fn spawn_belt(commands: &mut Commands) {
+    commands.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([Piece {
+        nomino: Nomino::TetrominoStraight,
+        color: LEVEL_COLOR,
+        rotation: *DEG_90,
+    }])));
+}
+
+fn spawn_bag(
+    commands: &mut Commands,
+    dips_window: &Res<DipsWindow>,
+    mut placed_pieces: EventWriter<PiecePlaced>,
+) {
+    let bag = commands.spawn_bag(dips_window, [BAG_SIZE_SMALL])[0];
+
+    // TODO use local coordinates after https://github.com/dimforge/bevy_rapier/issues/172
+    commands
+        .spawn_bundle(TransformBundle::default())
+        .insert(LevelMarker)
+        .with_children(|parent| {
+            let origin = Transform::from_translation(
+                compute_bag_coordinates(dips_window, [BAG_SIZE_SMALL])[0]
+                    - BAG_SIZE_SMALL.origin(),
+            );
+            macro_rules! spawn {
+                ($nomino:expr, $transform:expr) => {{
+                    parent
+                        .spawn_nomino_into_bag(origin, $nomino, LEVEL_COLOR, $transform)
+                        .id()
+                }};
+            }
+
+            let pieces = [
+                spawn!(
+                    Nomino::TrominoL,
+                    Transform::from_xyz(0., 1., 0.).with_rotation(*DEG_90)
+                ),
+                spawn!(Nomino::TetrominoSquare, Transform::from_xyz(0., 2., 0.)),
+            ];
+
+            for piece in pieces {
+                placed_pieces.send(PiecePlaced { piece, bag })
+            }
+        });
+}

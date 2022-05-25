@@ -5,9 +5,7 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     levels::{
-        tutorials::{
-            spawn_text_tutorial,
-        },
+        tutorials::{spawn_text_tutorial},
     },
     nominos::{Nomino, PiecePlaced},
     window_management::DipsWindow,
@@ -26,8 +24,8 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Try to completely fill the bags",
-    );
+        "Avoid leaving holes under items when possible",
+    )
 }
 
 fn spawn_belt(commands: &mut Commands) {
@@ -38,12 +36,12 @@ fn spawn_belt(commands: &mut Commands) {
             rotation: Quat::IDENTITY,
         },
         Piece {
-            nomino: Nomino::TetrominoSquare,
+            nomino: Nomino::TetrominoStraight,
             color: LEVEL_COLOR,
             rotation: Quat::IDENTITY,
         },
         Piece {
-            nomino: Nomino::TetrominoStraight,
+            nomino: Nomino::TrominoL,
             color: LEVEL_COLOR,
             rotation: Quat::IDENTITY,
         },
