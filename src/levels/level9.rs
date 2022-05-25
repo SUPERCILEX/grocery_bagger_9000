@@ -22,7 +22,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Items sticking out of the bag are worth fewer points",
+        "…try a different item arrangement\nfor a higher score",
     )
 }
 

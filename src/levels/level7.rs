@@ -9,7 +9,7 @@ use crate::{
     window_management::DipsWindow,
 };
 
-const LEVEL_COLOR: NominoColor = NominoColor::Green;
+const LEVEL_COLOR: NominoColor = NominoColor::Gold;
 
 pub fn init_level(
     mut commands: Commands,
@@ -22,7 +22,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Avoid leaving holes under items when possible",
+        "…try a different item arrangement\nfor a higher score",
     )
 }
 

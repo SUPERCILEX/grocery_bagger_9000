@@ -9,7 +9,7 @@ use crate::{
     window_management::DipsWindow,
 };
 
-const LEVEL_COLOR: NominoColor = NominoColor::Gold;
+const LEVEL_COLOR: NominoColor = NominoColor::Green;
 
 pub fn init_level(
     mut commands: Commands,
@@ -22,7 +22,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Items sticking out of the bag are worth fewer points",
+        "Items sticking out of the bag\nare worth fewer points…",
     );
 }
 

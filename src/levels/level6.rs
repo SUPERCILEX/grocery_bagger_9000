@@ -22,7 +22,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Avoid leaving holes under items when possible",
+        "Sometimes, leaving holes under\nitems is unavoidable…",
     );
 }
 
