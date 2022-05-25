@@ -21,7 +21,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "For best results, try distributing items among the bags",
+        "For best results, try distributing\nitems among the bags",
     );
     spawn_belt(&mut commands, &dips_window);
 }

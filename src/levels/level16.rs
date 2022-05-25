@@ -4,12 +4,19 @@ use crate::{
     bags::{BagContainerSpawner, BAG_SIZE_LARGE, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
-    nominos::{PiecePlaced, OMINOS},
+    nominos::{Nomino, PiecePlaced},
     window_management::DipsWindow,
 };
 
 const NUM_PIECES: usize = 18;
 const LEVEL_COLOR: NominoColor = NominoColor::Red;
+const LEVEL_OMINOS: [Nomino; 5] = [
+    Nomino::TrominoStraight,
+    Nomino::TrominoL,
+    Nomino::TetrominoStraight,
+    Nomino::TetrominoSquare,
+    Nomino::TetrominoL,
+];
 
 pub fn init_level(
     mut commands: Commands,
@@ -26,7 +33,7 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
         dips_window,
         Box::new(RandomPiecesConveyorBelt::new(
             NUM_PIECES,
-            OMINOS,
+            LEVEL_OMINOS,
             [LEVEL_COLOR],
         )),
     );
