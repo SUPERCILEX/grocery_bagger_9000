@@ -22,7 +22,7 @@ pub fn init_level(
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
     commands.spawn_belt(
-        &dips_window,
+        dips_window,
         Box::new(RandomPiecesConveyorBelt::new(
             NUM_PIECES,
             TETROMINOS,
