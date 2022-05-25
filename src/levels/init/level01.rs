@@ -29,7 +29,10 @@ pub struct Level1Plugin;
 
 impl Plugin for Level1Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(LevelSpawnStage, show_tutorial.after(super::init_levels));
+        app.add_system_to_stage(
+            LevelSpawnStage,
+            show_tutorial.after(super::super::init_levels),
+        );
     }
 }
 

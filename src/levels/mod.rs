@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+use init::*;
 use level01::Level1Plugin;
 use scoring::ScoringPlugin;
 pub use scoring::{CurrentScore, ScoringSystems};
@@ -11,28 +12,7 @@ pub use transitions::{
 use crate::{nominos::PiecePlaced, window_management::DipsWindow};
 
 mod infinite_level;
-mod level01;
-mod level02;
-mod level03;
-mod level04;
-mod level05;
-mod level06;
-mod level07;
-mod level08;
-mod level09;
-mod level10;
-mod level11;
-mod level12;
-mod level13;
-mod level14;
-mod level15;
-mod level16;
-mod level17;
-mod level18;
-mod level19;
-mod level20;
-mod level21;
-mod level22;
+mod init;
 mod scoring;
 mod transitions;
 mod tutorials;
@@ -51,30 +31,6 @@ impl Plugin for LevelsPlugin {
 }
 
 pub const LAST_LEVEL: u16 = (LEVELS.len() - 1) as u16;
-const LEVELS: &[fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<AssetServer>)] = &[
-    level01::init_level,
-    level02::init_level,
-    level03::init_level,
-    level04::init_level,
-    level05::init_level,
-    level06::init_level,
-    level07::init_level,
-    level08::init_level,
-    level09::init_level,
-    level10::init_level,
-    level11::init_level,
-    level12::init_level,
-    level13::init_level,
-    level14::init_level,
-    level15::init_level,
-    level16::init_level,
-    level17::init_level,
-    level18::init_level,
-    level19::init_level,
-    level20::init_level,
-    level21::init_level,
-    level22::init_level,
-];
 
 fn init_levels(
     mut level_started: EventReader<LevelStarted>,
