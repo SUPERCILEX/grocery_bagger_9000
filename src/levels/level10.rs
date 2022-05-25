@@ -8,7 +8,7 @@ use crate::{
     window_management::DipsWindow,
 };
 
-const LEVEL_COLOR: NominoColor = NominoColor::Green;
+const LEVEL_COLOR: NominoColor = NominoColor::Gold;
 
 pub fn init_level(
     mut commands: Commands,
