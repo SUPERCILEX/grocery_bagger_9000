@@ -1,14 +1,10 @@
-use bevy::{prelude::*};
+use bevy::prelude::*;
 
 use crate::{
     bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    levels::{
-        tutorials::{
-            spawn_text_tutorial,
-        },
-    },
+    levels::tutorials::spawn_text_tutorial,
     nominos::{Nomino, PiecePlaced},
     window_management::DipsWindow,
 };

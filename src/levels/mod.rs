@@ -11,6 +11,7 @@ pub use transitions::{
 use crate::{nominos::PiecePlaced, window_management::DipsWindow};
 
 mod level1;
+mod level10;
 mod level11;
 mod level12;
 mod level13;
@@ -21,6 +22,8 @@ mod level4;
 mod level5;
 mod level6;
 mod level7;
+mod level8;
+mod level9;
 mod scoring;
 mod transitions;
 mod tutorials;
@@ -38,7 +41,7 @@ impl Plugin for LevelsPlugin {
     }
 }
 
-const LEVELS: [fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<AssetServer>); 11] = [
+const LEVELS: [fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<AssetServer>); 14] = [
     level1::init_level,
     level2::init_level,
     level3::init_level,
@@ -46,6 +49,9 @@ const LEVELS: [fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<Asset
     level5::init_level,
     level6::init_level,
     level7::init_level,
+    level8::init_level,
+    level9::init_level,
+    level10::init_level,
     level11::init_level,
     level12::init_level,
     level13::init_level,

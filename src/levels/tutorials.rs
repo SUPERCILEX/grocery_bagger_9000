@@ -1,8 +1,5 @@
 use crate::levels::LevelMarker;
-use bevy::{
-    prelude::*,
-    ui::{PositionType::Absolute},
-};
+use bevy::{prelude::*, ui::PositionType::Absolute};
 
 pub const TUTORIAL_FONT_SIZE_LARGE: f32 = 32.;
 pub const TUTORIAL_FONT_SIZE_SMALL: f32 = 24.;

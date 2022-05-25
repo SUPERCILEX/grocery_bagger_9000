@@ -1,10 +1,6 @@
 use std::f32::consts::PI;
 
-use bevy::{
-    asset::LoadState,
-    math::const_vec3,
-    prelude::*,
-};
+use bevy::{asset::LoadState, math::const_vec3, prelude::*};
 use bevy_svg::prelude::{Origin, Svg, Svg2dBundle};
 use bevy_tweening::Animator;
 
@@ -18,8 +14,7 @@ use crate::{
     levels::{
         transitions::LevelSpawnStage,
         tutorials::{
-            TUTORIAL_FONT_COLOR, TUTORIAL_FONT_SIZE_LARGE, TUTORIAL_FONT_SIZE_SMALL,
-            TUTORIAL_STYLE,
+            TUTORIAL_FONT_COLOR, TUTORIAL_FONT_SIZE_LARGE, TUTORIAL_FONT_SIZE_SMALL, TUTORIAL_STYLE,
         },
         LevelMarker, LevelStarted,
     },
@@ -71,8 +66,7 @@ fn spawn_bag(
         .insert(LevelMarker)
         .with_children(|parent| {
             let origin = Transform::from_translation(
-                compute_bag_coordinates(dips_window, [BAG_SIZE_SMALL])[0]
-                    - BAG_SIZE_SMALL.origin(),
+                compute_bag_coordinates(dips_window, [BAG_SIZE_SMALL])[0] - BAG_SIZE_SMALL.origin(),
             );
             macro_rules! spawn {
                 ($nomino:expr, $transform:expr) => {{

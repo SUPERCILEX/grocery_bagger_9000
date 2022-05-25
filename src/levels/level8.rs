@@ -22,7 +22,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Avoid leaving holes under items when possible",
+        "Items sticking out of the bag are worth fewer points",
     );
 }
 
@@ -59,10 +59,10 @@ fn spawn_bag(
 
             let pieces = [
                 spawn!(
-                    Nomino::TrominoL,
-                    Transform::from_xyz(0., 1., 0.).with_rotation(*DEG_90)
+                    Nomino::TetrominoL,
+                    Transform::from_xyz(1., 0., 0.).with_rotation(DEG_90.inverse())
                 ),
-                spawn!(Nomino::TetrominoSquare, Transform::from_xyz(0., 2., 0.)),
+                spawn!(Nomino::TetrominoL, Transform::from_xyz(0., 2., 0.)),
             ];
 
             for piece in pieces {

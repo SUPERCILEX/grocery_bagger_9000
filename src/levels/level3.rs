@@ -4,7 +4,7 @@ use crate::{
     bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    levels::{transitions::LevelSpawnStage},
+    levels::transitions::LevelSpawnStage,
     nominos::{Nomino, PiecePlaced, DEG_180, DEG_MIRRORED},
     window_management::DipsWindow,
 };

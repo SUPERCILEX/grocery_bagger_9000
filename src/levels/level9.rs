@@ -5,7 +5,7 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     levels::tutorials::spawn_text_tutorial,
-    nominos::{Nomino, PiecePlaced, DEG_MIRRORED},
+    nominos::{Nomino, PiecePlaced},
     window_management::DipsWindow,
 };
 
@@ -22,21 +22,26 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Bags are worth more, the fuller they are,\nBut sometimes you won't be able to fill a bag completely...",
+        "Items sticking out of the bag are worth fewer points",
     )
 }
 
 fn spawn_belt(commands: &mut Commands) {
     commands.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([
         Piece {
-            nomino: Nomino::TetrominoSquare,
+            nomino: Nomino::TetrominoL,
+            color: LEVEL_COLOR,
+            rotation: Quat::IDENTITY,
+        },
+        Piece {
+            nomino: Nomino::TetrominoL,
             color: LEVEL_COLOR,
             rotation: Quat::IDENTITY,
         },
         Piece {
             nomino: Nomino::TetrominoStraight,
             color: LEVEL_COLOR,
-            rotation: *DEG_MIRRORED,
+            rotation: Quat::IDENTITY,
         },
     ])));
 }
