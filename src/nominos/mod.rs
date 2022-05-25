@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 use bevy_rapier3d::prelude::*;
+use num_derive::FromPrimitive;
 
 use consts::*;
 pub use consts::{DEG_180, DEG_90, DEG_MIRRORED};
@@ -27,7 +28,7 @@ impl Plugin for PiecesPlugin {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, FromPrimitive)]
 pub enum Nomino {
     TrominoStraight,
     TrominoL,

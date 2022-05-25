@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use num_traits::FromPrimitive;
 use rand::{
     distributions::{Distribution, WeightedIndex},
     thread_rng, Rng,
@@ -97,6 +98,34 @@ impl<const NOM_TYPES: usize, const COLORS: usize> ConveyorBelt
 
         Some(Piece {
             nomino: self.nomino_types[next_shape],
+            color: self.colors[next_color],
+            rotation,
+        })
+    }
+}
+
+pub struct InfinitePiecesConveyorBelt<const COLORS: usize> {
+    colors: [NominoColor; COLORS],
+}
+
+impl<const COLORS: usize> InfinitePiecesConveyorBelt<COLORS> {
+    pub fn new(colors: [NominoColor; COLORS]) -> Self {
+        Self { colors }
+    }
+}
+
+impl<const COLORS: usize> ConveyorBelt for InfinitePiecesConveyorBelt<COLORS> {
+    fn next(&mut self) -> Option<Piece> {
+        let mut rng = thread_rng();
+        let next_shape = rng.gen_range(0..Nomino::_Last as usize);
+        let next_color = rng.gen_range(0..COLORS);
+        let mut rotation = if rng.gen() { *DEG_MIRRORED } else { default() };
+        if rng.gen() {
+            rotation *= *DEG_180;
+        }
+
+        Some(Piece {
+            nomino: Nomino::from_usize(next_shape).unwrap(),
             color: self.colors[next_color],
             rotation,
         })

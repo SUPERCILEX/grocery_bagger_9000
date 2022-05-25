@@ -10,6 +10,7 @@ pub use transitions::{
 
 use crate::{nominos::PiecePlaced, window_management::DipsWindow};
 
+mod infinite_level;
 mod level01;
 mod level02;
 mod level03;
@@ -84,6 +85,11 @@ fn init_levels(
     asset_server: Res<AssetServer>,
 ) {
     if let Some(started) = level_started.iter().last() {
-        LEVELS[**started as usize](commands, dips_window, placed_pieces, asset_server);
+        let level = **started as usize;
+        if level < LEVELS.len() {
+            LEVELS[level](commands, dips_window, placed_pieces, asset_server);
+        } else {
+            infinite_level::init_level(commands, dips_window);
+        }
     }
 }

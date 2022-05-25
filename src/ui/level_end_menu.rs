@@ -85,7 +85,7 @@ fn show_level_end_screen(
         .with_children(|parent| {
             spawn_level_completed_summary(parent, &gb9000, font.clone());
             spawn_score_recap(parent, &gb9000, &score, font.clone());
-            spawn_restart_and_next_level_buttons(parent, font);
+            spawn_restart_and_next_level_buttons(parent, &gb9000, font);
         });
 }
 
@@ -158,7 +158,11 @@ fn spawn_score_recap(
     });
 }
 
-fn spawn_restart_and_next_level_buttons(parent: &mut ChildBuilder, font: Handle<Font>) {
+fn spawn_restart_and_next_level_buttons(
+    parent: &mut ChildBuilder,
+    gb9000: &GroceryBagger9000,
+    font: Handle<Font>,
+) {
     let button_bundle = ButtonBundle {
         style: Style {
             padding: Rect {
@@ -214,7 +218,11 @@ fn spawn_restart_and_next_level_buttons(parent: &mut ChildBuilder, font: Handle<
                 .with_children(|parent| {
                     parent.spawn_bundle(TextBundle {
                         text: Text::with_section(
-                            "Next Level",
+                            if gb9000.current_level == LAST_LEVEL {
+                                "Start infinite mode"
+                            } else {
+                                "Next Level"
+                            },
                             TextStyle {
                                 font,
                                 font_size: MENU_FONT_SIZE,

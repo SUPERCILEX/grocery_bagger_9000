@@ -30,6 +30,8 @@ bevy_svg = { version = "0.7.0", default-features = false, features = ["2d"] }
 bevy_tweening = { version = "0.4.0", default-features = false, features = ["bevy_ui"] }
 bitflags = "1.3.2"
 log = { version = "0.4.17", features = ["release_max_level_off"] }
+num-derive = "0.3.3"
+num-traits = "0.2.15"
 rand = "0.8.5"
 smallvec = "1.8.0"
 tracing = { version = "0.1.34", features = ["release_max_level_off"] }
