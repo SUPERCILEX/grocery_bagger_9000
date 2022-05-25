@@ -216,6 +216,7 @@ fn selected_piece_mover(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
     mut cursor_movements: EventReader<CursorMoved>,
+    mut last_snapped_cursor_position: Local<Vec2>,
     mut selected_piece: Query<
         (
             Entity,
@@ -233,19 +234,13 @@ fn selected_piece_mover(
     {
         let cursor_position = moved_event.position * dips_window.scale;
 
-        let snapped_cursor_position = cursor_position
-            .round()
-            .extend(piece_transform.translation.z);
+        let snapped_cursor_position = cursor_position.round();
 
-        if piece_transform.translation == snapped_cursor_position {
+        if *last_snapped_cursor_position == snapped_cursor_position {
             return;
         }
+        *last_snapped_cursor_position = snapped_cursor_position;
 
-        let rotation = original
-            .map(|o| o.rotation)
-            .unwrap_or(global_transform.rotation);
-
-        let snapped_cursor_position = snapped_cursor_position.truncate();
         let mut nearby_positions = SmallVec::<[_; 9]>::new();
         for i in -1..=1 {
             for j in -1..=1 {
@@ -257,6 +252,9 @@ fn selected_piece_mover(
                 .total_cmp(&b.distance(cursor_position))
         });
 
+        let rotation = original
+            .map(|o| o.rotation)
+            .unwrap_or(global_transform.rotation);
         for position in nearby_positions {
             let snapped_cursor_position = position.extend(piece_transform.translation.z);
             let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
