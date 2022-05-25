@@ -84,7 +84,7 @@ fn show_level_end_screen(
         ))
         .with_children(|parent| {
             spawn_level_completed_summary(parent, &gb9000, font.clone());
-            spawn_score_recap(parent, &gb9000, &score, font.clone());
+            spawn_score_recap(parent, &score, font.clone());
             spawn_restart_and_next_level_buttons(parent, &gb9000, font);
         });
 }
@@ -119,24 +119,13 @@ fn spawn_level_completed_summary(
     });
 }
 
-fn spawn_score_recap(
-    parent: &mut ChildBuilder,
-    gb9000: &GroceryBagger9000,
-    score: &CurrentScore,
-    font: Handle<Font>,
-) {
-    let text = if gb9000.current_level == LAST_LEVEL {
-        format!(
-            "Score: {}\nAll time score: {}",
-            score.points, score.all_time_points
-        )
-    } else {
-        format!("Score: {}", score.points)
-    };
-
+fn spawn_score_recap(parent: &mut ChildBuilder, score: &CurrentScore, font: Handle<Font>) {
     parent.spawn_bundle(TextBundle {
         text: Text::with_section(
-            text,
+            format!(
+                "Score: {}\nAll time score: {}",
+                score.points, score.all_time_points
+            ),
             TextStyle {
                 font,
                 font_size: MENU_FONT_SIZE,
