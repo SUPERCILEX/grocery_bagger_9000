@@ -19,12 +19,14 @@ pub const NOMINO_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
     filters: 0b1,
 };
 
-pub const TETROMINOS: [Nomino; 5] = [
+pub const OMINOS: [Nomino; 7] = [
     Nomino::TetrominoStraight,
     Nomino::TetrominoSquare,
     Nomino::TetrominoT,
     Nomino::TetrominoL,
     Nomino::TetrominoSkew,
+    Nomino::TrominoL,
+    Nomino::TrominoStraight,
 ];
 
 pub struct PiecesPlugin;

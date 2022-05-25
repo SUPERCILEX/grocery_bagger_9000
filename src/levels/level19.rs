@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags::{BagContainerSpawner, BAG_SIZE_LARGE},
+    bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
     nominos::{PiecePlaced, OMINOS},
@@ -17,7 +17,7 @@ pub fn init_level(
     _: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    commands.spawn_bag(&dips_window, [BAG_SIZE_LARGE, BAG_SIZE_LARGE]);
+    commands.spawn_bag(&dips_window, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]);
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
@@ -26,7 +26,7 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
         Box::new(RandomPiecesConveyorBelt::new(
             NUM_PIECES,
             OMINOS,
-            [NominoColor::Blue, NominoColor::Green],
+            [NominoColor::Pink, NominoColor::Blue],
         )),
     );
 }

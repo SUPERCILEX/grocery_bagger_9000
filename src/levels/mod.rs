@@ -24,7 +24,14 @@ mod level11;
 mod level12;
 mod level13;
 mod level14;
+mod level15;
+mod level16;
+mod level17;
+mod level18;
+mod level19;
 mod level20;
+mod level21;
+mod level22;
 mod scoring;
 mod transitions;
 mod tutorials;
@@ -57,7 +64,14 @@ const LEVELS: &[fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<Asse
     level12::init_level,
     level13::init_level,
     level14::init_level,
+    level15::init_level,
+    level16::init_level,
+    level17::init_level,
+    level18::init_level,
+    level19::init_level,
     level20::init_level,
+    level21::init_level,
+    level22::init_level,
 ];
 
 fn init_levels(

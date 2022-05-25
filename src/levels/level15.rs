@@ -1,23 +1,30 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags::{BagContainerSpawner, BAG_SIZE_LARGE},
+    bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
+    levels::tutorials::spawn_text_tutorial,
     nominos::{PiecePlaced, OMINOS},
     window_management::DipsWindow,
 };
 
-const NUM_PIECES: usize = 18;
+const NUM_PIECES: usize = 9;
+const LEVEL_COLOR: NominoColor = NominoColor::Pink;
 
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
     _: EventWriter<PiecePlaced>,
-    _: Res<AssetServer>,
+    asset_server: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    commands.spawn_bag(&dips_window, [BAG_SIZE_LARGE, BAG_SIZE_LARGE]);
+    spawn_text_tutorial(
+        &mut commands,
+        asset_server,
+        "Some levels are randomly generated\nand may not have a perfect solution.",
+    );
+    commands.spawn_bag(&dips_window, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]);
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
@@ -26,7 +33,7 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
         Box::new(RandomPiecesConveyorBelt::new(
             NUM_PIECES,
             OMINOS,
-            [NominoColor::Blue, NominoColor::Green],
+            [LEVEL_COLOR],
         )),
     );
 }

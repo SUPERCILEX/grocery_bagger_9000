@@ -9,6 +9,7 @@ use crate::{
 };
 
 const NUM_PIECES: usize = 18;
+const LEVEL_COLOR: NominoColor = NominoColor::Red;
 
 pub fn init_level(
     mut commands: Commands,
@@ -26,7 +27,7 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
         Box::new(RandomPiecesConveyorBelt::new(
             NUM_PIECES,
             OMINOS,
-            [NominoColor::Blue, NominoColor::Green],
+            [LEVEL_COLOR],
         )),
     );
 }
