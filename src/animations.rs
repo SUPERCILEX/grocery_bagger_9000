@@ -261,14 +261,13 @@ pub fn piece_loaded(
 pub fn piece_movement(
     from: Transform,
     to: Transform,
-    duration: Duration,
     speed: &GameSpeed,
 ) -> RedoableAnimationBundle<Transform> {
     let animator = Animator::new(
         Tween::new(
-            EaseMethod::EaseFunction(EaseFunction::CircularOut),
+            EaseMethod::EaseFunction(EaseFunction::CubicOut),
             TweeningType::Once,
-            duration,
+            Duration::from_secs(3),
             TransformPositionLens {
                 start: from.translation,
                 end: to.translation,

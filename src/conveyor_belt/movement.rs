@@ -16,8 +16,6 @@ use crate::{
         AttemptedPlacement, NominoMarker, NominoSpawner, PiecePlaced, PieceSystems, Selectable,
         Selected,
     },
-    robot,
-    robot::{RobotMarker, RobotTiming},
     window_management::{DipsWindow, WindowSystems},
 };
 
@@ -109,7 +107,6 @@ fn replace_pieces(
     belt_options: Res<ConveyorBeltOptions>,
     dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
-    robot_timing: Query<&RobotTiming, With<RobotMarker>>,
 ) {
     for PiecePlaced {
         piece: piece_id, ..
@@ -160,13 +157,9 @@ fn replace_pieces(
             if let Some(spawned) = spawned {
                 belt_pieces.push(spawned);
 
-                let ttl = robot_timing
-                    .get_single()
-                    .map(|r| r.time_left())
-                    .unwrap_or(robot::PLACEMENT_TTL);
                 commands
                     .entity(spawned)
-                    .insert_bundle(animations::piece_movement(from, target, ttl, &game_speed));
+                    .insert_bundle(animations::piece_movement(from, target, &game_speed));
             }
         }
     }
@@ -229,7 +222,6 @@ fn move_pieces(
     mut fsm: Local<PieceMovementFsm>,
     mut level_loaded: EventReader<LevelStarted>,
     positions: Query<&Transform, (With<NominoMarker>, Without<Selected>)>,
-    robot_timing: Query<&RobotTiming, With<RobotMarker>>,
 ) {
     if level_loaded.iter().count() > 0 {
         *fsm = PieceMovementFsm::Ready;
@@ -244,10 +236,6 @@ fn move_pieces(
             return;
         }
 
-        let ttl = robot_timing
-            .get_single()
-            .map(|r| r.time_left())
-            .unwrap_or(robot::PLACEMENT_TTL);
         for (index, piece) in belt_pieces.iter().enumerate() {
             if let Ok(position) = positions.get(*piece) {
                 commands
@@ -259,7 +247,6 @@ fn move_pieces(
                             &belt_options,
                             index,
                         )),
-                        ttl,
                         &game_speed,
                     ));
             }
@@ -274,7 +261,6 @@ fn reposition_pieces_on_window_resize(
     game_speed: Res<GameSpeed>,
     belt_options: Res<ConveyorBeltOptions>,
     belt_pieces: Query<&BeltPieceIds, With<ConveyorBeltMarker>>,
-    robot_timing: Query<&RobotTiming, With<RobotMarker>>,
     mut piece_positions: Query<
         (
             &mut Transform,
@@ -296,16 +282,11 @@ fn reposition_pieces_on_window_resize(
                     let diff = position - target.translation;
                     transform.translation += diff;
 
-                    let ttl = robot_timing
-                        .get_single()
-                        .map(|r| r.time_left())
-                        .unwrap_or(robot::PLACEMENT_TTL);
                     commands
                         .entity(*piece)
                         .insert_bundle(animations::piece_movement(
                             *transform,
                             transform.with_translation(position),
-                            ttl,
                             &game_speed,
                         ));
                 } else if let Some(old_animator) = animator {
