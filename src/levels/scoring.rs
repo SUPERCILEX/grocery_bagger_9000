@@ -5,7 +5,10 @@ use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
 use crate::{
-    bags::{BagMarker, BagSize, LARGEST_BAG_CAPACITY, LARGEST_BAG_HEIGHT, LARGEST_BAG_WIDTH},
+    bags::{
+        BagFilled, BagMarker, BagReplacementSystems, BagSize, LARGEST_BAG_CAPACITY,
+        LARGEST_BAG_HEIGHT, LARGEST_BAG_WIDTH,
+    },
     colors::NominoColor,
     levels::{LevelSpawnStage, LevelStarted},
     nominos::{NominoMarker, PiecePlaced, PieceSystems, NOMINO_COLLIDER_GROUP},
@@ -19,7 +22,13 @@ impl Plugin for ScoringPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CurrentScore>();
 
-        app.add_system(score_bags.label(ScoringSystems).after(PieceSystems));
+        app.add_system(
+            score_bags
+                .label(ScoringSystems)
+                .after(PieceSystems)
+                .before(BagReplacementSystems),
+        );
+        app.add_system(reclaim_memory.after(BagReplacementSystems));
         app.add_system_to_stage(LevelSpawnStage, reset_score.label(ScoringSystems));
     }
 }
@@ -251,6 +260,15 @@ fn calculate_bag_fill_multiplier(block_count: u8, capacity: u8) -> u16 {
         5
     } else {
         10
+    }
+}
+
+fn reclaim_memory(
+    mut current_score: ResMut<CurrentScore>,
+    mut filled_bags: EventReader<BagFilled>,
+) {
+    for bag in filled_bags.iter() {
+        current_score.score_map.remove(&**bag);
     }
 }
 

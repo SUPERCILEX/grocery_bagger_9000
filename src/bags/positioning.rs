@@ -3,7 +3,7 @@ use smallvec::SmallVec;
 
 use crate::{
     bags::{
-        bag_replacement::{BagPieces, BagSetupSystem},
+        bag_replacement::{BagPieces, BagSetupSystems},
         consts::BAG_SPACING,
         BagMarker, BagSize,
     },
@@ -21,7 +21,7 @@ impl Plugin for BagPositioningPlugin {
         //     CoreStage::PostUpdate,
         //     transfer_piece_ownership.after(TransformSystem::TransformPropagate),
         // );
-        app.add_system(center_bags.after(WindowSystems).after(BagSetupSystem));
+        app.add_system(center_bags.after(WindowSystems).after(BagSetupSystems));
     }
 }
 
