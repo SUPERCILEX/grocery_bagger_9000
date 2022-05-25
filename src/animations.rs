@@ -300,7 +300,17 @@ pub fn undo_selection(from: Transform, to: Transform, speed: &GameSpeed) -> Anim
 }
 
 pub fn mouse_tutorial_enter(target: Transform, speed: &GameSpeed) -> Animator<Transform> {
-    Animator::new(
+    Animator::new(Tracks::new([
+        Tween::new(
+            EaseMethod::Linear,
+            TweeningType::Once,
+            Duration::from_millis(200),
+            TransformPositionLens {
+                start: target.translation - const_vec3!([-1., -1., 0.]),
+                end: target.translation,
+            },
+        )
+        .with_speed(**speed),
         Tween::new(
             EaseMethod::Linear,
             TweeningType::Once,
@@ -312,39 +322,80 @@ pub fn mouse_tutorial_enter(target: Transform, speed: &GameSpeed) -> Animator<Tr
         )
         .with_speed(**speed)
         .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
-    )
+    ]))
 }
 
-pub fn mouse_tutorial_switch_rotation(target: Transform, speed: &GameSpeed) -> Animator<Transform> {
+pub fn mouse_tutorial_switch_rotation(
+    from: Transform,
+    to: Transform,
+    speed: &GameSpeed,
+    mirrored: bool,
+) -> Animator<Transform> {
     Animator::new(Sequence::new([
-        Tween::new(
-            EaseMethod::Linear,
-            TweeningType::Once,
-            Duration::from_millis(150),
-            TransformScaleLens {
-                start: target.scale,
-                end: Vec3::ZERO,
-            },
-        )
-        .with_speed(**speed),
-        Tween::new(
-            EaseMethod::Linear,
-            TweeningType::Once,
-            Duration::from_millis(25),
-            TeleportLens(target.with_scale(Vec3::ZERO)),
-        )
-        .with_speed(**speed),
-        Tween::new(
-            EaseMethod::Linear,
-            TweeningType::Once,
-            Duration::from_millis(200),
-            TransformScaleLens {
-                start: Vec3::ZERO,
-                end: target.scale,
-            },
-        )
-        .with_speed(**speed)
-        .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+        Box::new(Tracks::new([
+            Tween::new(
+                EaseMethod::Linear,
+                TweeningType::Once,
+                Duration::from_millis(150),
+                TransformPositionLens {
+                    start: from.translation,
+                    end: from.translation
+                        - if mirrored {
+                            const_vec3!([-1.25, -1.25, 0.])
+                        } else {
+                            const_vec3!([-1.25, 1.25, 0.])
+                        },
+                },
+            )
+            .with_speed(**speed),
+            Tween::new(
+                EaseMethod::Linear,
+                TweeningType::Once,
+                Duration::from_millis(150),
+                TransformScaleLens {
+                    start: from.scale,
+                    end: Vec3::ZERO,
+                },
+            )
+            .with_speed(**speed),
+        ])) as DynTweenable,
+        Box::new(
+            Tween::new(
+                EaseMethod::Linear,
+                TweeningType::Once,
+                Duration::from_millis(25),
+                TeleportLens(to.with_scale(Vec3::ZERO)),
+            )
+            .with_speed(**speed),
+        ) as DynTweenable,
+        Box::new(Tracks::new([
+            Tween::new(
+                EaseMethod::Linear,
+                TweeningType::Once,
+                Duration::from_millis(200),
+                TransformPositionLens {
+                    start: to.translation
+                        - if mirrored {
+                            const_vec3!([-1.25, 1.25, 0.])
+                        } else {
+                            const_vec3!([1.25, -1.25, 0.])
+                        },
+                    end: to.translation,
+                },
+            )
+            .with_speed(**speed),
+            Tween::new(
+                EaseMethod::Linear,
+                TweeningType::Once,
+                Duration::from_millis(200),
+                TransformScaleLens {
+                    start: Vec3::ZERO,
+                    end: to.scale,
+                },
+            )
+            .with_speed(**speed)
+            .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+        ])) as DynTweenable,
     ]))
 }
 

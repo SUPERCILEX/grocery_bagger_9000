@@ -1,7 +1,5 @@
-use std::f32::consts::PI;
-
 use bevy::{asset::LoadState, math::const_vec3, prelude::*};
-use bevy_svg::prelude::{Origin, Svg, Svg2dBundle};
+use bevy_svg::prelude::{Svg, Svg2dBundle};
 use bevy_tweening::Animator;
 
 use crate::{
@@ -19,7 +17,8 @@ use crate::{
         LevelMarker, LevelStarted,
     },
     nominos::{
-        Nomino, NominoMarker, NominoSpawner, PiecePickedUp, PiecePlaced, Selectable, DEG_90,
+        Nomino, NominoMarker, NominoSpawner, PiecePickedUp, PiecePlaced, Selectable, DEG_180,
+        DEG_90, DEG_MIRRORED,
     },
     window_management::DipsWindow,
 };
@@ -140,9 +139,9 @@ enum TutorialFsm {
     #[default]
     Ready,
     StartedLoad,
-    Loading(Handle<Svg>, Entity),
-    Loaded(Entity),
-    PickedUp(Entity),
+    Loading(Handle<Svg>, Entity, Transform),
+    Loaded(Entity, Transform),
+    PickedUp(Entity, Transform),
     Rotated,
 }
 
@@ -183,7 +182,7 @@ fn show_tutorial(
             if let Ok(piece) = first_piece.get_single() {
                 let handle = asset_server.load("icons/mouse-click.svg");
                 commands.entity(piece).with_children(|parent| {
-                    let transform = Transform::from_translation(Vec3::new(-2., 0.5, 0.))
+                    let transform = Transform::from_translation(const_vec3!([-1.25, -5., 0.]))
                         .with_scale(Vec3::ZERO)
                         .with_rotation(DEG_90.inverse());
 
@@ -191,51 +190,54 @@ fn show_tutorial(
                         .spawn_bundle(Svg2dBundle {
                             svg: handle.clone(),
                             transform,
-                            origin: Origin::Center,
                             ..default()
                         })
                         .insert(TutorialIconMarker)
                         .id();
 
-                    *fsm = TutorialFsm::Loading(handle, icon);
+                    *fsm = TutorialFsm::Loading(handle, icon, transform);
                 });
             }
         }
-        TutorialFsm::Loading(handle, icon) => {
+        TutorialFsm::Loading(handle, icon, from) => {
             if asset_server.get_load_state(handle) == LoadState::Loaded {
+                let transform = from.with_scale(ICON_SCALE);
                 commands
                     .entity(*icon)
-                    .insert(animations::mouse_tutorial_enter(
-                        Transform::from_scale(ICON_SCALE),
-                        &game_speed,
-                    ));
+                    .insert(animations::mouse_tutorial_enter(transform, &game_speed));
 
-                *fsm = TutorialFsm::Loaded(*icon);
+                *fsm = TutorialFsm::Loaded(*icon, transform);
             }
         }
-        TutorialFsm::Loaded(icon) => {
+        TutorialFsm::Loaded(icon, from) => {
             if piece_selections.iter().count() > 0 {
-                let transform =
-                    Transform::from_translation(Vec3::new(-0.5, 1.5, 0.)).with_scale(ICON_SCALE);
+                let transform = Transform::from_translation(const_vec3!([-1.25, -2.75, 0.]))
+                    .with_scale(ICON_SCALE)
+                    .with_rotation(DEG_90.inverse() * *DEG_MIRRORED);
                 commands
                     .entity(*icon)
                     .insert(animations::mouse_tutorial_switch_rotation(
-                        transform.with_rotation(Quat::from_rotation_y(PI)),
+                        *from,
+                        transform,
                         &game_speed,
+                        true,
                     ));
 
-                *fsm = TutorialFsm::PickedUp(*icon);
+                *fsm = TutorialFsm::PickedUp(*icon, transform);
             }
         }
-        TutorialFsm::PickedUp(icon) => {
+        TutorialFsm::PickedUp(icon, from) => {
             if mouse_button_input.just_pressed(MouseButton::Right) {
-                let transform =
-                    Transform::from_translation(Vec3::new(-2., 0.5, 0.)).with_scale(ICON_SCALE);
+                let transform = Transform::from_translation(const_vec3!([1.25, -5., 0.]))
+                    .with_scale(ICON_SCALE)
+                    .with_rotation(*DEG_180);
                 commands
                     .entity(*icon)
                     .insert(animations::mouse_tutorial_switch_rotation(
-                        transform.with_rotation(DEG_90.inverse()),
+                        *from,
+                        transform,
                         &game_speed,
+                        false,
                     ));
                 *fsm = TutorialFsm::Rotated;
             }
