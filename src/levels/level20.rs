@@ -14,13 +14,19 @@ pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
     _: EventWriter<PiecePlaced>,
-    _asset_server: Res<AssetServer>,
+    _: Res<AssetServer>,
 ) {
+    spawn_belt(&mut commands, &dips_window);
     commands.spawn_bag(&dips_window, [BAG_SIZE_LARGE, BAG_SIZE_LARGE]);
+}
 
-    commands.spawn_belt(Box::new(RandomPiecesConveyorBelt::new(
-        NUM_PIECES,
-        TETROMINOS,
-        [NominoColor::Blue, NominoColor::Green],
-    )));
+fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
+    commands.spawn_belt(
+        &dips_window,
+        Box::new(RandomPiecesConveyorBelt::new(
+            NUM_PIECES,
+            TETROMINOS,
+            [NominoColor::Blue, NominoColor::Green],
+        )),
+    );
 }

@@ -267,7 +267,7 @@ fn selected_piece_mover(
 }
 
 fn straddles_bag_or_overlaps_pieces(
-    rapier_context: &Res<RapierContext>,
+    rapier_context: &RapierContext,
     transform: Transform,
     collider: &Collider,
     self_id: Entity,
@@ -293,7 +293,7 @@ fn straddles_bag_or_overlaps_pieces(
 }
 
 fn piece_is_floating(
-    rapier_context: &Res<RapierContext>,
+    rapier_context: &RapierContext,
     transform: Transform,
     collider: &Collider,
     self_id: Entity,

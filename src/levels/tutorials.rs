@@ -1,10 +1,10 @@
-use crate::levels::LevelMarker;
 use bevy::{prelude::*, ui::PositionType::Absolute};
+
+use crate::levels::LevelMarker;
 
 pub const TUTORIAL_FONT_SIZE_LARGE: f32 = 32.;
 pub const TUTORIAL_FONT_SIZE_SMALL: f32 = 24.;
 pub const TUTORIAL_FONT_COLOR: Color = Color::BLACK;
-pub const TUTORIAL_SUBHEADING_VERTICAL_POSITION: Val = Val::Percent(35.);
 
 pub const TUTORIAL_STYLE: fn() -> Style = || Style {
     size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),

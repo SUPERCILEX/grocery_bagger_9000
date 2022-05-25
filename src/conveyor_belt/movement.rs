@@ -7,8 +7,14 @@ use crate::{
     animations,
     animations::{GameSpeed, Target},
     conveyor_belt::{
-        consts::{HEIGHT, LENGTH, MAX_NUM_PIECES, PIECE_WIDTH},
-        spawn::{ConveyorBeltInstance, ConveyorBeltMarker},
+        consts::{
+            HEIGHT, LENGTH, MAX_NUM_PIECES, NON_SELECTABLE_LIGHTNESS, PIECE_WIDTH,
+            SELECTABLE_SEPARATION,
+        },
+        spawn::{
+            ConveyorBeltBackgroundSpawner, ConveyorBeltHackMarker, ConveyorBeltInstance,
+            ConveyorBeltMarker,
+        },
         ConveyorBelt, ConveyorBeltOptions,
     },
     levels::LevelStarted,
@@ -18,9 +24,6 @@ use crate::{
     },
     window_management::{DipsWindow, WindowSystems},
 };
-
-const SELECTABLE_SEPARATION: f32 = 2.;
-const NON_SELECTABLE_LIGHTNESS: f32 = 0.38;
 
 pub struct ConveyorBeltMovementPlugin;
 
@@ -58,6 +61,7 @@ fn init_pieces(
         (Entity, &mut ConveyorBeltInstance, &mut BeltPieceIds),
         With<ConveyorBeltMarker>,
     >,
+    conveyor_belt_hack: Query<Entity, With<ConveyorBeltHackMarker>>,
     dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
     belt_options: Res<ConveyorBeltOptions>,
@@ -94,6 +98,10 @@ fn init_pieces(
             break;
         }
     }
+
+    commands
+        .entity(conveyor_belt_hack.single())
+        .with_children(|parent| parent.spawn_belt_background(belt_options.num_pieces_selectable));
 }
 
 fn replace_pieces(
@@ -317,8 +325,8 @@ fn reposition_pieces_on_window_resize(
 }
 
 fn piece_position(
-    dips_window: &Res<DipsWindow>,
-    belt_options: &Res<ConveyorBeltOptions>,
+    dips_window: &DipsWindow,
+    belt_options: &ConveyorBeltOptions,
     index: usize,
 ) -> Vec3 {
     let selectable_spacing = if index < belt_options.num_pieces_selectable.into() {
@@ -348,7 +356,7 @@ fn maybe_spawn_piece(
     position: usize,
     root: Entity,
     conveyor_belt: &mut dyn ConveyorBelt,
-    belt_options: &Res<ConveyorBeltOptions>,
+    belt_options: &ConveyorBeltOptions,
 ) -> Option<Entity> {
     conveyor_belt.next().map(|piece| {
         let color = if position < belt_options.num_pieces_selectable.into() {

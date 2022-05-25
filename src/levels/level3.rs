@@ -25,26 +25,29 @@ pub fn init_level(
     _: EventWriter<PiecePlaced>,
     _: Res<AssetServer>,
 ) {
-    spawn_belt(&mut commands);
+    spawn_belt(&mut commands, &dips_window);
     commands.spawn_bag(&dips_window, [BAG_SIZE_SMALL]);
 }
 
-fn spawn_belt(commands: &mut Commands) {
-    commands.spawn_belt(Box::new(PresetPiecesConveyorBelt::new([
-        Piece {
-            nomino: Nomino::TetrominoL,
-            color: LEVEL_COLOR,
-            rotation: Quat::IDENTITY,
-        },
-        Piece {
-            nomino: Nomino::TetrominoSkew,
-            color: LEVEL_COLOR,
-            rotation: *DEG_MIRRORED,
-        },
-        Piece {
-            nomino: Nomino::TetrominoL,
-            color: LEVEL_COLOR,
-            rotation: *DEG_180,
-        },
-    ])));
+fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
+    commands.spawn_belt(
+        dips_window,
+        Box::new(PresetPiecesConveyorBelt::new([
+            Piece {
+                nomino: Nomino::TetrominoL,
+                color: LEVEL_COLOR,
+                rotation: Quat::IDENTITY,
+            },
+            Piece {
+                nomino: Nomino::TetrominoSkew,
+                color: LEVEL_COLOR,
+                rotation: *DEG_MIRRORED,
+            },
+            Piece {
+                nomino: Nomino::TetrominoL,
+                color: LEVEL_COLOR,
+                rotation: *DEG_180,
+            },
+        ])),
+    );
 }
