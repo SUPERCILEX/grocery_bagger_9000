@@ -100,12 +100,19 @@ fn score_bags(
 }
 
 fn reset_score(
-    mut level_loaded: EventReader<LevelStarted>,
+    mut level_started: EventReader<LevelStarted>,
     mut current_score: ResMut<CurrentScore>,
+    mut prev_level: Local<u16>,
 ) {
-    if level_loaded.iter().count() > 0 {
+    if let Some(started) = level_started.iter().last() {
+        if **started == *prev_level {
+            current_score.all_time_points -= current_score.points;
+        }
+
         current_score.points = 0;
         current_score.score_map.clear();
+
+        *prev_level = **started;
     }
 }
 
