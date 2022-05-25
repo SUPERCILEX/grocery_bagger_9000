@@ -1,6 +1,7 @@
 use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
 use bevy_tweening::AnimationSystem;
+use smallvec::SmallVec;
 
 use crate::{
     animations,
@@ -240,29 +241,44 @@ fn selected_piece_mover(
             return;
         }
 
-        let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
-            &rapier_context,
-            Transform::from_translation(snapped_cursor_position).with_rotation(
-                original
-                    .map(|o| o.rotation)
-                    .unwrap_or(global_transform.rotation),
-            ),
-            collider,
-            piece,
-        );
+        let rotation = original
+            .map(|o| o.rotation)
+            .unwrap_or(global_transform.rotation);
 
-        if would_move_over_invalid_position {
-            return;
+        let snapped_cursor_position = snapped_cursor_position.truncate();
+        let mut nearby_positions = SmallVec::<[_; 9]>::new();
+        for i in -1..=1 {
+            for j in -1..=1 {
+                nearby_positions.push(snapped_cursor_position + Vec2::new(i as f32, j as f32));
+            }
         }
+        nearby_positions.sort_unstable_by(|a, b| {
+            a.distance(cursor_position)
+                .total_cmp(&b.distance(cursor_position))
+        });
 
-        if let Some(original) = original {
-            piece_transform.rotation = original.rotation;
-            commands
-                .entity(piece)
-                .remove_bundle::<UndoableAnimationBundle<Transform>>();
+        for position in nearby_positions {
+            let snapped_cursor_position = position.extend(piece_transform.translation.z);
+            let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
+                &rapier_context,
+                Transform::from_translation(snapped_cursor_position).with_rotation(rotation),
+                collider,
+                piece,
+            );
+            if would_move_over_invalid_position {
+                continue;
+            }
+
+            if let Some(original) = original {
+                piece_transform.rotation = original.rotation;
+                commands
+                    .entity(piece)
+                    .remove_bundle::<UndoableAnimationBundle<Transform>>();
+            }
+            piece_transform.translation = snapped_cursor_position;
+
+            break;
         }
-
-        piece_transform.translation = snapped_cursor_position;
     }
 }
 
