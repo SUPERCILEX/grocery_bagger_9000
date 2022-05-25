@@ -35,8 +35,8 @@ fn setup_hud(
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                 position_type: Absolute,
-                flex_direction: FlexDirection::ColumnReverse,
-                align_items: AlignItems::FlexStart,
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Center,
                 ..default()
             },
             color: Color::NONE.into(),
