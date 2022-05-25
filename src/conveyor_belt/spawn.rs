@@ -10,10 +10,11 @@ use bevy_prototype_lyon::{
 use crate::{
     conveyor_belt::{
         consts::{
-            BELT_NONSELECTABLE_BACKGROUND_COLOR, BELT_SELECTABLE_BACKGROUND_COLOR, LENGTH,
-            PIECE_WIDTH, SELECTABLE_SEPARATION,
+            BELT_NONSELECTABLE_BACKGROUND_COLOR, BELT_SELECTABLE_BACKGROUND_COLOR, PIECE_WIDTH,
+            SELECTABLE_SEPARATION,
         },
         movement::BeltPieceIds,
+        positioning::compute_belt_position,
         ConveyorBelt, HEIGHT, MAX_NUM_PIECES,
     },
     levels::LevelMarker,
@@ -58,13 +59,9 @@ impl<'w, 's> ConveyorBeltSpawner<'w, 's> for Commands<'w, 's> {
     ) -> EntityCommands<'w, 's, '_> {
         // TODO remove and put directly in real belt entity below after
         //  https://github.com/dimforge/bevy_rapier/issues/172
-        self.spawn_bundle(TransformBundle::from_transform(
-            Transform::from_translation(Vec3::new(
-                dips_window.width - (LENGTH + 2. * SELECTABLE_SEPARATION + 0.5),
-                dips_window.height - HEIGHT,
-                0.,
-            )),
-        ))
+        self.spawn_bundle(TransformBundle::from_transform(compute_belt_position(
+            dips_window,
+        )))
         .insert(LevelMarker)
         .insert(ConveyorBeltHackMarker);
 

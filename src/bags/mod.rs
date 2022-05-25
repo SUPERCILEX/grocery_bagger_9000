@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
+use bag_replacement::BagReplacementPlugin;
 pub use bag_size::BagSize;
 pub use consts::*;
+use positioning::BagPositioningPlugin;
 // TODO remove https://github.com/dimforge/bevy_rapier/issues/172
 pub use positioning::compute_bag_coordinates;
 pub use spawn::{BagContainerSpawner, BagMarker, BagSpawner};
-
-use crate::bags::{bag_replacement::BagReplacementPlugin, positioning::BagPositioningPlugin};
 
 mod bag_replacement;
 mod bag_size;
