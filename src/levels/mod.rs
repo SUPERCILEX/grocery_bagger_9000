@@ -41,7 +41,7 @@ impl Plugin for LevelsPlugin {
     }
 }
 
-const LEVELS: [fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<AssetServer>); 14] = [
+const LEVELS: &[fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<AssetServer>)] = &[
     level1::init_level,
     level2::init_level,
     level3::init_level,
