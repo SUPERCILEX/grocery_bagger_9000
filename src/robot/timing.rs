@@ -31,12 +31,6 @@ impl Default for RobotTiming {
     }
 }
 
-impl RobotTiming {
-    pub fn time_left(&self) -> Duration {
-        self.ttl.duration()
-    }
-}
-
 fn accumulate_left_over_time(
     mut piece_placements: EventReader<PiecePlaced>,
     mut timing: Query<&mut RobotTiming, With<RobotMarker>>,
