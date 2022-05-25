@@ -8,7 +8,10 @@ use crate::{
     animations::GameSpeed,
     colors::NominoColor,
     conveyor_belt::ConveyorBeltOptions,
-    gb9000::{GameState::Playing, GroceryBagger9000},
+    gb9000::{
+        GameState::{LevelEnded, Playing},
+        GroceryBagger9000,
+    },
     levels::{LevelFinished, LevelMarker},
     nominos::*,
 };
@@ -117,6 +120,11 @@ fn debug_options(
                 if level_num != gb9000.current_level {
                     gb9000.current_level = level_num;
                     gb9000.state = Playing;
+                    level_finished.send(LevelFinished);
+                }
+
+                if gb9000.state != LevelEnded && ui.button("Finish").clicked() {
+                    gb9000.state = LevelEnded;
                     level_finished.send(LevelFinished);
                 }
             });
