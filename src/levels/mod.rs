@@ -15,6 +15,7 @@ mod level10;
 mod level11;
 mod level12;
 mod level13;
+mod level14;
 mod level2;
 mod level20;
 mod level3;
@@ -55,6 +56,7 @@ const LEVELS: &[fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<Asse
     level11::init_level,
     level12::init_level,
     level13::init_level,
+    level14::init_level,
     level20::init_level,
 ];
 

@@ -3,6 +3,7 @@
 #![feature(once_cell)]
 #![feature(option_result_contains)]
 #![feature(is_sorted)]
+#![feature(let_else)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
 
