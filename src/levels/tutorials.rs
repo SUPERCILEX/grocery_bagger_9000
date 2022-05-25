@@ -13,7 +13,7 @@ pub const TUTORIAL_STYLE: fn() -> Style = || Style {
     align_items: AlignItems::FlexStart,
     justify_content: JustifyContent::FlexStart,
     position: Rect {
-        top: Val::Percent(25.),
+        top: Val::Percent(33.),
         left: Val::Percent(5.),
         ..default()
     },
