@@ -22,7 +22,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "…try a different item arrangement\nfor a higher score",
+        "…try a different item arrangement\nwith these same pieces for a higher score",
     )
 }
 

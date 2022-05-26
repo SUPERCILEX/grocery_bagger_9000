@@ -27,7 +27,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Some levels are randomly generated\nand may not have a perfect solution.",
+        "Some levels are randomly generated\nand may not have a perfect solution",
     );
     commands.spawn_bag(&dips_window, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]);
 }
