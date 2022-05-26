@@ -51,6 +51,10 @@ impl Plugin for ConveyorBeltMovementPlugin {
                 .after(AnimationSystem::AnimationUpdate),
         );
         app.add_system(update_background_on_num_selectable_pieces_changed);
+        app.add_system_to_stage(
+            CoreStage::PreUpdate,
+            update_piece_selectability_on_num_selectable_pieces_changed,
+        );
     }
 }
 
@@ -140,13 +144,7 @@ fn replace_pieces(
                     ref mut fill_mode, ..
                 } = *draw_mode
                 {
-                    let mut color = fill_mode.color.as_hsla();
-                    if let Color::Hsla { lightness, .. } = &mut color {
-                        *lightness = 0.5;
-                    } else {
-                        unreachable!()
-                    }
-                    fill_mode.color = color;
+                    fill_mode.color = fill_mode.color.with_lightness(0.5);
                 }
             }
 
@@ -260,6 +258,36 @@ fn update_background_on_num_selectable_pieces_changed(
     if let Ok((mut path, mut transform)) = nonselectable.get_single_mut() {
         *path = nonselectable_background_path(num_pieces_selectable);
         *transform = compute_selectable_background(num_pieces_selectable);
+    }
+}
+
+fn update_piece_selectability_on_num_selectable_pieces_changed(
+    mut commands: Commands,
+    belt_options: Res<ConveyorBeltOptions>,
+    conveyor_belt: Query<&BeltPieceIds, With<ConveyorBeltMarker>>,
+    mut colors: Query<&mut DrawMode, With<NominoMarker>>,
+) {
+    if !belt_options.is_changed() {
+        return;
+    }
+
+    let num_pieces_selectable = belt_options.num_pieces_selectable as usize;
+    if let Ok(belt_pieces) = conveyor_belt.get_single() {
+        for (index, piece) in belt_pieces.iter().enumerate() {
+            let mut draw_mode = colors.get_mut(*piece).unwrap();
+            if let DrawMode::Outlined {
+                ref mut fill_mode, ..
+            } = *draw_mode
+            {
+                if index < num_pieces_selectable {
+                    fill_mode.color = fill_mode.color.with_lightness(0.5);
+                    commands.entity(*piece).insert(Selectable);
+                } else {
+                    fill_mode.color = fill_mode.color.with_lightness(NON_SELECTABLE_LIGHTNESS);
+                    commands.entity(*piece).remove::<Selectable>();
+                };
+            }
+        }
     }
 }
 
@@ -389,16 +417,6 @@ fn piece_position(
     (base + offset).round().extend(0.01)
 }
 
-fn faded_piece_color(from: Color) -> Color {
-    let mut color = from.as_hsla();
-    if let Color::Hsla { lightness, .. } = &mut color {
-        *lightness = NON_SELECTABLE_LIGHTNESS;
-    } else {
-        unreachable!()
-    }
-    color
-}
-
 fn maybe_spawn_piece(
     commands: &mut Commands,
     transform: Transform,
@@ -411,7 +429,10 @@ fn maybe_spawn_piece(
         let color = if position < belt_options.num_pieces_selectable.into() {
             piece.color.render()
         } else {
-            faded_piece_color(piece.color.render())
+            piece
+                .color
+                .render()
+                .with_lightness(NON_SELECTABLE_LIGHTNESS)
         };
 
         commands
@@ -430,4 +451,20 @@ fn maybe_spawn_piece(
             })
             .out
     })
+}
+
+trait ColorUtils {
+    fn with_lightness(&self, value: f32) -> Color;
+}
+
+impl ColorUtils for Color {
+    fn with_lightness(&self, value: f32) -> Color {
+        let mut color = self.as_hsla();
+        if let Color::Hsla { lightness, .. } = &mut color {
+            *lightness = value;
+        } else {
+            unreachable!()
+        }
+        color
+    }
 }
