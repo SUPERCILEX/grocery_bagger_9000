@@ -430,29 +430,10 @@ class CapstoneLogger {
     }
 }
 
-getLogger(0);
+const PIECE_PLACED_ACTION = 0;
 
-function logLevelEnd(levelId) {
-    if (window.logger.isNewSession()) {
-        window.logger.startNewSession()
-    }
-    window.logger.logLevelEnd(JSON.stringify({
-        levelId
-    }));
-}
-
-function logLevelAction(actionId) {
-    if (window.logger.isNewSession()) {
-        window.logger.startNewSession()
-    }
-    window.logger.logLevelAction(actionId, "");
-}
-
-function logActionWithNoLevel(actionId) {
-    if (window.logger.isNewSession()) {
-        window.logger.startNewSession()
-    }
-    window.logger.logActionWithNoLevel(actionId, "");
+function init_analytics(versionId) {
+  getLogger(versionId);
 }
 
 function logLevelStart(levelId) {
@@ -460,6 +441,25 @@ function logLevelStart(levelId) {
         window.logger.startNewSession()
     }
     return window.logger.logLevelStart(levelId, "")
+}
+
+function logLevelEnd(levelId) {
+    if (window.logger.isNewSession()) {
+        window.logger.startNewSession()
+    }
+    window.logger.logLevelEnd(JSON.stringify({
+        levelId,
+    }));
+}
+
+function logPiecePlaced(score, bag) {
+    if (window.logger.isNewSession()) {
+        window.logger.startNewSession()
+    }
+    window.logger.logLevelAction(PIECE_PLACED_ACTION, JSON.stringify({
+        score,
+        bag,
+    }));
 }
 
 function getLogger(categoryId = 1) {
