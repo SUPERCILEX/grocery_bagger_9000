@@ -58,3 +58,6 @@ panic = "abort"
 inherits = "release"
 opt-level = "s"
 strip = "debuginfo"
+
+[profile.web-dev]
+inherits = "dev"
