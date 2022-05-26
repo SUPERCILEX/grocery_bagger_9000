@@ -8,7 +8,7 @@ use crate::{
     bags::{compute_bag_coordinates, BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    gb9000::GroceryBagger9000,
+    gb9000::{GameState::Playing, GroceryBagger9000},
     levels::{
         transitions::LevelSpawnStage,
         tutorials::{
@@ -171,7 +171,7 @@ fn show_tutorial(
 ) {
     const ICON_SCALE: Vec3 = const_vec3!([0.05, 0.05, 0.05]);
 
-    if gb9000.current_level != 0 || level_started.iter().count() > 0 {
+    if gb9000.state != Playing || gb9000.current_level != 0 || level_started.iter().count() > 0 {
         *fsm = TutorialFsm::Ready;
         return;
     }
