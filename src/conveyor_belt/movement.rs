@@ -20,10 +20,11 @@ use crate::{
         },
         ConveyorBelt, ConveyorBeltOptions,
     },
+    gb9000::GroceryBagger9000,
     levels::LevelStarted,
     nominos::{
         AttemptedPlacement, NominoMarker, NominoSpawner, PiecePlaced, PieceSystems, Selectable,
-        Selected,
+        Selected, DEG_90, DEG_MIRRORED,
     },
     window_management::{DipsWindow, WindowSystems},
 };
@@ -197,6 +198,7 @@ fn check_for_piece_selection_undos(
     mut attempted_placement_events: EventReader<AttemptedPlacement>,
     belt_pieces: Query<&BeltPieceIds, With<ConveyorBeltMarker>>,
     piece_positions: Query<&Transform, (With<NominoMarker>, With<Selected>)>,
+    gb9000: Res<GroceryBagger9000>,
     belt_options: Res<ConveyorBeltOptions>,
     dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
@@ -207,9 +209,21 @@ fn check_for_piece_selection_undos(
             .iter()
             .position(|p| *p == **attempted)
             .unwrap();
-        let transform =
-            Transform::from_translation(piece_position(&dips_window, &belt_options, position));
         let from = piece_positions.get(**attempted).unwrap();
+        let mut transform =
+            Transform::from_translation(piece_position(&dips_window, &belt_options, position))
+                .with_rotation(from.rotation);
+
+        let mut unmirrored_rotation = transform.rotation;
+        if transform.rotation.x.abs() > 1e-5 || transform.rotation.y.abs() > 1e-5 {
+            unmirrored_rotation *= *DEG_MIRRORED;
+        }
+        if gb9000.current_level != 0
+            && unmirrored_rotation.z.abs() > 1e-5
+            && unmirrored_rotation.w.abs() > 1e-5
+        {
+            transform.rotation *= *DEG_90;
+        }
 
         commands
             .entity(**attempted)

@@ -204,7 +204,7 @@ fn piece_rotation_handler(
         }
 
         let rotation = &mut transform.rotation;
-        if rotation.x.is_normal() || rotation.y.is_normal() {
+        if rotation.x.abs() > 1e-5 || rotation.y.abs() > 1e-5 {
             *rotation *= DEG_90.inverse();
         } else {
             *rotation *= *DEG_90;
