@@ -119,8 +119,8 @@ pub fn selectable_background_path(num_pieces_selectable: u8) -> Path {
 }
 
 pub fn nonselectable_background_path(num_pieces_selectable: u8) -> Path {
-    let selectable_width =
-        (MAX_NUM_PIECES as u8 - num_pieces_selectable) as f32 * PIECE_WIDTH + SELECTABLE_SEPARATION;
+    let selectable_width = f32::from(MAX_NUM_PIECES - num_pieces_selectable)
+        .mul_add(PIECE_WIDTH, SELECTABLE_SEPARATION);
 
     let mut b = Builder::with_capacity(4, 5);
 

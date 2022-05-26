@@ -80,21 +80,22 @@ impl Default for NominoColorWrapper {
 }
 
 impl NominoType {
-    fn name(&self) -> &str {
+    const fn name(&self) -> &str {
         match self {
-            NominoType::Straight3 => "Straight (3)",
-            NominoType::L3 => "L (3)",
-            NominoType::Straight => "Straight",
-            NominoType::Square => "Square",
-            NominoType::T => "T",
-            NominoType::L => "L",
-            NominoType::L2 => "Mirrored L",
-            NominoType::Skew => "Skew",
-            NominoType::Skew2 => "Mirrored Skew",
+            Self::Straight3 => "Straight (3)",
+            Self::L3 => "L (3)",
+            Self::Straight => "Straight",
+            Self::Square => "Square",
+            Self::T => "T",
+            Self::L => "L",
+            Self::L2 => "Mirrored L",
+            Self::Skew => "Skew",
+            Self::Skew2 => "Mirrored Skew",
         }
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn debug_options(
     mut egui_context: ResMut<EguiContext>,
     mut debug_options: ResMut<DebugOptions>,

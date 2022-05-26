@@ -56,7 +56,8 @@ pub fn compute_bag_coordinates(
     }
     space_needed -= BAG_SPACING;
 
-    let mut starting_position = BagCoord((window.width - space_needed as f32) / 2.).snap_to_grid();
+    let mut starting_position =
+        BagCoord((window.width - f32::from(space_needed)) / 2.).snap_to_grid();
     debug_assert!(starting_position >= 0. && starting_position <= window.width);
 
     let base_y = BagCoord((window.height - conveyor_belt::HEIGHT) / 2.).snap_to_grid();
@@ -69,7 +70,7 @@ pub fn compute_bag_coordinates(
             base_y - (max_half_height - bag.half_height()),
             0.,
         ));
-        starting_position += bag.half_width() + BAG_SPACING as f32;
+        starting_position += bag.half_width() + f32::from(BAG_SPACING);
     }
     bags
 }

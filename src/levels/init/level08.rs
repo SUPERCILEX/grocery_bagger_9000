@@ -69,7 +69,7 @@ fn spawn_bag(
             ];
 
             for piece in pieces {
-                placed_pieces.send(PiecePlaced { piece, bag })
+                placed_pieces.send(PiecePlaced { piece, bag });
             }
         });
 }

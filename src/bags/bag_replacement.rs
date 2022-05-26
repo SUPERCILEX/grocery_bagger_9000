@@ -61,7 +61,7 @@ struct RemoveFilledBag(Entity);
 struct ReplaceFilledBag(Entity);
 
 #[derive(Component, Deref, DerefMut)]
-pub struct BagPieces(pub SmallVec<[Entity; conveyor_belt::MAX_NUM_PIECES]>);
+pub struct BagPieces(pub SmallVec<[Entity; conveyor_belt::MAX_NUM_PIECES as usize]>);
 
 fn detect_filled_bags(
     mut piece_placements: EventReader<PiecePlaced>,
@@ -103,7 +103,7 @@ fn detect_filled_bags(
         for i in 0..bag_size.width() {
             let mut intersection = false;
             rapier_context.intersections_with_point(
-                bag_coords.translation + Vec3::new(i as f32, 0., 0.),
+                bag_coords.translation + Vec3::new(f32::from(i), 0., 0.),
                 NOMINO_COLLIDER_GROUP.into(),
                 None,
                 |_| {

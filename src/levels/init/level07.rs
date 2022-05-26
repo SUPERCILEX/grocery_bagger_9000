@@ -23,7 +23,7 @@ pub fn init_level(
         &mut commands,
         asset_server,
         "…try a different item arrangement\nwith these same pieces for a higher score",
-    )
+    );
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {

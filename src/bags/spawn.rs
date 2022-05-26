@@ -60,7 +60,7 @@ impl<'w, 's> BagContainerSpawner for Commands<'w, 's> {
             .with_children(|parent| {
                 for (position, size) in compute_bag_coordinates(window, sizes).iter().zip(sizes) {
                     spawned_bags
-                        .push(spawn_bag(parent, Transform::from_translation(*position), size).id())
+                        .push(spawn_bag(parent, Transform::from_translation(*position), size).id());
                 }
             });
 

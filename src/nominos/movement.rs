@@ -146,13 +146,10 @@ fn piece_selection_handler(
             NOMINO_COLLIDER_GROUP.into(),
             None,
             |id| {
-                #[allow(unused_mut)]
-                let mut selectable = selectables.contains(id);
-
+                #[cfg(not(feature = "debug"))]
+                let selectable = selectables.contains(id);
                 #[cfg(feature = "debug")]
-                if debug_options.unrestricted_pieces {
-                    selectable = true;
-                }
+                let selectable = debug_options.unrestricted_pieces || selectables.contains(id);
 
                 if selectable {
                     picked_up_events.send(PiecePickedUp(id));
@@ -242,9 +239,9 @@ fn selected_piece_mover(
         *last_snapped_cursor_position = snapped_cursor_position;
 
         let mut nearby_positions = SmallVec::<[_; 9]>::new();
-        for i in -1..=1 {
-            for j in -1..=1 {
-                nearby_positions.push(snapped_cursor_position + Vec2::new(i as f32, j as f32));
+        for i in -1i8..=1 {
+            for j in -1i8..=1 {
+                nearby_positions.push(snapped_cursor_position + Vec2::new(f32::from(i), f32::from(j)));
             }
         }
         nearby_positions.sort_unstable_by(|a, b| {
@@ -252,9 +249,7 @@ fn selected_piece_mover(
                 .total_cmp(&b.distance(cursor_position))
         });
 
-        let rotation = original
-            .map(|o| o.rotation)
-            .unwrap_or(global_transform.rotation);
+        let rotation = original.map_or(global_transform.rotation, |o| o.rotation);
         for position in nearby_positions {
             let snapped_cursor_position = position.extend(piece_transform.translation.z);
             let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(

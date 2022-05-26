@@ -19,7 +19,7 @@ impl Plugin for ConveyorBeltPositioningPlugin {
 
 pub fn compute_belt_position(dips_window: &DipsWindow) -> Transform {
     Transform::from_xyz(
-        dips_window.width - (LENGTH + 2. * SELECTABLE_SEPARATION + 0.5),
+        dips_window.width - (2f32.mul_add(SELECTABLE_SEPARATION, LENGTH + 0.5)),
         dips_window.height - HEIGHT,
         0.,
     )
@@ -27,9 +27,10 @@ pub fn compute_belt_position(dips_window: &DipsWindow) -> Transform {
 
 pub fn compute_selectable_background(num_pieces_selectable: u8) -> Transform {
     Transform::from_xyz(
-        num_pieces_selectable as f32 * PIECE_WIDTH
-            + SELECTABLE_SEPARATION
-            + SELECTABLE_SEPARATION / 2.,
+        f32::from(num_pieces_selectable).mul_add(
+            PIECE_WIDTH,
+            SELECTABLE_SEPARATION + SELECTABLE_SEPARATION / 2.,
+        ),
         0.,
         0.,
     )

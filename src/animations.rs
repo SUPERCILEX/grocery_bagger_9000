@@ -218,7 +218,7 @@ pub fn piece_placed(current: Transform, speed: &GameSpeed) -> Animator<Transform
 }
 
 pub fn piece_loaded(
-    index: usize,
+    index: u8,
     from: Transform,
     to: Transform,
     speed: &GameSpeed,
@@ -227,13 +227,19 @@ pub fn piece_loaded(
         let x2 = x * x;
         let x4 = x2 * x2;
 
-        -42.48 * x4 * x2 + 120.48 * x * x4 - 114. * x4 + 34. * x * x2 + 3. * x2
+        (-42.48f32).mul_add(
+            x4 * x2,
+            120.48f32.mul_add(
+                x * x4,
+                (-114f32).mul_add(x4, 34f32.mul_add(x * x2, 3. * x2)),
+            ),
+        )
     };
-    let steady_velocity_time = (to.translation.x - from.translation.x).abs() as u64 * 16;
+    let steady_velocity_time = (to.translation.x - from.translation.x).abs() * 16. / 1000.;
     let enter = Tween::new(
         EaseMethod::CustomFunction(bezier_6th),
         TweeningType::Once,
-        Duration::from_millis(steady_velocity_time),
+        Duration::from_secs_f32(steady_velocity_time),
         TransformPositionLens {
             start: from.translation,
             end: to.translation,
@@ -247,7 +253,7 @@ pub fn piece_loaded(
             Tween::new(
                 EaseMethod::Linear,
                 TweeningType::Once,
-                Duration::from_millis(10 * index as u64),
+                Duration::from_millis(10 * u64::from(index)),
                 NoopLens,
             )
             .with_speed(**speed),
@@ -496,7 +502,7 @@ fn ease_in_back(x: f32) -> f32 {
     const C3: f32 = C1 + 1.;
 
     let x2 = x * x;
-    C3 * x * x2 - C1 * x2
+    C3.mul_add(x * x2, -C1 * x2)
 }
 
 fn ease_out_back(x: f32) -> f32 {
@@ -505,5 +511,5 @@ fn ease_out_back(x: f32) -> f32 {
 
     let x1 = x - 1.;
     let x2 = x1 * x1;
-    1. + C3 * x1 * x2 + C1 * x2
+    1. + C3.mul_add(x1 * x2, C1 * x2)
 }

@@ -1,3 +1,6 @@
+// TODO https://github.com/rust-lang/rust-clippy/issues/6902
+#![allow(clippy::use_self)]
+
 use bevy::prelude::*;
 use bevy_prototype_lyon::prelude::*;
 use bevy_rapier3d::prelude::*;
@@ -43,27 +46,27 @@ pub enum Nomino {
 impl Nomino {
     fn path(&self) -> &Path {
         match self {
-            Nomino::TrominoStraight => &TROMINO_STRAIGHT_PATH,
-            Nomino::TrominoL => &TROMINO_L_PATH,
-            Nomino::TetrominoStraight => &TETROMINO_STRAIGHT_PATH,
-            Nomino::TetrominoSquare => &TETROMINO_SQUARE_PATH,
-            Nomino::TetrominoT => &TETROMINO_T_PATH,
-            Nomino::TetrominoL => &TETROMINO_L_PATH,
-            Nomino::TetrominoSkew => &TETROMINO_SKEW_PATH,
-            Nomino::_Last => panic!("you shouldn't be here!"),
+            Self::TrominoStraight => &TROMINO_STRAIGHT_PATH,
+            Self::TrominoL => &TROMINO_L_PATH,
+            Self::TetrominoStraight => &TETROMINO_STRAIGHT_PATH,
+            Self::TetrominoSquare => &TETROMINO_SQUARE_PATH,
+            Self::TetrominoT => &TETROMINO_T_PATH,
+            Self::TetrominoL => &TETROMINO_L_PATH,
+            Self::TetrominoSkew => &TETROMINO_SKEW_PATH,
+            Self::_Last => panic!("you shouldn't be here!"),
         }
     }
 
     fn collider(&self) -> &Collider {
         match self {
-            Nomino::TrominoStraight => &TROMINO_STRAIGHT_COLLIDER,
-            Nomino::TrominoL => &TROMINO_L_COLLIDER,
-            Nomino::TetrominoStraight => &TETROMINO_STRAIGHT_COLLIDER,
-            Nomino::TetrominoSquare => &TETROMINO_SQUARE_COLLIDER,
-            Nomino::TetrominoT => &TETROMINO_T_COLLIDER,
-            Nomino::TetrominoL => &TETROMINO_L_COLLIDER,
-            Nomino::TetrominoSkew => &TETROMINO_SKEW_COLLIDER,
-            Nomino::_Last => panic!("you shouldn't be here!"),
+            Self::TrominoStraight => &TROMINO_STRAIGHT_COLLIDER,
+            Self::TrominoL => &TROMINO_L_COLLIDER,
+            Self::TetrominoStraight => &TETROMINO_STRAIGHT_COLLIDER,
+            Self::TetrominoSquare => &TETROMINO_SQUARE_COLLIDER,
+            Self::TetrominoT => &TETROMINO_T_COLLIDER,
+            Self::TetrominoL => &TETROMINO_L_COLLIDER,
+            Self::TetrominoSkew => &TETROMINO_SKEW_COLLIDER,
+            Self::_Last => panic!("you shouldn't be here!"),
         }
     }
 }

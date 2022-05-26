@@ -23,7 +23,7 @@ pub fn init_level(
         &mut commands,
         asset_server,
         "Only the leftmost three items are selectable\nAfter filling a bag, a replacement bag will appear",
-    )
+    );
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {

@@ -4,8 +4,21 @@
 #![feature(option_result_contains)]
 #![feature(is_sorted)]
 #![feature(let_else)]
+#![warn(
+    clippy::all,
+    clippy::float_cmp_const,
+    clippy::empty_structs_with_brackets,
+    clippy::pedantic,
+    clippy::nursery,
+    clippy::cargo
+)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
+#![allow(clippy::needless_pass_by_value)]
+#![allow(clippy::wildcard_imports)]
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::multiple_crate_versions)]
+#![allow(clippy::option_if_let_else)]
 
 use bevy::{app::App, DefaultPlugins};
 

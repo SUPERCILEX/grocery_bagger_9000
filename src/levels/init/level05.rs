@@ -23,7 +23,7 @@ pub fn init_level(
         &mut commands,
         asset_server,
         "Bags are worth more the fuller they are,\nbut sometimes you won't be able to fill\na bag completely…",
-    )
+    );
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {

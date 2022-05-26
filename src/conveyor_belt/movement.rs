@@ -61,7 +61,7 @@ impl Plugin for ConveyorBeltMovementPlugin {
 pub struct BeltEmptyEvent;
 
 #[derive(Default, Component, Deref, DerefMut)]
-pub struct BeltPieceIds(SmallVec<[Entity; MAX_NUM_PIECES]>);
+pub struct BeltPieceIds(SmallVec<[Entity; MAX_NUM_PIECES as usize]>);
 
 fn init_pieces(
     mut commands: Commands,
@@ -202,11 +202,14 @@ fn check_for_piece_selection_undos(
     game_speed: Res<GameSpeed>,
 ) {
     for attempted in attempted_placement_events.iter() {
-        let position = belt_pieces
-            .single()
-            .iter()
-            .position(|p| *p == **attempted)
-            .unwrap();
+        let position = u8::try_from(
+            belt_pieces
+                .single()
+                .iter()
+                .position(|p| *p == **attempted)
+                .unwrap(),
+        )
+        .unwrap();
         let from = piece_positions.get(**attempted).unwrap();
         let mut transform =
             Transform::from_translation(piece_position(&dips_window, &belt_options, position))
@@ -330,7 +333,7 @@ fn move_pieces(
                         Transform::from_translation(piece_position(
                             &dips_window,
                             &belt_options,
-                            index,
+                            u8::try_from(index).unwrap(),
                         )),
                         &game_speed,
                     ));
@@ -361,7 +364,8 @@ fn reposition_pieces_on_window_resize(
 
     if let Ok(pieces) = belt_pieces.get_single() {
         for (index, piece) in pieces.iter().enumerate() {
-            let position = piece_position(&dips_window, &belt_options, index);
+            let position =
+                piece_position(&dips_window, &belt_options, u8::try_from(index).unwrap());
             if let Ok((mut transform, animator, target)) = piece_positions.get_mut(*piece) {
                 if let Some(target) = target {
                     let diff = position - target.translation;
@@ -384,7 +388,7 @@ fn reposition_pieces_on_window_resize(
                             0.,
                         );
                         let mut animator = animations::piece_loaded(
-                            index,
+                            u8::try_from(index).unwrap(),
                             start,
                             Transform::from_translation(position),
                             &game_speed,
@@ -401,32 +405,31 @@ fn reposition_pieces_on_window_resize(
     }
 }
 
-fn piece_position(
-    dips_window: &DipsWindow,
-    belt_options: &ConveyorBeltOptions,
-    index: usize,
-) -> Vec3 {
-    let selectable_spacing = if index < belt_options.num_pieces_selectable.into() {
+fn piece_position(dips_window: &DipsWindow, belt_options: &ConveyorBeltOptions, index: u8) -> Vec3 {
+    let selectable_spacing = if index < belt_options.num_pieces_selectable {
         SELECTABLE_SEPARATION
     } else {
         0.
     };
 
     let base = Vec2::new(dips_window.width - LENGTH, dips_window.height - HEIGHT);
-    let offset = Vec2::new(index as f32 * PIECE_WIDTH - selectable_spacing, PIECE_WIDTH);
+    let offset = Vec2::new(
+        f32::from(index) * PIECE_WIDTH - selectable_spacing,
+        PIECE_WIDTH,
+    );
     (base + offset).round().extend(0.01)
 }
 
 fn maybe_spawn_piece(
     commands: &mut Commands,
     transform: Transform,
-    position: usize,
+    position: u8,
     root: Entity,
     conveyor_belt: &mut dyn ConveyorBelt,
     belt_options: &ConveyorBeltOptions,
 ) -> Option<Entity> {
     conveyor_belt.next().map(|piece| {
-        let color = if position < belt_options.num_pieces_selectable.into() {
+        let color = if position < belt_options.num_pieces_selectable {
             piece.color.render()
         } else {
             piece
@@ -444,7 +447,7 @@ fn maybe_spawn_piece(
                     piece.color,
                     color,
                 );
-                if position < belt_options.num_pieces_selectable.into() {
+                if position < belt_options.num_pieces_selectable {
                     commands.insert(Selectable);
                 }
                 commands.id()

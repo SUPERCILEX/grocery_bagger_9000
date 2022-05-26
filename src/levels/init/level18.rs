@@ -59,7 +59,7 @@ fn spawn_bag(
             )];
 
             for piece in pieces {
-                placed_pieces.send(PiecePlaced { piece, bag: *bag1 })
+                placed_pieces.send(PiecePlaced { piece, bag: *bag1 });
             }
         });
 
@@ -80,7 +80,7 @@ fn spawn_bag(
             )];
 
             for piece in pieces {
-                placed_pieces.send(PiecePlaced { piece, bag: *bag2 })
+                placed_pieces.send(PiecePlaced { piece, bag: *bag2 });
             }
         });
 }

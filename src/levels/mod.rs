@@ -30,7 +30,7 @@ impl Plugin for LevelsPlugin {
     }
 }
 
-pub const LAST_LEVEL: u16 = (LEVELS.len() - 1) as u16;
+pub const LAST_LEVEL: usize = LEVELS.len() - 1;
 
 fn init_levels(
     mut level_started: EventReader<LevelStarted>,

@@ -15,23 +15,23 @@ pub enum NominoColor {
 }
 
 impl NominoColor {
-    pub const COUNT: usize = NominoColor::_Last as usize;
+    pub const COUNT: usize = Self::_Last as usize;
 
-    pub fn render(&self) -> Color {
+    pub fn render(self) -> Color {
         match self {
-            NominoColor::Red => Color::RED,
-            NominoColor::Gold => Color::GOLD,
-            NominoColor::Blue => Color::CYAN,
-            NominoColor::Green => Color::GREEN,
-            NominoColor::Pink => Color::FUCHSIA,
+            Self::Red => Color::RED,
+            Self::Gold => Color::GOLD,
+            Self::Blue => Color::CYAN,
+            Self::Green => Color::GREEN,
+            Self::Pink => Color::FUCHSIA,
             #[cfg(feature = "debug")]
-            NominoColor::Debug => Color::WHITE,
-            NominoColor::_Last => unreachable!(),
+            Self::Debug => Color::WHITE,
+            Self::_Last => unreachable!(),
         }
     }
 
-    pub fn id(&self) -> usize {
-        *self as usize
+    pub const fn id(self) -> usize {
+        self as usize
     }
 }
 

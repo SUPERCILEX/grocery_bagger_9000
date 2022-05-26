@@ -28,7 +28,7 @@ pub struct PresetPiecesConveyorBelt<const N: usize> {
 }
 
 impl<const N: usize> PresetPiecesConveyorBelt<N> {
-    pub fn new(pieces: [Piece; N]) -> PresetPiecesConveyorBelt<N> {
+    pub const fn new(pieces: [Piece; N]) -> Self {
         Self { pieces, next: 0 }
     }
 }
@@ -109,7 +109,7 @@ pub struct InfinitePiecesConveyorBelt<const COLORS: usize> {
 }
 
 impl<const COLORS: usize> InfinitePiecesConveyorBelt<COLORS> {
-    pub fn new(colors: [NominoColor; COLORS]) -> Self {
+    pub const fn new(colors: [NominoColor; COLORS]) -> Self {
         Self { colors }
     }
 }

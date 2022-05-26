@@ -53,8 +53,8 @@ fn score_bags(
     for PiecePlaced { bag, .. } in piece_placements.iter() {
         let (bag_coords, bag_size) = bags.get(*bag).unwrap();
 
-        let width = bag_size.width();
-        let height = bag_size.height();
+        let width = bag_size.width() as usize;
+        let height = bag_size.height() as usize;
         let block_origin = bag_coords.translation - bag_size.origin() + const_vec3!([0.5, 0.5, 0.]);
 
         let mut bag_matrix = [[false; LARGEST_BAG_WIDTH]; LARGEST_BAG_HEIGHT];
@@ -63,7 +63,12 @@ fn score_bags(
         for (row_num, row) in bag_matrix[..height].iter_mut().enumerate() {
             for (col, cell) in row[..width].iter_mut().enumerate() {
                 rapier_context.intersections_with_point(
-                    block_origin + Vec3::new(col as f32, row_num as f32, 0.),
+                    block_origin
+                        + Vec3::new(
+                            f32::from(u8::try_from(col).unwrap()),
+                            f32::from(u8::try_from(row_num).unwrap()),
+                            0.,
+                        ),
                     NOMINO_COLLIDER_GROUP.into(),
                     None,
                     |color_id| {
@@ -91,11 +96,14 @@ fn score_bags(
             bag_size.capacity(),
         );
         let bag_score = current_score.score_map.entry(*bag).or_insert(0);
-        let diff = (total_bag_score as i16 - *bag_score as i16) as isize;
+        let diff = (i32::from(total_bag_score) - i32::from(*bag_score)) as isize;
 
         *bag_score = total_bag_score;
-        current_score.points = (current_score.points as isize + diff) as usize;
-        current_score.all_time_points = (current_score.all_time_points as isize + diff) as usize;
+        current_score.points =
+            usize::try_from(isize::try_from(current_score.points).unwrap() + diff).unwrap();
+        current_score.all_time_points =
+            usize::try_from(isize::try_from(current_score.all_time_points).unwrap() + diff)
+                .unwrap();
     }
 }
 
@@ -116,10 +124,11 @@ fn reset_score(
     }
 }
 
+#[allow(clippy::cast_sign_loss, clippy::cast_possible_truncation)]
 fn score_bag(
     bag_matrix: &[impl AsRef<[bool]>],
     block_count: u8,
-    color_block_count_map: &[u8; NominoColor::COUNT],
+    color_block_count_map: &[u8],
     capacity: u8,
 ) -> u16 {
     debug_assert!(color_block_count_map.is_sorted_by(|a, b| Some(b.cmp(a))));
@@ -127,8 +136,8 @@ fn score_bag(
     debug_assert_eq!(
         bag_matrix
             .iter()
-            .flat_map(|row| row.as_ref())
-            .map(|b| *b as u8)
+            .flat_map(AsRef::as_ref)
+            .map(|b| u8::from(*b))
             .sum::<u8>(),
         block_count
     );
@@ -140,46 +149,46 @@ fn score_bag(
     let num_holes = count_holes(bag_matrix, block_count, capacity);
     let base_score = calculate_base_score(color_block_count_map, capacity);
     let multiplier = calculate_bag_fill_multiplier(block_count, capacity);
-    let hole_penalty = num_holes as u16 * BLOCK_POINT_VALUE;
+    let hole_penalty = u16::from(num_holes) * BLOCK_POINT_VALUE;
 
-    (multiplier as f32 * (base_score - hole_penalty as f32)).round() as u16
+    (f32::from(multiplier) * (base_score - f32::from(hole_penalty))).round() as u16
 }
 
 fn count_holes(matrix: &[impl AsRef<[bool]>], block_count: u8, capacity: u8) -> u8 {
-    capacity - block_count - get_connected_empties(matrix).len() as u8
+    capacity - block_count - u8::try_from(get_connected_empties(matrix).len()).unwrap()
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 struct RowCol(usize, usize);
 
 impl RowCol {
-    fn left(&self) -> Option<Self> {
+    const fn left(&self) -> Option<Self> {
         if self.1 > 0 {
-            Some(RowCol(self.0, self.1 - 1))
+            Some(Self(self.0, self.1 - 1))
         } else {
             None
         }
     }
 
-    fn right(&self, max: usize) -> Option<Self> {
+    const fn right(&self, max: usize) -> Option<Self> {
         if self.1 < max {
-            Some(RowCol(self.0, self.1 + 1))
+            Some(Self(self.0, self.1 + 1))
         } else {
             None
         }
     }
 
-    fn up(&self, max: usize) -> Option<Self> {
+    const fn up(&self, max: usize) -> Option<Self> {
         if self.0 < max {
-            Some(RowCol(self.0 + 1, self.1))
+            Some(Self(self.0 + 1, self.1))
         } else {
             None
         }
     }
 
-    fn down(&self) -> Option<Self> {
+    const fn down(&self) -> Option<Self> {
         if self.0 > 0 {
-            Some(RowCol(self.0 - 1, self.1))
+            Some(Self(self.0 - 1, self.1))
         } else {
             None
         }
@@ -233,7 +242,7 @@ fn get_connected_empties(
     connected_to_top
 }
 
-fn calculate_base_score(color_map: &[u8; NominoColor::COUNT], capacity: u8) -> f32 {
+fn calculate_base_score(color_map: &[u8], capacity: u8) -> f32 {
     let mut score = 0.;
 
     for (i, color_count) in color_map.iter().enumerate() {
@@ -243,11 +252,11 @@ fn calculate_base_score(color_map: &[u8; NominoColor::COUNT], capacity: u8) -> f
 
         let perfect_bag_bonus = *color_count == capacity;
 
-        let mut raw_points = *color_count as u16 * BLOCK_POINT_VALUE;
+        let mut raw_points = u16::from(*color_count) * BLOCK_POINT_VALUE;
         if perfect_bag_bonus {
             raw_points += 100;
         }
-        score += raw_points as f32 * (1. + 1. / (1 + i) as f32);
+        score += f32::from(raw_points) * (1. + 1. / f32::from(1 + u8::try_from(i).unwrap()));
     }
 
     score
