@@ -1,6 +1,7 @@
 use std::fmt::Write;
 
 use bevy::{prelude::*, ui::PositionType::Absolute};
+use num_format::{Locale, ToFormattedString};
 
 use crate::{
     levels::{CurrentScore, LevelMarker, LevelSpawnStage, LevelStarted, ScoringSystems},
@@ -70,6 +71,11 @@ fn update_score(score: Res<CurrentScore>, mut text_query: Query<&mut Text, With<
         let text = &mut text.sections[0].value;
 
         text.clear();
-        write!(text, "Score: {}", score.points).unwrap();
+        write!(
+            text,
+            "Score: {}",
+            score.points.to_formatted_string(&Locale::en)
+        )
+        .unwrap();
     }
 }

@@ -1,4 +1,5 @@
 use bevy::{app::Plugin, prelude::*, ui::PositionType::Absolute};
+use num_format::{Locale, ToFormattedString};
 
 use crate::{
     animations,
@@ -124,7 +125,8 @@ fn spawn_score_recap(parent: &mut ChildBuilder, score: &CurrentScore, font: Hand
         text: Text::with_section(
             format!(
                 "Score: {}\nAll time score: {}",
-                score.points, score.all_time_points
+                score.points.to_formatted_string(&Locale::en),
+                score.all_time_points.to_formatted_string(&Locale::en)
             ),
             TextStyle {
                 font,
