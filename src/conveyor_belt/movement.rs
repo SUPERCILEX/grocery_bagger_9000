@@ -333,7 +333,7 @@ fn move_pieces(
                         Transform::from_translation(piece_position(
                             &dips_window,
                             &belt_options,
-                            u8::try_from(index).unwrap(),
+                            index.try_into().unwrap(),
                         )),
                         &game_speed,
                     ));
@@ -364,8 +364,7 @@ fn reposition_pieces_on_window_resize(
 
     if let Ok(pieces) = belt_pieces.get_single() {
         for (index, piece) in pieces.iter().enumerate() {
-            let position =
-                piece_position(&dips_window, &belt_options, u8::try_from(index).unwrap());
+            let position = piece_position(&dips_window, &belt_options, index.try_into().unwrap());
             if let Ok((mut transform, animator, target)) = piece_positions.get_mut(*piece) {
                 if let Some(target) = target {
                     let diff = position - target.translation;
@@ -388,7 +387,7 @@ fn reposition_pieces_on_window_resize(
                             0.,
                         );
                         let mut animator = animations::piece_loaded(
-                            u8::try_from(index).unwrap(),
+                            index.try_into().unwrap(),
                             start,
                             Transform::from_translation(position),
                             &game_speed,

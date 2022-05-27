@@ -99,11 +99,13 @@ fn score_bags(
         let diff = (i32::from(total_bag_score) - i32::from(*bag_score)) as isize;
 
         *bag_score = total_bag_score;
-        current_score.points =
-            usize::try_from(isize::try_from(current_score.points).unwrap() + diff).unwrap();
-        current_score.all_time_points =
-            usize::try_from(isize::try_from(current_score.all_time_points).unwrap() + diff)
-                .unwrap();
+        current_score.points = (isize::try_from(current_score.points).unwrap() + diff)
+            .try_into()
+            .unwrap();
+        current_score.all_time_points = (isize::try_from(current_score.all_time_points).unwrap()
+            + diff)
+            .try_into()
+            .unwrap();
     }
 }
 
@@ -155,14 +157,14 @@ fn score_bag(
 }
 
 fn count_holes(matrix: &[impl AsRef<[bool]>], block_count: u8, capacity: u8) -> u8 {
-    capacity - block_count - u8::try_from(get_connected_empties(matrix).len()).unwrap()
+    capacity - block_count - get_connected_empties_count(matrix)
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
-struct RowCol(usize, usize);
+struct RowCol(u8, u8);
 
 impl RowCol {
-    const fn left(&self) -> Option<Self> {
+    const fn left(self) -> Option<Self> {
         if self.1 > 0 {
             Some(Self(self.0, self.1 - 1))
         } else {
@@ -170,7 +172,7 @@ impl RowCol {
         }
     }
 
-    const fn right(&self, max: usize) -> Option<Self> {
+    const fn right(self, max: u8) -> Option<Self> {
         if self.1 < max {
             Some(Self(self.0, self.1 + 1))
         } else {
@@ -178,7 +180,7 @@ impl RowCol {
         }
     }
 
-    const fn up(&self, max: usize) -> Option<Self> {
+    const fn up(self, max: u8) -> Option<Self> {
         if self.0 < max {
             Some(Self(self.0 + 1, self.1))
         } else {
@@ -186,7 +188,7 @@ impl RowCol {
         }
     }
 
-    const fn down(&self) -> Option<Self> {
+    const fn down(self) -> Option<Self> {
         if self.0 > 0 {
             Some(Self(self.0 - 1, self.1))
         } else {
@@ -197,18 +199,17 @@ impl RowCol {
 
 /// Generates a vector containing the coordinates of all the empty spaces in the
 /// bag that are connected to an empty space on the top row.
-fn get_connected_empties(
-    matrix: &[impl AsRef<[bool]>],
-) -> SmallVec<[RowCol; LARGEST_BAG_CAPACITY]> {
-    let mut connected_to_top = SmallVec::<[RowCol; LARGEST_BAG_CAPACITY]>::new();
+fn get_connected_empties_count(matrix: &[impl AsRef<[bool]>]) -> u8 {
+    let mut connected_to_top = 0;
     let mut touched = HashSet::<RowCol>::with_capacity(LARGEST_BAG_CAPACITY);
     let mut frontier = VecDeque::<RowCol>::with_capacity(LARGEST_BAG_CAPACITY);
-    let top_row = matrix.len() - 1;
+    let top_row = u8::try_from(matrix.len() - 1).unwrap();
 
     for (i, filled) in matrix.last().unwrap().as_ref().iter().enumerate() {
+        let i = u8::try_from(i).unwrap();
         if !filled {
             let block = RowCol(top_row, i);
-            connected_to_top.push(block);
+            connected_to_top += 1;
 
             if let Some(neighbor) = block.down() {
                 frontier.push_back(neighbor);
@@ -220,13 +221,13 @@ fn get_connected_empties(
     }
 
     while let Some(block) = frontier.pop_front() {
-        let row = matrix[block.0].as_ref();
-        let filled = row[block.1];
+        let row = matrix[block.0 as usize].as_ref();
+        let filled = row[block.1 as usize];
 
         if filled {
             continue;
         }
-        connected_to_top.push(block);
+        connected_to_top += 1;
 
         let mut touch_neighbor = |neighbor| {
             if touched.insert(neighbor) {
@@ -234,7 +235,9 @@ fn get_connected_empties(
             }
         };
         block.left().map(&mut touch_neighbor);
-        block.right(row.len() - 1).map(&mut touch_neighbor);
+        block
+            .right((row.len() - 1).try_into().unwrap())
+            .map(&mut touch_neighbor);
         block.up(top_row).map(&mut touch_neighbor);
         block.down().map(&mut touch_neighbor);
     }
