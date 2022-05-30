@@ -5,19 +5,14 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     levels::LevelMarker,
-    nominos::{Nomino, PiecePlaced, DEG_180, DEG_MIRRORED},
+    nominos::{Nomino, DEG_180, DEG_MIRRORED},
     robot::{RobotMarker, RobotTiming},
     window_management::DipsWindow,
 };
 
 const LEVEL_COLOR: NominoColor = NominoColor::Pink;
 
-pub fn init_level(
-    mut commands: Commands,
-    dips_window: Res<DipsWindow>,
-    _: EventWriter<PiecePlaced>,
-    _: Res<AssetServer>,
-) {
+pub fn init_level(mut commands: Commands, dips_window: Res<DipsWindow>, _: Res<AssetServer>) {
     spawn_belt(&mut commands, &dips_window);
     commands.spawn_bag(&dips_window, [BAG_SIZE_LARGE]);
 

@@ -5,7 +5,7 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     levels::tutorials::spawn_text_tutorial,
-    nominos::{Nomino, PiecePlaced, DEG_MIRRORED},
+    nominos::{Nomino, DEG_MIRRORED},
     window_management::DipsWindow,
 };
 
@@ -14,7 +14,6 @@ const LEVEL_COLOR: NominoColor = NominoColor::Red;
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
-    _: EventWriter<PiecePlaced>,
     asset_server: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);

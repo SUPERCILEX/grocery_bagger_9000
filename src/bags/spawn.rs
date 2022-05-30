@@ -107,10 +107,9 @@ fn spawn_bag<'w, 's, 'a>(
     ));
     commands.insert(Sensor(true));
     commands.insert(BAG_COLLIDER_GROUP);
-    commands.insert(RigidBody::Fixed);
     commands.with_children(|parent| {
         parent
-            .spawn()
+            .spawn_bundle(TransformBundle::default())
             .insert(BagLidMarker)
             .insert(Collider::compound(vec![(
                 const_vec3!([0., bag_size.half_height() + LID_OFFSET, 0.]),
@@ -121,7 +120,7 @@ fn spawn_bag<'w, 's, 'a>(
             .insert(BAG_LID_COLLIDER_GROUP);
 
         parent
-            .spawn()
+            .spawn_bundle(TransformBundle::default())
             .insert(BagWallsMarker)
             .insert(Collider::compound(vec![
                 (
@@ -139,7 +138,7 @@ fn spawn_bag<'w, 's, 'a>(
             .insert(BAG_WALLS_COLLIDER_GROUP);
 
         parent
-            .spawn()
+            .spawn_bundle(TransformBundle::default())
             .insert(BagFloorMarker)
             .insert(Collider::compound(vec![(
                 const_vec3!([0., -bag_size.half_height(), 0.]),

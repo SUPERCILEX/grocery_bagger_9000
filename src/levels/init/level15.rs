@@ -5,7 +5,7 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
     levels::tutorials::spawn_text_tutorial,
-    nominos::{Nomino, PiecePlaced},
+    nominos::Nomino,
     window_management::DipsWindow,
 };
 
@@ -20,7 +20,6 @@ const LEVEL_OMINOS: [Nomino; 3] = [
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
-    _: EventWriter<PiecePlaced>,
     asset_server: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);

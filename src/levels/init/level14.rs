@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 
 use crate::{
-    bags::{compute_bag_coordinates, BagContainerSpawner, BAG_SIZE_SMALL},
+    bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    levels::{tutorials::spawn_text_tutorial, LevelMarker},
-    nominos::{Nomino, NominoSpawner, PiecePlaced, DEG_90, DEG_MIRRORED},
+    levels::tutorials::spawn_text_tutorial,
+    nominos::{Nomino, NominoSpawner, DEG_90, DEG_MIRRORED},
     window_management::DipsWindow,
 };
 
@@ -14,10 +14,9 @@ const LEVEL_COLOR: NominoColor = NominoColor::Gold;
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
-    placed_pieces: EventWriter<PiecePlaced>,
     asset_server: Res<AssetServer>,
 ) {
-    spawn_bag(&mut commands, &dips_window, placed_pieces);
+    spawn_bag(&mut commands, &dips_window);
     spawn_text_tutorial(
         &mut commands,
         asset_server,
@@ -26,62 +25,38 @@ pub fn init_level(
     spawn_belt(&mut commands, &dips_window);
 }
 
-fn spawn_bag(
-    commands: &mut Commands,
-    dips_window: &DipsWindow,
-    mut placed_pieces: EventWriter<PiecePlaced>,
-) {
+fn spawn_bag(commands: &mut Commands, dips_window: &DipsWindow) {
     let [bag1, bag2, ..] = commands
         .spawn_bag(dips_window, [BAG_SIZE_SMALL, BAG_SIZE_SMALL])
         .as_slice() else { unreachable!() };
-    let [coords1, coords2, ..] =
-        compute_bag_coordinates(dips_window, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]).as_slice() else { unreachable!() };
-    let (origin1, origin2) = (
-        Transform::from_translation(*coords1 - BAG_SIZE_SMALL.origin()),
-        Transform::from_translation(*coords2 - BAG_SIZE_SMALL.origin()),
-    );
+    let origin = Transform::from_translation(-BAG_SIZE_SMALL.origin());
 
-    commands
-        .spawn_bundle(TransformBundle::default())
-        .insert(LevelMarker)
-        .with_children(|parent| {
-            macro_rules! spawn {
-                ($nomino:expr, $transform:expr) => {{
-                    parent
-                        .spawn_nomino_into_bag(origin1, $nomino, LEVEL_COLOR, $transform)
-                        .id()
-                }};
-            }
-            let pieces = [spawn!(
-                Nomino::TetrominoL,
-                Transform::from_xyz(1., 0., 0.).with_rotation(DEG_90.inverse())
-            )];
+    commands.entity(*bag1).with_children(|parent| {
+        macro_rules! spawn {
+            ($nomino:expr, $transform:expr) => {{
+                parent
+                    .spawn_nomino_into_bag(origin, $nomino, LEVEL_COLOR, $transform)
+                    .id()
+            }};
+        }
 
-            for piece in pieces {
-                placed_pieces.send(PiecePlaced { piece, bag: *bag1 });
-            }
-        });
+        spawn!(
+            Nomino::TetrominoL,
+            Transform::from_xyz(1., 0., 0.).with_rotation(DEG_90.inverse())
+        );
+    });
 
-    commands
-        .spawn_bundle(TransformBundle::default())
-        .insert(LevelMarker)
-        .with_children(|parent| {
-            macro_rules! spawn {
-                ($nomino:expr, $transform:expr) => {{
-                    parent
-                        .spawn_nomino_into_bag(origin2, $nomino, LEVEL_COLOR, $transform)
-                        .id()
-                }};
-            }
-            let pieces = [spawn!(
-                Nomino::TetrominoSquare,
-                Transform::from_xyz(0., 0., 0.)
-            )];
+    commands.entity(*bag2).with_children(|parent| {
+        macro_rules! spawn {
+            ($nomino:expr, $transform:expr) => {{
+                parent
+                    .spawn_nomino_into_bag(origin, $nomino, LEVEL_COLOR, $transform)
+                    .id()
+            }};
+        }
 
-            for piece in pieces {
-                placed_pieces.send(PiecePlaced { piece, bag: *bag2 });
-            }
-        });
+        spawn!(Nomino::TetrominoSquare, Transform::from_xyz(0., 0., 0.));
+    });
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {

@@ -9,7 +9,7 @@ pub use transitions::{
     LevelFinished, LevelMarker, LevelSpawnStage, LevelStarted, LevelTransitionSystems,
 };
 
-use crate::{nominos::PiecePlaced, window_management::DipsWindow};
+use crate::window_management::DipsWindow;
 
 mod infinite_level;
 mod init;
@@ -35,15 +35,13 @@ pub const LAST_LEVEL: usize = LEVELS.len() - 1;
 fn init_levels(
     mut level_started: EventReader<LevelStarted>,
     commands: Commands,
-    // TODO shouldn't need after https://github.com/dimforge/bevy_rapier/issues/172
-    placed_pieces: EventWriter<PiecePlaced>,
     dips_window: Res<DipsWindow>,
     asset_server: Res<AssetServer>,
 ) {
     if let Some(started) = level_started.iter().last() {
         let level = **started as usize;
         if level < LEVELS.len() {
-            LEVELS[level](commands, dips_window, placed_pieces, asset_server);
+            LEVELS[level](commands, dips_window, asset_server);
         } else {
             infinite_level::init_level(commands, dips_window);
         }

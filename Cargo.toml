@@ -14,6 +14,7 @@ bevy = { git = "https://github.com/SUPERCILEX/bevy" }
 bevy_ecs = { git = "https://github.com/SUPERCILEX/bevy" }
 bevy_app = { git = "https://github.com/SUPERCILEX/bevy" }
 bevy_render = { git = "https://github.com/SUPERCILEX/bevy" }
+bevy_rapier3d = { git = "https://github.com/dimforge/bevy_rapier" }
 bevy_tweening = { git = "https://github.com/SUPERCILEX/bevy_tweening" }
 bevy_screen_diags = { git = "https://github.com/SUPERCILEX/bevy_screen_diags" }
 

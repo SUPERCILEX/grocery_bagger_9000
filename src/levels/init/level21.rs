@@ -4,7 +4,7 @@ use crate::{
     bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
-    nominos::{Nomino, PiecePlaced},
+    nominos::Nomino,
     window_management::DipsWindow,
 };
 
@@ -18,12 +18,7 @@ const LEVEL_OMINOS: [Nomino; 6] = [
     Nomino::TetrominoSkew,
 ];
 
-pub fn init_level(
-    mut commands: Commands,
-    dips_window: Res<DipsWindow>,
-    _: EventWriter<PiecePlaced>,
-    _: Res<AssetServer>,
-) {
+pub fn init_level(mut commands: Commands, dips_window: Res<DipsWindow>, _: Res<AssetServer>) {
     spawn_belt(&mut commands, &dips_window);
     commands.spawn_bag(
         &dips_window,

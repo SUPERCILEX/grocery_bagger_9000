@@ -5,7 +5,7 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     levels::transitions::LevelSpawnStage,
-    nominos::{Nomino, PiecePlaced, DEG_180, DEG_MIRRORED},
+    nominos::{Nomino, DEG_180, DEG_MIRRORED},
     window_management::DipsWindow,
 };
 
@@ -19,12 +19,7 @@ impl Plugin for Level3Plugin {
     }
 }
 
-pub fn init_level(
-    mut commands: Commands,
-    dips_window: Res<DipsWindow>,
-    _: EventWriter<PiecePlaced>,
-    _: Res<AssetServer>,
-) {
+pub fn init_level(mut commands: Commands, dips_window: Res<DipsWindow>, _: Res<AssetServer>) {
     spawn_belt(&mut commands, &dips_window);
     commands.spawn_bag(&dips_window, [BAG_SIZE_SMALL]);
 }
