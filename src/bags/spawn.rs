@@ -7,7 +7,7 @@ use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
 use crate::{
-    bags::{bag_size::BagSize, consts::*, positioning::compute_bag_coordinates},
+    bags::{bag_size::BagSize, consts::*, positioning::compute_container_coordinates},
     levels::LevelMarker,
     window_management::DipsWindow,
 };
@@ -51,13 +51,19 @@ impl<'w, 's> BagContainerSpawner for Commands<'w, 's> {
     ) -> SmallVec<[Entity; 3]> {
         let mut spawned_bags = SmallVec::new();
 
-        self.spawn_bundle(TransformBundle::default())
+        let base = compute_container_coordinates(window, sizes);
+        self.spawn_bundle(TransformBundle::from(Transform::from_translation(base)))
             .insert(LevelMarker)
             .insert(BagContainerMarker)
             .with_children(|parent| {
-                for (position, size) in compute_bag_coordinates(window, sizes).iter().zip(sizes) {
-                    spawned_bags
-                        .push(spawn_bag(parent, Transform::from_translation(*position), size).id());
+                let mut starting_position = Vec3::ZERO;
+                for size in sizes {
+                    starting_position.x += size.half_width();
+                    spawned_bags.push(
+                        spawn_bag(parent, Transform::from_translation(starting_position), size)
+                            .id(),
+                    );
+                    starting_position.x += size.half_width() + f32::from(BAG_SPACING);
                 }
             });
 

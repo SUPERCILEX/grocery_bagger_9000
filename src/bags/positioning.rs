@@ -2,7 +2,12 @@ use bevy::{prelude::*, window::WindowResized};
 use smallvec::SmallVec;
 
 use crate::{
-    bags::{bag_replacement::BagSetupSystems, consts::BAG_SPACING, BagMarker, BagSize},
+    bags::{
+        bag_replacement::{BagSetupSystems, Exiting},
+        consts::BAG_SPACING,
+        spawn::BagContainerMarker,
+        BagMarker, BagSize,
+    },
     conveyor_belt,
     nominos::{NominoMarker, PiecePlaced, PieceSystems},
     window_management::{DipsWindow, WindowSystems},
@@ -34,13 +39,13 @@ impl BagSnapper<f32> for BagCoord {
     }
 }
 
-pub fn compute_bag_coordinates(
+pub fn compute_container_coordinates(
     window: &DipsWindow,
-    bag_sizes: impl IntoIterator<Item = BagSize> + Clone,
-) -> SmallVec<[Vec3; 3]> {
+    bag_sizes: impl IntoIterator<Item = BagSize>,
+) -> Vec3 {
     let mut space_needed = 0;
     let mut max_half_height = 0.;
-    for size in bag_sizes.clone() {
+    for size in bag_sizes {
         space_needed += size.width() + BAG_SPACING;
         if size.half_height() > max_half_height {
             max_half_height = size.half_height();
@@ -48,29 +53,18 @@ pub fn compute_bag_coordinates(
     }
     space_needed -= BAG_SPACING;
 
-    let mut starting_position =
-        BagCoord((window.width - f32::from(space_needed)) / 2.).snap_to_grid();
-    debug_assert!(starting_position >= 0. && starting_position <= window.width);
-
+    let starting_position = BagCoord((window.width - f32::from(space_needed)) / 2.).snap_to_grid();
     let base_y = BagCoord((window.height - conveyor_belt::HEIGHT) / 2.).snap_to_grid();
+    debug_assert!(starting_position >= 0. && starting_position <= window.width);
+    debug_assert!(base_y >= 0. && base_y <= window.height);
 
-    let mut bags = SmallVec::new();
-    for bag in bag_sizes {
-        starting_position += bag.half_width();
-        bags.push(Vec3::new(
-            starting_position,
-            base_y - (max_half_height - bag.half_height()),
-            0.,
-        ));
-        starting_position += bag.half_width() + f32::from(BAG_SPACING);
-    }
-    bags
+    Vec3::new(starting_position, base_y, 0.)
 }
 
 fn transfer_piece_ownership(
     mut commands: Commands,
     mut piece_placements: EventReader<PiecePlaced>,
-    bag_positions: Query<&Transform, With<BagMarker>>,
+    bag_positions: Query<&GlobalTransform, With<BagMarker>>,
     mut piece_positions: Query<
         (&GlobalTransform, &mut Transform),
         (With<NominoMarker>, Without<BagMarker>),
@@ -88,7 +82,8 @@ fn transfer_piece_ownership(
 fn center_bags(
     mut resized_events: EventReader<WindowResized>,
     dips_window: Res<DipsWindow>,
-    mut bags: Query<(&mut Transform, &BagSize), (With<BagMarker>, Without<NominoMarker>)>,
+    bags: Query<&BagSize, (With<BagMarker>, Without<Exiting>)>,
+    mut container: Query<&mut Transform, With<BagContainerMarker>>,
 ) {
     if resized_events.iter().count() == 0 {
         return;
@@ -97,12 +92,10 @@ fn center_bags(
         return;
     }
 
-    let bag_positions = compute_bag_coordinates(
+    let base = compute_container_coordinates(
         &dips_window,
-        bags.iter().map(|bag| *bag.1).collect::<SmallVec<[_; 3]>>(),
+        bags.iter().copied().collect::<SmallVec<[_; 3]>>(),
     );
 
-    for (index, (mut bag_position, _)) in bags.iter_mut().enumerate() {
-        bag_position.translation = bag_positions[index];
-    }
+    container.single_mut().translation = base;
 }

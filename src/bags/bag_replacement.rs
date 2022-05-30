@@ -58,6 +58,9 @@ struct RemoveFilledBag(Entity);
 #[derive(Deref)]
 struct ReplaceFilledBag(Entity);
 
+#[derive(Component)]
+pub struct Exiting;
+
 fn detect_filled_bags(
     mut piece_placements: EventReader<PiecePlaced>,
     bags: Query<(&GlobalTransform, &BagSize), With<BagMarker>>,
@@ -161,21 +164,20 @@ fn remove_filled_bags(
     mut commands: Commands,
     mut remove_events: EventReader<RemoveFilledBag>,
     game_speed: Res<GameSpeed>,
-    bags: Query<(&Transform, &BagSize), With<BagMarker>>,
+    bags: Query<(&Transform, &GlobalTransform, &BagSize), With<BagMarker>>,
 ) {
     for removed_bag in remove_events.iter() {
-        let (current_bag_position, bag_size) = bags.get(**removed_bag).unwrap();
+        let (local, global, bag_size) = bags.get(**removed_bag).unwrap();
         let exit_bag_position = {
-            let mut p = *current_bag_position;
-            p.translation.y = -(bag_size.half_height() + 0.5);
+            let mut p = *local;
+            p.translation.y = -(global.translation.y + bag_size.half_height());
             p
         };
 
-        commands.entity(**removed_bag).insert(animations::bag_exit(
-            *current_bag_position,
-            exit_bag_position,
-            &game_speed,
-        ));
+        commands
+            .entity(**removed_bag)
+            .insert(animations::bag_exit(*local, exit_bag_position, &game_speed))
+            .insert(Exiting);
     }
 }
 
