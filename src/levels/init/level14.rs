@@ -85,44 +85,34 @@ fn spawn_bag(
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
+    macro_rules! piece {
+        (mirrored $nomino:expr) => {{
+            Piece {
+                nomino: $nomino,
+                color: LEVEL_COLOR,
+                rotation: *DEG_MIRRORED,
+            }
+        }};
+
+        ($nomino:expr) => {{
+            Piece {
+                nomino: $nomino,
+                color: LEVEL_COLOR,
+                rotation: Quat::IDENTITY,
+            }
+        }};
+    }
+
     commands.spawn_belt(
         dips_window,
         Box::new(PresetPiecesConveyorBelt::new([
-            Piece {
-                nomino: Nomino::TetrominoSkew,
-                color: LEVEL_COLOR,
-                rotation: *DEG_MIRRORED,
-            },
-            Piece {
-                nomino: Nomino::TetrominoL,
-                color: LEVEL_COLOR,
-                rotation: Quat::IDENTITY,
-            },
-            Piece {
-                nomino: Nomino::TetrominoSquare,
-                color: LEVEL_COLOR,
-                rotation: Quat::IDENTITY,
-            },
-            Piece {
-                nomino: Nomino::TetrominoStraight,
-                color: LEVEL_COLOR,
-                rotation: Quat::IDENTITY,
-            },
-            Piece {
-                nomino: Nomino::TetrominoL,
-                color: LEVEL_COLOR,
-                rotation: Quat::IDENTITY,
-            },
-            Piece {
-                nomino: Nomino::TetrominoL,
-                color: LEVEL_COLOR,
-                rotation: Quat::IDENTITY,
-            },
-            Piece {
-                nomino: Nomino::TetrominoStraight,
-                color: LEVEL_COLOR,
-                rotation: Quat::IDENTITY,
-            },
+            piece!(mirrored Nomino::TetrominoSkew),
+            piece!(Nomino::TetrominoL),
+            piece!(Nomino::TetrominoSquare),
+            piece!(Nomino::TetrominoStraight),
+            piece!(Nomino::TetrominoL),
+            piece!(Nomino::TetrominoL),
+            piece!(Nomino::TetrominoStraight),
         ])),
     );
 }

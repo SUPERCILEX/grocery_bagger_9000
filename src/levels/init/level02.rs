@@ -27,24 +27,22 @@ pub fn init_level(
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
+    macro_rules! piece {
+        ($nomino:expr) => {{
+            Piece {
+                nomino: $nomino,
+                color: LEVEL_COLOR,
+                rotation: Quat::IDENTITY,
+            }
+        }};
+    }
+
     commands.spawn_belt(
         dips_window,
         Box::new(PresetPiecesConveyorBelt::new([
-            Piece {
-                nomino: Nomino::TetrominoSquare,
-                color: LEVEL_COLOR,
-                rotation: Quat::IDENTITY,
-            },
-            Piece {
-                nomino: Nomino::TetrominoSquare,
-                color: LEVEL_COLOR,
-                rotation: Quat::IDENTITY,
-            },
-            Piece {
-                nomino: Nomino::TetrominoStraight,
-                color: LEVEL_COLOR,
-                rotation: Quat::IDENTITY,
-            },
+            piece!(Nomino::TetrominoSquare),
+            piece!(Nomino::TetrominoSquare),
+            piece!(Nomino::TetrominoStraight),
         ])),
     );
 }
