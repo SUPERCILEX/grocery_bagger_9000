@@ -309,16 +309,16 @@ fn move_pieces(
 
         for (index, piece) in belt_pieces.iter().enumerate() {
             if let Ok(position) = positions.get(*piece) {
-                commands
-                    .entity(*piece)
-                    .insert_bundle(animations::piece_movement(
-                        *position,
-                        Transform::from_translation(piece_position(
-                            &belt_options,
-                            index.try_into().unwrap(),
-                        )),
-                        &game_speed,
-                    ));
+                let target = Transform::from_translation(piece_position(
+                    &belt_options,
+                    index.try_into().unwrap(),
+                ));
+
+                if !position.translation.abs_diff_eq(target.translation, 1e-3) {
+                    commands
+                        .entity(*piece)
+                        .insert_bundle(animations::piece_movement(*position, target, &game_speed));
+                }
             }
         }
     }
