@@ -190,22 +190,10 @@ fn replace_filled_bags(
 ) {
     for replaced_bag in replace_events.iter() {
         let (current_bag_position, bag_size) = bags.get(**replaced_bag).unwrap();
-        let new_bag_start = {
-            let mut p = *current_bag_position;
-            p.scale = Vec3::ZERO;
-            p
-        };
-
         commands
             .entity(bag_container.single())
             .with_children(|parent| {
-                parent
-                    .spawn_replacement_bag(new_bag_start, *bag_size)
-                    .insert(animations::bag_enter(
-                        new_bag_start,
-                        *current_bag_position,
-                        &game_speed,
-                    ));
+                parent.spawn_replacement_bag(&game_speed, *current_bag_position, *bag_size);
             });
     }
 }

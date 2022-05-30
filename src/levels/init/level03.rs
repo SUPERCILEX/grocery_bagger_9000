@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    animations::GameSpeed,
     bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
@@ -19,9 +20,14 @@ impl Plugin for Level3Plugin {
     }
 }
 
-pub fn init_level(mut commands: Commands, dips_window: Res<DipsWindow>, _: Res<AssetServer>) {
+pub fn init_level(
+    mut commands: Commands,
+    dips_window: Res<DipsWindow>,
+    game_speed: Res<GameSpeed>,
+    _: Res<AssetServer>,
+) {
     spawn_belt(&mut commands, &dips_window);
-    commands.spawn_bag(&dips_window, [BAG_SIZE_SMALL]);
+    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_SMALL]);
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {

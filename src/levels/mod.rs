@@ -9,7 +9,7 @@ pub use transitions::{
     LevelFinished, LevelMarker, LevelSpawnStage, LevelStarted, LevelTransitionSystems,
 };
 
-use crate::window_management::DipsWindow;
+use crate::{animations::GameSpeed, window_management::DipsWindow};
 
 mod infinite_level;
 mod init;
@@ -36,14 +36,15 @@ fn init_levels(
     mut level_started: EventReader<LevelStarted>,
     commands: Commands,
     dips_window: Res<DipsWindow>,
+    game_speed: Res<GameSpeed>,
     asset_server: Res<AssetServer>,
 ) {
     if let Some(started) = level_started.iter().last() {
         let level = **started as usize;
         if level < LEVELS.len() {
-            LEVELS[level](commands, dips_window, asset_server);
+            LEVELS[level](commands, dips_window, game_speed, asset_server);
         } else {
-            infinite_level::init_level(commands, dips_window);
+            infinite_level::init_level(commands, dips_window, game_speed);
         }
     }
 }

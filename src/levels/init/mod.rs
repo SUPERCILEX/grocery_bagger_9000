@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::window_management::DipsWindow;
+use crate::{animations::GameSpeed, window_management::DipsWindow};
 
 pub mod level01;
 pub mod level02;
@@ -26,7 +26,7 @@ pub mod level21;
 pub mod level22;
 pub mod level23;
 
-pub const LEVELS: &[fn(Commands, Res<DipsWindow>, Res<AssetServer>)] = &[
+pub const LEVELS: &[fn(Commands, Res<DipsWindow>, Res<GameSpeed>, Res<AssetServer>)] = &[
     level01::init_level,
     level02::init_level,
     level03::init_level,

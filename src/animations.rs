@@ -111,9 +111,18 @@ pub fn error_shake(current: Transform, speed: &GameSpeed) -> UndoableAnimationBu
     }
 }
 
-pub fn bag_enter(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<Transform> {
+pub fn bag_enter(
+    from: Transform,
+    to: Transform,
+    speed: &GameSpeed,
+    is_replacement: bool,
+) -> Animator<Transform> {
     Animator::new(Sequence::new([
-        Box::new(Delay::new(Duration::from_millis(500))) as DynTweenable,
+        Box::new(Delay::new(Duration::from_millis(if is_replacement {
+            500
+        } else {
+            100
+        }))) as DynTweenable,
         Box::new(Tracks::new([
             Box::new(
                 Tween::new(

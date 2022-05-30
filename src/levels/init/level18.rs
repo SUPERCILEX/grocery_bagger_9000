@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    animations::GameSpeed,
     bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
@@ -15,9 +16,10 @@ const LEVEL_COLOR_2: NominoColor = NominoColor::Blue;
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
+    game_speed: Res<GameSpeed>,
     asset_server: Res<AssetServer>,
 ) {
-    spawn_bag(&mut commands, &dips_window);
+    spawn_bag(&mut commands, &dips_window, &game_speed);
     spawn_text_tutorial(
         &mut commands,
         asset_server,
@@ -26,9 +28,9 @@ pub fn init_level(
     spawn_belt(&mut commands, &dips_window);
 }
 
-fn spawn_bag(commands: &mut Commands, dips_window: &DipsWindow) {
+fn spawn_bag(commands: &mut Commands, dips_window: &DipsWindow, game_speed: &GameSpeed) {
     let [bag1, bag2, ..] = commands
-        .spawn_bag(dips_window, [BAG_SIZE_SMALL, BAG_SIZE_SMALL])
+        .spawn_bag(dips_window, game_speed, [BAG_SIZE_SMALL, BAG_SIZE_SMALL])
         .as_slice() else { unreachable!() };
     let origin = Transform::from_translation(-BAG_SIZE_SMALL.origin());
 

@@ -7,6 +7,8 @@ use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
 use crate::{
+    animations,
+    animations::GameSpeed,
     bags::{bag_size::BagSize, consts::*, positioning::compute_container_coordinates},
     levels::LevelMarker,
     window_management::DipsWindow,
@@ -31,6 +33,7 @@ pub trait BagContainerSpawner {
     fn spawn_bag(
         &mut self,
         window: &DipsWindow,
+        game_speed: &GameSpeed,
         sizes: impl IntoIterator<Item = BagSize> + Copy,
     ) -> SmallVec<[Entity; 3]>;
 }
@@ -38,6 +41,7 @@ pub trait BagContainerSpawner {
 pub trait BagSpawner<'w, 's> {
     fn spawn_replacement_bag(
         &mut self,
+        game_speed: &GameSpeed,
         transform: Transform,
         bag_size: BagSize,
     ) -> EntityCommands<'w, 's, '_>;
@@ -47,6 +51,7 @@ impl<'w, 's> BagContainerSpawner for Commands<'w, 's> {
     fn spawn_bag(
         &mut self,
         window: &DipsWindow,
+        game_speed: &GameSpeed,
         sizes: impl IntoIterator<Item = BagSize> + Copy,
     ) -> SmallVec<[Entity; 3]> {
         let mut spawned_bags = SmallVec::new();
@@ -60,8 +65,14 @@ impl<'w, 's> BagContainerSpawner for Commands<'w, 's> {
                 for size in sizes {
                     starting_position.x += size.half_width();
                     spawned_bags.push(
-                        spawn_bag(parent, Transform::from_translation(starting_position), size)
-                            .id(),
+                        spawn_bag(
+                            parent,
+                            game_speed,
+                            Transform::from_translation(starting_position),
+                            size,
+                            false,
+                        )
+                        .id(),
                     );
                     starting_position.x += size.half_width() + f32::from(BAG_SPACING);
                 }
@@ -74,17 +85,20 @@ impl<'w, 's> BagContainerSpawner for Commands<'w, 's> {
 impl<'w, 's, 'a> BagSpawner<'w, 's> for ChildBuilder<'w, 's, 'a> {
     fn spawn_replacement_bag(
         &mut self,
+        game_speed: &GameSpeed,
         transform: Transform,
         bag_size: BagSize,
     ) -> EntityCommands<'w, 's, '_> {
-        spawn_bag(self, transform, bag_size)
+        spawn_bag(self, game_speed, transform, bag_size, true)
     }
 }
 
 fn spawn_bag<'w, 's, 'a>(
     commands: &'a mut ChildBuilder<'w, 's, '_>,
+    game_speed: &GameSpeed,
     transform: Transform,
     bag_size: BagSize,
+    is_replacement: bool,
 ) -> EntityCommands<'w, 's, 'a> {
     let draw_mode = DrawMode::Outlined {
         fill_mode: FillMode {
@@ -94,13 +108,20 @@ fn spawn_bag<'w, 's, 'a>(
         outline_mode: StrokeMode::new(BAG_OUTLINE_COLOR, 0.15),
     };
 
+    let entry_transform = transform.with_scale(Vec3::ZERO);
     let mut commands = commands.spawn_bundle(GeometryBuilder::build_as(
         &bag_path(bag_size),
         draw_mode,
-        transform,
+        entry_transform,
     ));
     commands.insert(BagMarker);
     commands.insert(bag_size);
+    commands.insert(animations::bag_enter(
+        entry_transform,
+        transform,
+        game_speed,
+        is_replacement,
+    ));
 
     commands.insert(Collider::cuboid(
         bag_size.half_width(),

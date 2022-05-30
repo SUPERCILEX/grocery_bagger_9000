@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    animations::GameSpeed,
     bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
@@ -20,6 +21,7 @@ const LEVEL_OMINOS: [Nomino; 3] = [
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
+    game_speed: Res<GameSpeed>,
     asset_server: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
@@ -28,7 +30,7 @@ pub fn init_level(
         asset_server,
         "Some levels are randomly generated\nand may not have a perfect solution",
     );
-    commands.spawn_bag(&dips_window, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]);
+    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]);
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
