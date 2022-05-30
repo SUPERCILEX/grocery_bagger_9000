@@ -59,13 +59,8 @@ bitflags! {
     }
 }
 
+// TODO remove and check for with_speed stuff after animation lib upgrade
 type DynTweenable = Box<dyn Tweenable<Transform> + Send + Sync + 'static>;
-
-struct NoopLens;
-
-impl<T> Lens<T> for NoopLens {
-    fn lerp(&mut self, _: &mut T, _: f32) {}
-}
 
 struct TeleportLens<T>(T);
 
@@ -118,15 +113,7 @@ pub fn error_shake(current: Transform, speed: &GameSpeed) -> UndoableAnimationBu
 
 pub fn bag_enter(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<Transform> {
     Animator::new(Sequence::new([
-        Box::new(
-            Tween::new(
-                EaseMethod::Linear,
-                TweeningType::Once,
-                Duration::from_millis(500),
-                NoopLens,
-            )
-            .with_speed(**speed),
-        ) as DynTweenable,
+        Box::new(Delay::new(Duration::from_millis(500))) as DynTweenable,
         Box::new(Tracks::new([
             Box::new(
                 Tween::new(
@@ -146,7 +133,7 @@ pub fn bag_enter(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<
             ) as DynTweenable,
             Box::new(Sequence::new([
                 Tween::new(
-                    EaseMethod::EaseFunction(EaseFunction::CircularIn),
+                    EaseFunction::CircularIn,
                     TweeningType::Once,
                     Duration::from_millis(100),
                     TransformPositionLens {
@@ -156,7 +143,7 @@ pub fn bag_enter(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<
                 )
                 .with_speed(**speed),
                 Tween::new(
-                    EaseMethod::EaseFunction(EaseFunction::CircularOut),
+                    EaseFunction::CircularOut,
                     TweeningType::Once,
                     Duration::from_millis(100),
                     TransformPositionLens {
@@ -194,7 +181,7 @@ pub fn piece_placed(current: Transform, speed: &GameSpeed) -> Animator<Transform
 
     Animator::new(Sequence::new([
         Tween::new(
-            EaseMethod::EaseFunction(EaseFunction::CircularIn),
+            EaseFunction::CircularIn,
             TweeningType::Once,
             Duration::from_millis(100),
             TransformScaleLens {
@@ -204,7 +191,7 @@ pub fn piece_placed(current: Transform, speed: &GameSpeed) -> Animator<Transform
         )
         .with_speed(**speed),
         Tween::new(
-            EaseMethod::EaseFunction(EaseFunction::CircularOut),
+            EaseFunction::CircularOut,
             TweeningType::Once,
             Duration::from_millis(150),
             TransformScaleLens {
@@ -250,14 +237,8 @@ pub fn piece_loaded(
 
     if index > 0 {
         Animator::new(Sequence::new([
-            Tween::new(
-                EaseMethod::Linear,
-                TweeningType::Once,
-                Duration::from_millis(10 * u64::from(index)),
-                NoopLens,
-            )
-            .with_speed(**speed),
-            enter,
+            Box::new(Delay::new(Duration::from_millis(10 * u64::from(index)))) as DynTweenable,
+            Box::new(enter) as DynTweenable,
         ]))
     } else {
         Animator::new(enter)
@@ -271,7 +252,7 @@ pub fn piece_movement(
 ) -> RedoableAnimationBundle<Transform> {
     let animator = Animator::new(
         Tween::new(
-            EaseMethod::EaseFunction(EaseFunction::CubicOut),
+            EaseFunction::CubicOut,
             TweeningType::Once,
             Duration::from_secs(3),
             TransformPositionLens {
@@ -292,7 +273,7 @@ pub fn piece_movement(
 pub fn undo_selection(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<Transform> {
     Animator::new(Tracks::new([
         Tween::new(
-            EaseMethod::EaseFunction(EaseFunction::ExponentialInOut),
+            EaseFunction::ExponentialInOut,
             TweeningType::Once,
             Duration::from_millis(250),
             TransformRotationLens {
@@ -302,7 +283,7 @@ pub fn undo_selection(from: Transform, to: Transform, speed: &GameSpeed) -> Anim
         )
         .with_speed(**speed),
         Tween::new(
-            EaseMethod::EaseFunction(EaseFunction::ExponentialInOut),
+            EaseFunction::ExponentialInOut,
             TweeningType::Once,
             Duration::from_millis(250),
             TransformPositionLens {
@@ -377,7 +358,7 @@ pub fn mouse_tutorial_switch_rotation(
         ])) as DynTweenable,
         Box::new(
             Tween::new(
-                EaseMethod::Linear,
+                EaseMethod::Discrete(0.),
                 TweeningType::Once,
                 Duration::from_millis(25),
                 TeleportLens(to.with_scale(Vec3::ZERO)),
