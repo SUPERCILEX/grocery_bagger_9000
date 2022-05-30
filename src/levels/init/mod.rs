@@ -24,6 +24,7 @@ pub mod level19;
 pub mod level20;
 pub mod level21;
 pub mod level22;
+pub mod level23;
 
 pub const LEVELS: &[fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<AssetServer>)] = &[
     level01::init_level,
@@ -48,4 +49,5 @@ pub const LEVELS: &[fn(Commands, Res<DipsWindow>, EventWriter<PiecePlaced>, Res<
     level20::init_level,
     level21::init_level,
     level22::init_level,
+    level23::init_level,
 ];
