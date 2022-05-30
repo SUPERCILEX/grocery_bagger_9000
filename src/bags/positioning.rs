@@ -2,13 +2,9 @@ use bevy::{prelude::*, window::WindowResized};
 use smallvec::SmallVec;
 
 use crate::{
-    bags::{
-        bag_replacement::{BagPieces, BagSetupSystems},
-        consts::BAG_SPACING,
-        BagMarker, BagSize,
-    },
+    bags::{bag_replacement::BagSetupSystems, consts::BAG_SPACING, BagMarker, BagSize},
     conveyor_belt,
-    nominos::{NominoMarker, PiecePlaced},
+    nominos::{NominoMarker, PiecePlaced, PieceSystems},
     window_management::{DipsWindow, WindowSystems},
 };
 
@@ -16,11 +12,7 @@ pub struct BagPositioningPlugin;
 
 impl Plugin for BagPositioningPlugin {
     fn build(&self, app: &mut App) {
-        // TODO add back after https://github.com/dimforge/bevy_rapier/issues/172
-        // app.add_system_to_stage(
-        //     CoreStage::PostUpdate,
-        //     transfer_piece_ownership.after(TransformSystem::TransformPropagate),
-        // );
+        app.add_system(transfer_piece_ownership.after(PieceSystems));
         app.add_system(center_bags.after(WindowSystems).after(BagSetupSystems));
     }
 }
@@ -75,8 +67,6 @@ pub fn compute_bag_coordinates(
     bags
 }
 
-// TODO https://github.com/dimforge/bevy_rapier/issues/172
-#[allow(dead_code)]
 fn transfer_piece_ownership(
     mut commands: Commands,
     mut piece_placements: EventReader<PiecePlaced>,
@@ -95,15 +85,10 @@ fn transfer_piece_ownership(
     }
 }
 
-// TODO only move bags after https://github.com/dimforge/bevy_rapier/issues/172
 fn center_bags(
     mut resized_events: EventReader<WindowResized>,
     dips_window: Res<DipsWindow>,
-    mut piece_positions: Query<&mut Transform, (With<NominoMarker>, Without<BagMarker>)>,
-    mut bags: Query<
-        (&mut Transform, &BagPieces, &BagSize),
-        (With<BagMarker>, Without<NominoMarker>),
-    >,
+    mut bags: Query<(&mut Transform, &BagSize), (With<BagMarker>, Without<NominoMarker>)>,
 ) {
     if resized_events.iter().count() == 0 {
         return;
@@ -114,16 +99,10 @@ fn center_bags(
 
     let bag_positions = compute_bag_coordinates(
         &dips_window,
-        bags.iter().map(|bag| *bag.2).collect::<SmallVec<[_; 3]>>(),
+        bags.iter().map(|bag| *bag.1).collect::<SmallVec<[_; 3]>>(),
     );
 
-    for (index, (mut bag_position, bag_pieces, _)) in bags.iter_mut().enumerate() {
-        let old_position = bag_position.translation;
+    for (index, (mut bag_position, _)) in bags.iter_mut().enumerate() {
         bag_position.translation = bag_positions[index];
-        let diff = bag_position.translation - old_position;
-
-        for piece in &**bag_pieces {
-            piece_positions.get_mut(*piece).unwrap().translation += diff;
-        }
     }
 }

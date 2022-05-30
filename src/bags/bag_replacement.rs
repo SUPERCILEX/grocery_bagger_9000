@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use smallvec::SmallVec;
 
 use crate::{
     animations,
@@ -9,7 +8,6 @@ use crate::{
         spawn::{BagContainerMarker, BagLidMarker, BagMarker},
         BagSize, BagSpawner, BAG_LID_COLLIDER_GROUP,
     },
-    conveyor_belt,
     conveyor_belt::BeltEmptyEvent,
     nominos::{NominoMarker, PiecePlaced, PieceSystems, NOMINO_COLLIDER_GROUP},
 };
@@ -60,20 +58,16 @@ struct RemoveFilledBag(Entity);
 #[derive(Deref)]
 struct ReplaceFilledBag(Entity);
 
-#[derive(Component, Deref, DerefMut)]
-pub struct BagPieces(pub SmallVec<[Entity; conveyor_belt::MAX_NUM_PIECES as usize]>);
-
 fn detect_filled_bags(
     mut piece_placements: EventReader<PiecePlaced>,
-    mut bags: Query<(&GlobalTransform, &mut BagPieces, &BagSize), With<BagMarker>>,
+    bags: Query<(&GlobalTransform, &BagSize), With<BagMarker>>,
     mut filled_events: EventWriter<BagFilled>,
     rapier_context: Res<RapierContext>,
     piece_colliders: Query<(&GlobalTransform, &Collider), With<NominoMarker>>,
     lid_collider_bag: Query<&Parent, With<BagLidMarker>>,
 ) {
     for PiecePlaced { piece, bag } in piece_placements.iter() {
-        let (bag_coords, mut bag_pieces, bag_size) = bags.get_mut(*bag).unwrap();
-        bag_pieces.push(*piece);
+        let (bag_coords, bag_size) = bags.get(*bag).unwrap();
 
         {
             let (transform, collider) = piece_colliders.get(*piece).unwrap();
@@ -168,11 +162,6 @@ fn remove_filled_bags(
     mut remove_events: EventReader<RemoveFilledBag>,
     game_speed: Res<GameSpeed>,
     bags: Query<(&Transform, &BagSize), With<BagMarker>>,
-    bag_pieces: Query<&BagPieces, With<BagMarker>>,
-    mut piece_positions: Query<
-        (&GlobalTransform, &mut Transform),
-        (With<NominoMarker>, Without<BagMarker>),
-    >,
 ) {
     for removed_bag in remove_events.iter() {
         let (current_bag_position, bag_size) = bags.get(**removed_bag).unwrap();
@@ -187,15 +176,6 @@ fn remove_filled_bags(
             exit_bag_position,
             &game_speed,
         ));
-
-        // TODO remove after https://github.com/dimforge/bevy_rapier/issues/172
-        for piece in &**bag_pieces.get(**removed_bag).unwrap() {
-            commands.entity(**removed_bag).add_child(*piece);
-
-            let bag_global = current_bag_position.translation;
-            let (piece_global, mut piece_local) = piece_positions.get_mut(*piece).unwrap();
-            piece_local.translation = piece_global.translation - bag_global;
-        }
     }
 }
 

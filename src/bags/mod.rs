@@ -5,8 +5,6 @@ pub use bag_replacement::{BagFilled, BagReplacementSystems};
 pub use bag_size::BagSize;
 pub use consts::*;
 use positioning::BagPositioningPlugin;
-// TODO remove https://github.com/dimforge/bevy_rapier/issues/172
-pub use positioning::compute_bag_coordinates;
 pub use spawn::{BagContainerSpawner, BagMarker, BagSpawner};
 
 mod bag_replacement;

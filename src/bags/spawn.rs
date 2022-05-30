@@ -7,10 +7,7 @@ use bevy_rapier3d::prelude::*;
 use smallvec::SmallVec;
 
 use crate::{
-    bags::{
-        bag_replacement::BagPieces, bag_size::BagSize, consts::*,
-        positioning::compute_bag_coordinates,
-    },
+    bags::{bag_size::BagSize, consts::*, positioning::compute_bag_coordinates},
     levels::LevelMarker,
     window_management::DipsWindow,
 };
@@ -97,7 +94,6 @@ fn spawn_bag<'w, 's, 'a>(
         transform,
     ));
     commands.insert(BagMarker);
-    commands.insert(BagPieces(SmallVec::default()));
     commands.insert(bag_size);
 
     commands.insert(Collider::cuboid(
