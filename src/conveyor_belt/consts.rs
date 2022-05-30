@@ -3,7 +3,7 @@ use bevy::prelude::Color;
 pub const MAX_NUM_PIECES: u8 = 9;
 pub const PIECE_WIDTH: f32 = 3.;
 pub const HEIGHT: f32 = PIECE_WIDTH * 2.;
-pub const LENGTH: f32 = PIECE_WIDTH * MAX_NUM_PIECES as f32;
+pub const LENGTH: f32 = PIECE_WIDTH * MAX_NUM_PIECES as f32 + 2.5 * SELECTABLE_SEPARATION;
 
 pub const SELECTABLE_SEPARATION: f32 = 2.;
 pub const NON_SELECTABLE_LIGHTNESS: f32 = 0.38;

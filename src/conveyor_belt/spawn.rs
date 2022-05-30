@@ -26,10 +26,6 @@ pub type BoxedConveyorBelt = Box<dyn ConveyorBelt + Send + Sync>;
 #[derive(Component)]
 pub struct ConveyorBeltMarker;
 
-// TODO remove after https://github.com/dimforge/bevy_rapier/issues/172
-#[derive(Component)]
-pub struct ConveyorBeltHackMarker;
-
 #[derive(Component)]
 pub struct BeltSelectableBackgroundMarker;
 
@@ -57,15 +53,9 @@ impl<'w, 's> ConveyorBeltSpawner<'w, 's> for Commands<'w, 's> {
         dips_window: &DipsWindow,
         belt: BoxedConveyorBelt,
     ) -> EntityCommands<'w, 's, '_> {
-        // TODO remove and put directly in real belt entity below after
-        //  https://github.com/dimforge/bevy_rapier/issues/172
-        self.spawn_bundle(TransformBundle::from_transform(compute_belt_position(
-            dips_window,
-        )))
-        .insert(LevelMarker)
-        .insert(ConveyorBeltHackMarker);
-
-        let mut commands = self.spawn_bundle(TransformBundle::default());
+        let mut commands = self.spawn_bundle(TransformBundle::from_transform(
+            compute_belt_position(dips_window),
+        ));
         commands.insert(LevelMarker);
         commands.insert(ConveyorBeltInstance(belt));
         commands.insert(BeltPieceIds::default());

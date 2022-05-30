@@ -1,22 +1,19 @@
-use bevy::{prelude::*, window::WindowResized};
+use bevy::{math::const_vec3, prelude::*};
 use bevy_prototype_lyon::{draw::DrawMode, entity::Path};
-use bevy_tweening::{AnimationSystem, Animator};
 use smallvec::SmallVec;
 
 use crate::{
     animations,
-    animations::{GameSpeed, Target},
+    animations::GameSpeed,
     conveyor_belt::{
         consts::{
-            HEIGHT, LENGTH, MAX_NUM_PIECES, NON_SELECTABLE_LIGHTNESS, PIECE_WIDTH,
-            SELECTABLE_SEPARATION,
+            LENGTH, MAX_NUM_PIECES, NON_SELECTABLE_LIGHTNESS, PIECE_WIDTH, SELECTABLE_SEPARATION,
         },
         positioning::compute_selectable_background,
         spawn::{
             nonselectable_background_path, selectable_background_path,
             BeltNonselectableBackgroundMarker, BeltSelectableBackgroundMarker,
-            ConveyorBeltBackgroundSpawner, ConveyorBeltHackMarker, ConveyorBeltInstance,
-            ConveyorBeltMarker,
+            ConveyorBeltBackgroundSpawner, ConveyorBeltInstance, ConveyorBeltMarker,
         },
         ConveyorBelt, ConveyorBeltOptions,
     },
@@ -26,7 +23,7 @@ use crate::{
         AttemptedPlacement, NominoMarker, NominoSpawner, PiecePlaced, PieceSystems, Selectable,
         Selected, DEG_90, DEG_MIRRORED,
     },
-    window_management::{DipsWindow, WindowSystems},
+    window_management::WindowSystems,
 };
 
 pub struct ConveyorBeltMovementPlugin;
@@ -45,11 +42,6 @@ impl Plugin for ConveyorBeltMovementPlugin {
                 .after(replace_pieces),
         );
         app.add_system(move_pieces.after(WindowSystems).after(replace_pieces));
-        app.add_system(
-            reposition_pieces_on_window_resize
-                .after(WindowSystems)
-                .after(AnimationSystem::AnimationUpdate),
-        );
         app.add_system(update_background_on_num_selectable_pieces_changed);
         app.add_system_to_stage(
             CoreStage::PreUpdate,
@@ -70,8 +62,6 @@ fn init_pieces(
         (Entity, &mut ConveyorBeltInstance, &mut BeltPieceIds),
         With<ConveyorBeltMarker>,
     >,
-    conveyor_belt_hack: Query<Entity, With<ConveyorBeltHackMarker>>,
-    dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
     belt_options: Res<ConveyorBeltOptions>,
 ) {
@@ -81,11 +71,8 @@ fn init_pieces(
 
     let (id, mut conveyor_belt, mut belt_pieces) = conveyor_belt.single_mut();
     for i in 0..MAX_NUM_PIECES {
-        let start = Transform::from_xyz(
-            dips_window.width + PIECE_WIDTH,
-            dips_window.height - HEIGHT + PIECE_WIDTH,
-            0.,
-        );
+        let start =
+            Transform::from_translation(const_vec3!([LENGTH + PIECE_WIDTH, PIECE_WIDTH, 0.]));
         let spawned = maybe_spawn_piece(
             &mut commands,
             start,
@@ -100,7 +87,7 @@ fn init_pieces(
             commands.entity(spawned).insert(animations::piece_loaded(
                 i,
                 start,
-                Transform::from_translation(piece_position(&dips_window, &belt_options, i)),
+                Transform::from_translation(piece_position(&belt_options, i)),
                 &game_speed,
             ));
         } else {
@@ -109,7 +96,7 @@ fn init_pieces(
     }
 
     commands
-        .entity(conveyor_belt_hack.single())
+        .entity(id)
         .with_children(|parent| parent.spawn_belt_background(belt_options.num_pieces_selectable));
 }
 
@@ -122,7 +109,6 @@ fn replace_pieces(
     mut colors: Query<&mut DrawMode, (With<NominoMarker>, Without<Selectable>)>,
     mut placed_pieces: EventReader<PiecePlaced>,
     belt_options: Res<ConveyorBeltOptions>,
-    dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
 ) {
     for PiecePlaced {
@@ -149,11 +135,10 @@ fn replace_pieces(
             }
 
             let position = MAX_NUM_PIECES - 1;
-            let target =
-                Transform::from_translation(piece_position(&dips_window, &belt_options, position));
+            let target = Transform::from_translation(piece_position(&belt_options, position));
             let from = {
                 let mut from = target;
-                from.translation.x = dips_window.width + PIECE_WIDTH;
+                from.translation.x = LENGTH + PIECE_WIDTH;
                 from
             };
 
@@ -198,7 +183,6 @@ fn check_for_piece_selection_undos(
     piece_positions: Query<&Transform, (With<NominoMarker>, With<Selected>)>,
     gb9000: Res<GroceryBagger9000>,
     belt_options: Res<ConveyorBeltOptions>,
-    dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
 ) {
     for attempted in attempted_placement_events.iter() {
@@ -211,9 +195,8 @@ fn check_for_piece_selection_undos(
         )
         .unwrap();
         let from = piece_positions.get(**attempted).unwrap();
-        let mut transform =
-            Transform::from_translation(piece_position(&dips_window, &belt_options, position))
-                .with_rotation(from.rotation);
+        let mut transform = Transform::from_translation(piece_position(&belt_options, position))
+            .with_rotation(from.rotation);
 
         let mut unmirrored_rotation = transform.rotation;
         if transform.rotation.x.abs() > 1e-5 || transform.rotation.y.abs() > 1e-5 {
@@ -304,7 +287,6 @@ enum PieceMovementFsm {
 fn move_pieces(
     mut commands: Commands,
     belt_options: Res<ConveyorBeltOptions>,
-    dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
     belt_pieces: Query<(&BeltPieceIds, ChangeTrackers<BeltPieceIds>), With<ConveyorBeltMarker>>,
     mut fsm: Local<PieceMovementFsm>,
@@ -331,7 +313,6 @@ fn move_pieces(
                     .insert_bundle(animations::piece_movement(
                         *position,
                         Transform::from_translation(piece_position(
-                            &dips_window,
                             &belt_options,
                             index.try_into().unwrap(),
                         )),
@@ -342,81 +323,22 @@ fn move_pieces(
     }
 }
 
-fn reposition_pieces_on_window_resize(
-    mut commands: Commands,
-    mut resized_events: EventReader<WindowResized>,
-    dips_window: Res<DipsWindow>,
-    game_speed: Res<GameSpeed>,
-    belt_options: Res<ConveyorBeltOptions>,
-    belt_pieces: Query<&BeltPieceIds, With<ConveyorBeltMarker>>,
-    mut piece_positions: Query<
-        (
-            &mut Transform,
-            Option<&Animator<Transform>>,
-            Option<&Target<Transform>>,
-        ),
-        (With<NominoMarker>, Without<Selected>),
-    >,
-) {
-    if resized_events.iter().count() == 0 {
-        return;
-    }
-
-    if let Ok(pieces) = belt_pieces.get_single() {
-        for (index, piece) in pieces.iter().enumerate() {
-            let position = piece_position(&dips_window, &belt_options, index.try_into().unwrap());
-            if let Ok((mut transform, animator, target)) = piece_positions.get_mut(*piece) {
-                if let Some(target) = target {
-                    let diff = position - target.translation;
-                    transform.translation += diff;
-
-                    commands
-                        .entity(*piece)
-                        .insert_bundle(animations::piece_movement(
-                            *transform,
-                            transform.with_translation(position),
-                            &game_speed,
-                        ));
-                } else if let Some(old_animator) = animator {
-                    if old_animator.progress() > 1. - 1e-5 {
-                        transform.translation = position;
-                    } else {
-                        let start = Transform::from_xyz(
-                            dips_window.width + PIECE_WIDTH,
-                            dips_window.height - HEIGHT + PIECE_WIDTH,
-                            0.,
-                        );
-                        let mut animator = animations::piece_loaded(
-                            index.try_into().unwrap(),
-                            start,
-                            Transform::from_translation(position),
-                            &game_speed,
-                        );
-                        animator.set_progress(old_animator.progress());
-
-                        commands.entity(*piece).insert(animator);
-                    }
-                } else {
-                    transform.translation = position;
-                }
-            }
-        }
-    }
-}
-
-fn piece_position(dips_window: &DipsWindow, belt_options: &ConveyorBeltOptions, index: u8) -> Vec3 {
+fn piece_position(belt_options: &ConveyorBeltOptions, index: u8) -> Vec3 {
     let selectable_spacing = if index < belt_options.num_pieces_selectable {
         SELECTABLE_SEPARATION
     } else {
         0.
     };
 
-    let base = Vec2::new(dips_window.width - LENGTH, dips_window.height - HEIGHT);
-    let offset = Vec2::new(
-        f32::from(index) * PIECE_WIDTH - selectable_spacing,
+    Vec2::new(
+        f32::from(index).mul_add(
+            PIECE_WIDTH,
+            2.5 * SELECTABLE_SEPARATION - selectable_spacing,
+        ),
         PIECE_WIDTH,
-    );
-    (base + offset).round().extend(0.01)
+    )
+    .round()
+    .extend(0.01)
 }
 
 fn maybe_spawn_piece(
