@@ -179,21 +179,16 @@ fn belt_empty_check(
 fn check_for_piece_selection_undos(
     mut commands: Commands,
     mut attempted_placement_events: EventReader<AttemptedPlacement>,
-    belt_pieces: Query<&BeltPieceIds, With<ConveyorBeltMarker>>,
-    piece_positions: Query<&Transform, (With<NominoMarker>, With<Selected>)>,
+    belt: Query<(Entity, &GlobalTransform, &BeltPieceIds), With<ConveyorBeltMarker>>,
+    piece_positions: Query<&GlobalTransform, (With<NominoMarker>, With<Selected>)>,
     gb9000: Res<GroceryBagger9000>,
     belt_options: Res<ConveyorBeltOptions>,
     game_speed: Res<GameSpeed>,
 ) {
     for attempted in attempted_placement_events.iter() {
-        let position = u8::try_from(
-            belt_pieces
-                .single()
-                .iter()
-                .position(|p| *p == **attempted)
-                .unwrap(),
-        )
-        .unwrap();
+        let (id, belt_position, belt_pieces) = belt.single();
+        let position =
+            u8::try_from(belt_pieces.iter().position(|p| *p == **attempted).unwrap()).unwrap();
         let from = piece_positions.get(**attempted).unwrap();
         let mut transform = Transform::from_translation(piece_position(&belt_options, position))
             .with_rotation(from.rotation);
@@ -209,10 +204,16 @@ fn check_for_piece_selection_undos(
             transform.rotation *= *DEG_90;
         }
 
+        let from_translation = from.translation - belt_position.translation;
         commands
             .entity(**attempted)
             .remove::<Selected>()
-            .insert(animations::undo_selection(*from, transform, &game_speed));
+            .insert(animations::undo_selection(
+                from.with_translation(from_translation).into(),
+                transform,
+                &game_speed,
+            ));
+        commands.entity(id).add_child(**attempted);
     }
 }
 

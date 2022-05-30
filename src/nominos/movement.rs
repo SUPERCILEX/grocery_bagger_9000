@@ -7,6 +7,7 @@ use crate::{
     animations,
     animations::{GameSpeed, Original, UndoableAnimationBundle},
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP, BAG_FLOOR_COLLIDER_GROUP},
+    levels::LevelMarker,
     nominos::*,
     window_management::{DipsWindow, MainCamera, WindowSystems},
     window_utils::compute_cursor_position,
@@ -152,11 +153,21 @@ fn piece_selection_handler(
                 let selectable = debug_options.unrestricted_pieces || selectables.contains(id);
 
                 if selectable {
+                    let piece_positions = pieces_queries.p1();
+                    let (piece_position, ..) = piece_positions.get(id).unwrap();
+
                     picked_up_events.send(PiecePickedUp(id));
 
                     commands
                         .entity(id)
+                        .insert(LevelMarker)
                         .insert(Selected)
+                        .insert(
+                            piece_position.with_translation(
+                                cursor_position.extend(piece_position.translation.z),
+                            ),
+                        )
+                        .remove::<Parent>()
                         .remove_bundle::<UndoableAnimationBundle<Transform>>();
                 }
                 failed_selection = if selectable { None } else { Some(id) };
