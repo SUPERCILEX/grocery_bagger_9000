@@ -360,21 +360,18 @@ fn maybe_spawn_piece(
                 .with_lightness(NON_SELECTABLE_LIGHTNESS)
         };
 
-        commands
-            .entity(root)
-            .with_children(|parent| {
-                let mut commands = parent.spawn_nomino(
-                    transform.with_rotation(piece.rotation),
-                    piece.nomino,
-                    piece.color,
-                    color,
-                );
-                if position < belt_options.num_pieces_selectable {
-                    commands.insert(Selectable);
-                }
-                commands.id()
-            })
-            .out
+        commands.entity(root).add_children(|parent| {
+            let mut commands = parent.spawn_nomino(
+                transform.with_rotation(piece.rotation),
+                piece.nomino,
+                piece.color,
+                color,
+            );
+            if position < belt_options.num_pieces_selectable {
+                commands.insert(Selectable);
+            }
+            commands.id()
+        })
     })
 }
 
