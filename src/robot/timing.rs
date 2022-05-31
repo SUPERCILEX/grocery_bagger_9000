@@ -7,7 +7,7 @@ use bevy_tweening::Animator;
 use crate::{
     animations::{GameSpeed, RedoableAnimationBundle},
     bags::{BagMarker, BagSize, BAG_FLOOR_COLLIDER_GROUP, BAG_WALLS_COLLIDER_GROUP},
-    nominos::{PiecePlaced, PieceSystems, NOMINO_COLLIDER_GROUP},
+    nominos::{PiecePlaced, PieceSystems, Selected, NOMINO_COLLIDER_GROUP},
     robot::spawn::RobotMarker,
 };
 
@@ -78,6 +78,7 @@ fn place_piece(
             Without<Animator<Transform>>,
         ),
     >,
+    selected_piece: Query<(), With<Selected>>,
     mut target_piece: Query<
         (Entity, &mut GlobalTransform, &Collider),
         (With<RobotTargetMarker>, Without<BagMarker>),
@@ -102,9 +103,13 @@ fn place_piece(
         return;
     };
 
-    if let Some((bag, mut position)) =
-        find_robot_piece_placement(bags, &piece_position, collider, &rapier_context)
-    {
+    if let Some((bag, mut position)) = find_robot_piece_placement(
+        bags,
+        selected_piece,
+        &piece_position,
+        collider,
+        &rapier_context,
+    ) {
         position.z = piece_position.translation.z;
         piece_position.translation = position;
         piece_placements.send(PiecePlaced { piece, bag });
@@ -124,6 +129,7 @@ fn find_robot_piece_placement(
             Without<Animator<Transform>>,
         ),
     >,
+    ignore: Query<(), With<Selected>>,
     target_piece: &GlobalTransform,
     collider: &Collider,
     rapier_context: &RapierContext,
@@ -144,7 +150,7 @@ fn find_robot_piece_placement(
                     target_piece.rotation,
                     collider,
                     INVALID_PLACEMENT_GROUPS.into(),
-                    None,
+                    Some(&|id| !ignore.contains(id)),
                 );
                 if intersects.is_some() {
                     continue;
