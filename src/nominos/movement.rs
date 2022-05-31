@@ -122,7 +122,6 @@ fn piece_selection_handler(
                 {
                     commands
                         .entity(piece)
-                        .remove::<Selectable>()
                         .remove::<Selected>()
                         .insert(animations::piece_placed(*transform, &game_speed));
 

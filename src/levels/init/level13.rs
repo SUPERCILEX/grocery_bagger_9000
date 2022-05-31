@@ -23,6 +23,7 @@ pub fn init_level(
     commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_LARGE]);
 
     // TODO remove
+    #[cfg(debug_assertions)]
     commands
         .spawn_bundle(TransformBundle::default())
         .insert(LevelMarker)

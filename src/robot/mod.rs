@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 pub use spawn::RobotMarker;
 use timing::RobotTimingPlugin;
-pub use timing::{RobotTiming, PLACEMENT_TTL};
+pub use timing::{RobotTargetMarker, RobotTiming, PLACEMENT_TTL};
 
 mod spawn;
 mod timing;

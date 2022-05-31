@@ -24,6 +24,7 @@ use crate::{
         AttemptedPlacement, NominoMarker, NominoSpawner, PiecePlaced, PieceSystems, Selectable,
         Selected, DEG_90, DEG_MIRRORED,
     },
+    robot::RobotTargetMarker,
     ui::MenuButtonClickedSystems,
     window_management::WindowSystems,
 };
@@ -34,6 +35,7 @@ impl Plugin for ConveyorBeltMovementPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<BeltEmptyEvent>();
 
+        // TODO add system that removes RobotTargetMarker on piece selection
         app.add_system_to_stage(CoreStage::PostUpdate, init_pieces);
         app.add_system(replace_pieces.after(WindowSystems).after(PieceSystems));
         app.add_system(belt_empty_check.after(replace_pieces));
@@ -133,6 +135,18 @@ fn replace_pieces(
         };
 
         belt_pieces.remove(placed_position);
+
+        {
+            let mut piece_commands = commands.entity(*piece_id);
+            piece_commands.remove::<Selectable>();
+            if placed_position == 0 {
+                piece_commands.remove::<RobotTargetMarker>();
+                if let Some(id) = belt_pieces.get(0) {
+                    commands.entity(*id).insert(RobotTargetMarker);
+                }
+            }
+        }
+
         if belt_options.num_pieces_selectable > 1 &&
         let Some(id) = belt_pieces.get(belt_options.num_pieces_selectable as usize - 1)
         {
@@ -216,16 +230,20 @@ fn check_for_piece_selection_undos(
             transform.rotation *= *DEG_90;
         }
 
+        commands.entity(id).add_child(**attempted);
+
         let from_translation = from.translation - belt_position.translation;
-        commands
-            .entity(**attempted)
+        let mut piece_commands = commands.entity(**attempted);
+        piece_commands
             .remove::<Selected>()
             .insert(animations::undo_selection(
                 from.with_translation(from_translation).into(),
                 transform,
                 &game_speed,
             ));
-        commands.entity(id).add_child(**attempted);
+        if position == 0 {
+            piece_commands.insert(RobotTargetMarker);
+        }
     }
 }
 
@@ -389,9 +407,14 @@ fn maybe_spawn_piece(
                 piece.color,
                 color,
             );
+
             if position < belt_options.num_pieces_selectable {
                 commands.insert(Selectable);
             }
+            if position == 0 {
+                commands.insert(RobotTargetMarker);
+            }
+
             commands.id()
         })
     })
