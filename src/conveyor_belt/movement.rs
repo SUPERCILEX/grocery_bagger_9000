@@ -21,8 +21,8 @@ use crate::{
     gb9000::GroceryBagger9000,
     levels::{LevelStarted, LevelTransitionSystems},
     nominos::{
-        AttemptedPlacement, NominoMarker, NominoSpawner, PiecePlaced, PieceSystems, Selectable,
-        Selected, DEG_90, DEG_MIRRORED,
+        AttemptedPlacement, NominoMarker, NominoSpawner, PiecePickedUp, PiecePlaced, PieceSystems,
+        Selectable, Selected, DEG_90, DEG_MIRRORED,
     },
     robot::RobotTargetMarker,
     ui::MenuButtonClickedSystems,
@@ -35,7 +35,6 @@ impl Plugin for ConveyorBeltMovementPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<BeltEmptyEvent>();
 
-        // TODO add system that removes RobotTargetMarker on piece selection
         app.add_system_to_stage(CoreStage::PostUpdate, init_pieces);
         app.add_system(replace_pieces.after(WindowSystems).after(PieceSystems));
         app.add_system(belt_empty_check.after(replace_pieces));
@@ -50,6 +49,11 @@ impl Plugin for ConveyorBeltMovementPlugin {
             move_pieces
                 .after(LevelTransitionSystems)
                 .after(WindowSystems)
+                .after(replace_pieces),
+        );
+        app.add_system(
+            update_robot_target_on_piece_selection
+                .after(PieceSystems)
                 .after(replace_pieces),
         );
         app.add_system(update_background_on_num_selectable_pieces_changed);
@@ -117,6 +121,7 @@ fn replace_pieces(
         With<ConveyorBeltMarker>,
     >,
     mut colors: Query<&mut DrawMode, (With<NominoMarker>, Without<Selectable>)>,
+    selected_pieces: Query<(), With<Selected>>,
     mut placed_pieces: EventReader<PiecePlaced>,
     belt_options: Res<ConveyorBeltOptions>,
     game_speed: Res<GameSpeed>,
@@ -135,16 +140,15 @@ fn replace_pieces(
         };
 
         belt_pieces.remove(placed_position);
-
+        commands
+            .entity(*piece_id)
+            .remove::<Selectable>()
+            .remove::<RobotTargetMarker>();
+        if let Some(id) = belt_pieces
+            .iter()
+            .find(|id| !selected_pieces.contains(**id))
         {
-            let mut piece_commands = commands.entity(*piece_id);
-            piece_commands.remove::<Selectable>();
-            if placed_position == 0 {
-                piece_commands.remove::<RobotTargetMarker>();
-                if let Some(id) = belt_pieces.get(0) {
-                    commands.entity(*id).insert(RobotTargetMarker);
-                }
-            }
+            commands.entity(*id).insert(RobotTargetMarker);
         }
 
         if belt_options.num_pieces_selectable > 1 &&
@@ -207,6 +211,7 @@ fn check_for_piece_selection_undos(
     mut attempted_placement_events: EventReader<AttemptedPlacement>,
     belt: Query<(Entity, &GlobalTransform, &BeltPieceIds), With<ConveyorBeltMarker>>,
     piece_positions: Query<&GlobalTransform, (With<NominoMarker>, With<Selected>)>,
+    old_robot_target: Query<Entity, With<RobotTargetMarker>>,
     gb9000: Res<GroceryBagger9000>,
     belt_options: Res<ConveyorBeltOptions>,
     game_speed: Res<GameSpeed>,
@@ -243,6 +248,23 @@ fn check_for_piece_selection_undos(
             ));
         if position == 0 {
             piece_commands.insert(RobotTargetMarker);
+            if let Ok(id) = old_robot_target.get_single() {
+                debug_assert_ne!(id, **attempted);
+                commands.entity(id).remove::<RobotTargetMarker>();
+            }
+        }
+    }
+}
+
+fn update_robot_target_on_piece_selection(
+    mut commands: Commands,
+    belt_pieces: Query<&BeltPieceIds, With<ConveyorBeltMarker>>,
+    mut picked_up_pieces: EventReader<PiecePickedUp>,
+) {
+    for piece in picked_up_pieces.iter() {
+        commands.entity(**piece).remove::<RobotTargetMarker>();
+        if let Some(id) = belt_pieces.single().iter().find(|id| **id != **piece) {
+            commands.entity(*id).insert(RobotTargetMarker);
         }
     }
 }
