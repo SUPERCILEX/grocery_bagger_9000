@@ -1,17 +1,25 @@
 use std::time::Duration;
 
 use bevy::{math::const_vec3, prelude::*};
-use bevy_rapier3d::prelude::{Collider, RapierContext};
+use bevy_rapier3d::prelude::{Collider, CollisionGroups, RapierContext};
 use bevy_tweening::Animator;
 
 use crate::{
     animations::{GameSpeed, RedoableAnimationBundle},
-    bags::{BagMarker, BagSize},
+    bags::{BagMarker, BagSize, BAG_FLOOR_COLLIDER_GROUP, BAG_WALLS_COLLIDER_GROUP},
     nominos::{PiecePlaced, PieceSystems, NOMINO_COLLIDER_GROUP},
     robot::spawn::RobotMarker,
 };
 
-pub const PLACEMENT_TTL: Duration = Duration::from_secs(5);
+const PLACEMENT_TTL: Duration = Duration::from_secs(5);
+const INVALID_PLACEMENT_GROUPS: CollisionGroups = CollisionGroups {
+    memberships: BAG_FLOOR_COLLIDER_GROUP.memberships
+        | BAG_WALLS_COLLIDER_GROUP.memberships
+        | NOMINO_COLLIDER_GROUP.memberships,
+    filters: BAG_FLOOR_COLLIDER_GROUP.filters
+        | BAG_WALLS_COLLIDER_GROUP.filters
+        | NOMINO_COLLIDER_GROUP.filters,
+};
 
 pub struct RobotTimingPlugin;
 
@@ -132,7 +140,7 @@ fn find_robot_piece_placement(
                     position,
                     target_piece.rotation,
                     collider,
-                    NOMINO_COLLIDER_GROUP.into(),
+                    INVALID_PLACEMENT_GROUPS.into(),
                     None,
                 );
                 if intersects.is_some() {
