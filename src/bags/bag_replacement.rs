@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
 
 use crate::{
@@ -70,8 +70,6 @@ fn detect_filled_bags(
     lid_collider_bag: Query<&Parent, With<BagLidMarker>>,
 ) {
     for PiecePlaced { piece, bag } in piece_placements.iter() {
-        let (bag_coords, bag_size) = bags.get(*bag).unwrap();
-
         {
             let (transform, collider) = piece_colliders.get(*piece).unwrap();
             let bag_overflowing = rapier_context
@@ -89,18 +87,14 @@ fn detect_filled_bags(
             }
         }
 
-        let mut bag_coords = *bag_coords;
-        bag_coords.translation += Vec3::new(
-            0.5 - bag_size.half_width(),
-            bag_size.half_height() - 0.5,
-            0.,
-        );
+        let (bag_coords, bag_size) = bags.get(*bag).unwrap();
+        let block_origin = bag_coords.translation + bag_size.origin() - const_vec3!([0.5, 0.5, 0.]);
 
         let mut top_row_full = true;
         for i in 0..bag_size.width() {
             let mut intersection = false;
             rapier_context.intersections_with_point(
-                bag_coords.translation + Vec3::new(f32::from(i), 0., 0.),
+                block_origin - Vec3::new(f32::from(i), 0., 0.),
                 NOMINO_COLLIDER_GROUP.into(),
                 None,
                 |_| {
