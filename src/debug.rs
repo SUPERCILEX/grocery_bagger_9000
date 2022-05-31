@@ -1,4 +1,4 @@
-use bevy::{prelude::*};
+use bevy::prelude::*;
 use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSystem};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;

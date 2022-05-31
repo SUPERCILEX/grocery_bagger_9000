@@ -126,45 +126,49 @@ fn replace_pieces(
         let (id, mut conveyor_belt, mut belt_pieces) = conveyor_belt.single_mut();
 
         let placed_position = belt_pieces.iter().position(|id| *id == *piece_id);
-        if let Some(placed_position) = placed_position {
-            belt_pieces.remove(placed_position);
-            if belt_options.num_pieces_selectable > 1 &&
-            let Some(id) = belt_pieces.get(belt_options.num_pieces_selectable as usize - 1)
+        let placed_position = if let Some(placed_position) = placed_position {
+            placed_position
+        } else {
+            continue;
+        };
+
+        belt_pieces.remove(placed_position);
+        if belt_options.num_pieces_selectable > 1 &&
+        let Some(id) = belt_pieces.get(belt_options.num_pieces_selectable as usize - 1)
+        {
+            commands.entity(*id).insert(Selectable);
+
+            let mut draw_mode = colors.get_mut(*id).unwrap();
+            if let DrawMode::Outlined {
+                ref mut fill_mode, ..
+            } = *draw_mode
             {
-                commands.entity(*id).insert(Selectable);
-
-                let mut draw_mode = colors.get_mut(*id).unwrap();
-                if let DrawMode::Outlined {
-                    ref mut fill_mode, ..
-                } = *draw_mode
-                {
-                    fill_mode.color = fill_mode.color.with_lightness(0.5);
-                }
+                fill_mode.color = fill_mode.color.with_lightness(0.5);
             }
+        }
 
-            let position = MAX_NUM_PIECES - 1;
-            let target = Transform::from_translation(piece_position(&belt_options, position));
-            let from = {
-                let mut from = target;
-                from.translation.x = LENGTH + PIECE_WIDTH;
-                from
-            };
+        let position = MAX_NUM_PIECES - 1;
+        let target = Transform::from_translation(piece_position(&belt_options, position));
+        let from = {
+            let mut from = target;
+            from.translation.x = LENGTH + PIECE_WIDTH;
+            from
+        };
 
-            let spawned = maybe_spawn_piece(
-                &mut commands,
-                from,
-                position,
-                id,
-                &mut ***conveyor_belt,
-                &belt_options,
-            );
-            if let Some(spawned) = spawned {
-                belt_pieces.push(spawned);
+        let spawned = maybe_spawn_piece(
+            &mut commands,
+            from,
+            position,
+            id,
+            &mut ***conveyor_belt,
+            &belt_options,
+        );
+        if let Some(spawned) = spawned {
+            belt_pieces.push(spawned);
 
-                commands
-                    .entity(spawned)
-                    .insert_bundle(animations::piece_movement(from, target, &game_speed));
-            }
+            commands
+                .entity(spawned)
+                .insert_bundle(animations::piece_movement(from, target, &game_speed));
         }
     }
 }
@@ -269,21 +273,25 @@ fn update_piece_selectability_on_num_selectable_pieces_changed(
     }
 
     let num_pieces_selectable = belt_options.num_pieces_selectable as usize;
-    if let Ok(belt_pieces) = conveyor_belt.get_single() {
-        for (index, piece) in belt_pieces.iter().enumerate() {
-            let mut draw_mode = colors.get_mut(*piece).unwrap();
-            if let DrawMode::Outlined {
-                ref mut fill_mode, ..
-            } = *draw_mode
-            {
-                if index < num_pieces_selectable {
-                    fill_mode.color = fill_mode.color.with_lightness(0.5);
-                    commands.entity(*piece).insert(Selectable);
-                } else {
-                    fill_mode.color = fill_mode.color.with_lightness(NON_SELECTABLE_LIGHTNESS);
-                    commands.entity(*piece).remove::<Selectable>();
-                };
-            }
+    let belt_pieces = if let Ok(belt_pieces) = conveyor_belt.get_single() {
+        belt_pieces
+    } else {
+        return;
+    };
+
+    for (index, piece) in belt_pieces.iter().enumerate() {
+        let mut draw_mode = colors.get_mut(*piece).unwrap();
+        if let DrawMode::Outlined {
+            ref mut fill_mode, ..
+        } = *draw_mode
+        {
+            if index < num_pieces_selectable {
+                fill_mode.color = fill_mode.color.with_lightness(0.5);
+                commands.entity(*piece).insert(Selectable);
+            } else {
+                fill_mode.color = fill_mode.color.with_lightness(NON_SELECTABLE_LIGHTNESS);
+                commands.entity(*piece).remove::<Selectable>();
+            };
         }
     }
 }
@@ -308,27 +316,31 @@ fn move_pieces(
         *fsm = PieceMovementFsm::Ready;
     }
 
-    if let Ok((belt_pieces, belt_changes)) = belt_pieces.get_single() {
-        if !belt_changes.is_changed() {
-            return;
-        }
-        if *fsm == PieceMovementFsm::Ready {
-            *fsm = PieceMovementFsm::Loaded;
-            return;
-        }
+    let (belt_pieces, belt_changes) = if let Ok(p) = belt_pieces.get_single() {
+        p
+    } else {
+        return;
+    };
 
-        for (index, piece) in belt_pieces.iter().enumerate() {
-            if let Ok(position) = positions.get(*piece) {
-                let target = Transform::from_translation(piece_position(
-                    &belt_options,
-                    index.try_into().unwrap(),
-                ));
+    if !belt_changes.is_changed() {
+        return;
+    }
+    if *fsm == PieceMovementFsm::Ready {
+        *fsm = PieceMovementFsm::Loaded;
+        return;
+    }
 
-                if !position.translation.abs_diff_eq(target.translation, 1e-3) {
-                    commands
-                        .entity(*piece)
-                        .insert_bundle(animations::piece_movement(*position, target, &game_speed));
-                }
+    for (index, piece) in belt_pieces.iter().enumerate() {
+        if let Ok(position) = positions.get(*piece) {
+            let target = Transform::from_translation(piece_position(
+                &belt_options,
+                index.try_into().unwrap(),
+            ));
+
+            if !position.translation.abs_diff_eq(target.translation, 1e-3) {
+                commands
+                    .entity(*piece)
+                    .insert_bundle(animations::piece_movement(*position, target, &game_speed));
             }
         }
     }

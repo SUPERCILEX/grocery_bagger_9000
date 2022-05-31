@@ -140,55 +140,58 @@ fn piece_selection_handler(
         }
     }
 
-    if let Some(cursor_position) = compute_cursor_position(windows, camera) {
-        let mut failed_selection = None;
+    let cursor_position = if let Some(cursor_position) = compute_cursor_position(windows, camera) {
+        cursor_position
+    } else {
+        return;
+    };
 
-        rapier_context.intersections_with_point(
-            cursor_position.extend(0.),
-            NOMINO_COLLIDER_GROUP.into(),
-            None,
-            |id| {
-                #[cfg(not(feature = "debug"))]
-                let selectable = selectables.contains(id);
-                #[cfg(feature = "debug")]
-                let selectable = debug_options.unrestricted_pieces || selectables.contains(id);
+    let mut failed_selection = None;
 
-                if selectable {
-                    let piece_positions = pieces_queries.p1();
-                    let (piece_position, ..) = piece_positions.get(id).unwrap();
+    rapier_context.intersections_with_point(
+        cursor_position.extend(0.),
+        NOMINO_COLLIDER_GROUP.into(),
+        None,
+        |id| {
+            #[cfg(not(feature = "debug"))]
+            let selectable = selectables.contains(id);
+            #[cfg(feature = "debug")]
+            let selectable = debug_options.unrestricted_pieces || selectables.contains(id);
 
-                    picked_up_events.send(PiecePickedUp(id));
+            if selectable {
+                let piece_positions = pieces_queries.p1();
+                let (piece_position, ..) = piece_positions.get(id).unwrap();
 
-                    commands
-                        .entity(id)
-                        .insert(LevelMarker)
-                        .insert(Selected)
-                        .insert(
-                            piece_position.with_translation(
-                                cursor_position.extend(piece_position.translation.z),
-                            ),
-                        )
-                        .remove::<Parent>()
-                        .remove_bundle::<UndoableAnimationBundle<Transform>>();
-                }
-                failed_selection = if selectable { None } else { Some(id) };
+                picked_up_events.send(PiecePickedUp(id));
 
-                !selectable
-            },
-        );
-
-        if let Some(failed) = failed_selection {
-            let mut piece_positions = pieces_queries.p1();
-            let (mut piece_position, original) = piece_positions.get_mut(failed).unwrap();
-
-            if let Some(original) = original {
-                piece_position.rotation = original.rotation;
+                commands
+                    .entity(id)
+                    .insert(LevelMarker)
+                    .insert(Selected)
+                    .insert(
+                        piece_position
+                            .with_translation(cursor_position.extend(piece_position.translation.z)),
+                    )
+                    .remove::<Parent>()
+                    .remove_bundle::<UndoableAnimationBundle<Transform>>();
             }
+            failed_selection = if selectable { None } else { Some(id) };
 
-            commands
-                .entity(failed)
-                .insert_bundle(animations::error_shake(*piece_position, &game_speed));
+            !selectable
+        },
+    );
+
+    if let Some(failed) = failed_selection {
+        let mut piece_positions = pieces_queries.p1();
+        let (mut piece_position, original) = piece_positions.get_mut(failed).unwrap();
+
+        if let Some(original) = original {
+            piece_position.rotation = original.rotation;
         }
+
+        commands
+            .entity(failed)
+            .insert_bundle(animations::error_shake(*piece_position, &game_speed));
     }
 }
 
@@ -238,52 +241,59 @@ fn selected_piece_mover(
     >,
     rapier_context: Res<RapierContext>,
 ) {
-    if let Some(moved_event) = cursor_movements.iter().last() &&
-    let Ok((piece, global_transform, mut piece_transform, collider, original)) = selected_piece.get_single_mut()
-    {
-        let cursor_position = moved_event.position * dips_window.scale;
-
-        let snapped_cursor_position = cursor_position.round();
-
-        if *last_snapped_cursor_position == snapped_cursor_position {
+    let moved_event = if let Some(moved_event) = cursor_movements.iter().last() {
+        moved_event
+    } else {
+        return;
+    };
+    let (piece, global_transform, mut piece_transform, collider, original) =
+        if let Ok(s) = selected_piece.get_single_mut() {
+            s
+        } else {
             return;
+        };
+
+    let cursor_position = moved_event.position * dips_window.scale;
+    let snapped_cursor_position = cursor_position.round();
+
+    if *last_snapped_cursor_position == snapped_cursor_position {
+        return;
+    }
+    *last_snapped_cursor_position = snapped_cursor_position;
+
+    let mut nearby_positions = SmallVec::<[_; 9]>::new();
+    for i in -1i8..=1 {
+        for j in -1i8..=1 {
+            nearby_positions.push(snapped_cursor_position + Vec2::new(f32::from(i), f32::from(j)));
         }
-        *last_snapped_cursor_position = snapped_cursor_position;
+    }
+    nearby_positions.sort_unstable_by(|a, b| {
+        a.distance(cursor_position)
+            .total_cmp(&b.distance(cursor_position))
+    });
 
-        let mut nearby_positions = SmallVec::<[_; 9]>::new();
-        for i in -1i8..=1 {
-            for j in -1i8..=1 {
-                nearby_positions.push(snapped_cursor_position + Vec2::new(f32::from(i), f32::from(j)));
-            }
+    let rotation = original.map_or(global_transform.rotation, |o| o.rotation);
+    for position in nearby_positions {
+        let snapped_cursor_position = position.extend(piece_transform.translation.z);
+        let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
+            &rapier_context,
+            Transform::from_translation(snapped_cursor_position).with_rotation(rotation),
+            collider,
+            piece,
+        );
+        if would_move_over_invalid_position {
+            continue;
         }
-        nearby_positions.sort_unstable_by(|a, b| {
-            a.distance(cursor_position)
-                .total_cmp(&b.distance(cursor_position))
-        });
 
-        let rotation = original.map_or(global_transform.rotation, |o| o.rotation);
-        for position in nearby_positions {
-            let snapped_cursor_position = position.extend(piece_transform.translation.z);
-            let would_move_over_invalid_position = straddles_bag_or_overlaps_pieces(
-                &rapier_context,
-                Transform::from_translation(snapped_cursor_position).with_rotation(rotation),
-                collider,
-                piece,
-            );
-            if would_move_over_invalid_position {
-                continue;
-            }
-
-            if let Some(original) = original {
-                piece_transform.rotation = original.rotation;
-                commands
-                    .entity(piece)
-                    .remove_bundle::<UndoableAnimationBundle<Transform>>();
-            }
-            piece_transform.translation = snapped_cursor_position;
-
-            break;
+        if let Some(original) = original {
+            piece_transform.rotation = original.rotation;
+            commands
+                .entity(piece)
+                .remove_bundle::<UndoableAnimationBundle<Transform>>();
         }
+        piece_transform.translation = snapped_cursor_position;
+
+        break;
     }
 }
 
