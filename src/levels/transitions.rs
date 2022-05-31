@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_tweening::TweenCompleted;
+use bevy_tweening::{AnimationSystem, TweenCompleted};
 
 use crate::{
     animations::AnimationEvent,
@@ -24,7 +24,12 @@ impl Plugin for LevelTransitionPlugin {
         app.add_event::<LevelFinished>();
 
         app.add_system(level_start_handler.label(LevelTransitionSystems));
-        app.add_system(level_end_handler.label(LevelTransitionSystems));
+        app.add_system(
+            level_end_handler
+                .label(LevelTransitionSystems)
+                .after(AnimationSystem::AnimationUpdate)
+                .before(level_start_handler),
+        );
         app.add_system(
             level_unload_handler
                 .label(LevelTransitionSystems)

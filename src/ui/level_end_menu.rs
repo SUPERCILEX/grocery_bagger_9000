@@ -27,10 +27,22 @@ impl Plugin for LevelEndMenuPlugin {
         );
         app.add_system(despawn_menu.after(LevelTransitionSystems));
 
-        app.add_system(handle_restart_level_click.before(LevelTransitionSystems));
-        app.add_system(handle_next_level_click.before(LevelTransitionSystems));
+        app.add_system(
+            handle_restart_level_click
+                .label(MenuButtonClickedSystems)
+                .before(LevelTransitionSystems),
+        );
+        app.add_system(
+            handle_next_level_click
+                .label(MenuButtonClickedSystems)
+                .after(handle_restart_level_click)
+                .before(LevelTransitionSystems),
+        );
     }
 }
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
+pub struct MenuButtonClickedSystems;
 
 #[derive(Component)]
 struct MenuMarker;

@@ -41,6 +41,7 @@ tracing = { version = "0.1.34", features = ["release_max_level_off"] }
 [features]
 debug = ["dep:bevy_egui", "dep:bevy_screen_diags", "dep:bevy-inspector-egui", "dep:bevy-inspector-egui-rapier"]
 dump = ["dep:bevy_mod_debugdump"]
+system-ambiguity = []
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 bevy = { version = "0.7.0", default-features = false, features = ["bevy_render", "bevy_ui", "bevy_text", "bevy_winit", "x11"] }

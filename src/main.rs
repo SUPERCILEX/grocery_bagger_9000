@@ -99,6 +99,12 @@ fn main() {
         }
     }
 
-    #[cfg(not(feature = "dump"))]
+    #[cfg(feature = "system-ambiguity")]
+    {
+        app.init_resource::<bevy::ecs::schedule::ReportExecutionOrderAmbiguities>();
+        app.update();
+    }
+
+    #[cfg(all(not(feature = "dump"), not(feature = "system-ambiguity")))]
     app.run();
 }

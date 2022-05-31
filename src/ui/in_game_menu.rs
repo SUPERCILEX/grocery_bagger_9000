@@ -1,4 +1,7 @@
-use bevy::{prelude::*, ui::PositionType::Absolute};
+use bevy::{
+    prelude::*,
+    ui::{PositionType::Absolute, UiSystem},
+};
 
 use crate::{
     levels::{LevelFinished, LevelMarker, LevelSpawnStage, LevelStarted},
@@ -10,7 +13,10 @@ pub struct InGameMenuPlugin;
 impl Plugin for InGameMenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_to_stage(LevelSpawnStage, setup_menu);
-        app.add_system_to_stage(CoreStage::PreUpdate, handle_restart_level_click);
+        app.add_system_to_stage(
+            CoreStage::PreUpdate,
+            handle_restart_level_click.after(UiSystem::Focus),
+        );
     }
 }
 

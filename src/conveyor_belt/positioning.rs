@@ -1,4 +1,5 @@
 use bevy::{prelude::*, window::WindowResized};
+use bevy_tweening::Animator;
 
 use crate::{
     conveyor_belt::{
@@ -6,6 +7,7 @@ use crate::{
         spawn::ConveyorBeltMarker,
         HEIGHT,
     },
+    nominos::NominoMarker,
     window_management::{DipsWindow, WindowSystems},
 };
 
@@ -32,7 +34,14 @@ pub fn compute_selectable_background(num_pieces_selectable: u8) -> Transform {
 fn reposition_background_on_window_resize(
     mut resized_events: EventReader<WindowResized>,
     dips_window: Res<DipsWindow>,
-    mut background: Query<&mut Transform, With<ConveyorBeltMarker>>,
+    mut background: Query<
+        &mut Transform,
+        (
+            With<ConveyorBeltMarker>,
+            Without<NominoMarker>,
+            Without<Animator<Transform>>,
+        ),
+    >,
 ) {
     if resized_events.iter().count() == 0 {
         return;

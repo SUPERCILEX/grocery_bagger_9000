@@ -4,6 +4,7 @@ use consts::{HOVERED_BUTTON, NORMAL_BUTTON, PRESSED_BUTTON};
 use hud::HudPlugin;
 use in_game_menu::InGameMenuPlugin;
 use level_end_menu::LevelEndMenuPlugin;
+pub use level_end_menu::MenuButtonClickedSystems;
 
 mod consts;
 mod hud;

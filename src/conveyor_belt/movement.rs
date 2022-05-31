@@ -1,5 +1,6 @@
 use bevy::{math::const_vec3, prelude::*};
 use bevy_prototype_lyon::{draw::DrawMode, entity::Path};
+use bevy_tweening::Animator;
 use smallvec::SmallVec;
 
 use crate::{
@@ -18,11 +19,12 @@ use crate::{
         ConveyorBelt, ConveyorBeltOptions,
     },
     gb9000::GroceryBagger9000,
-    levels::LevelStarted,
+    levels::{LevelStarted, LevelTransitionSystems},
     nominos::{
         AttemptedPlacement, NominoMarker, NominoSpawner, PiecePlaced, PieceSystems, Selectable,
         Selected, DEG_90, DEG_MIRRORED,
     },
+    ui::MenuButtonClickedSystems,
     window_management::WindowSystems,
 };
 
@@ -39,9 +41,15 @@ impl Plugin for ConveyorBeltMovementPlugin {
             check_for_piece_selection_undos
                 .after(WindowSystems)
                 .after(PieceSystems)
+                .after(MenuButtonClickedSystems)
                 .after(replace_pieces),
         );
-        app.add_system(move_pieces.after(WindowSystems).after(replace_pieces));
+        app.add_system(
+            move_pieces
+                .after(LevelTransitionSystems)
+                .after(WindowSystems)
+                .after(replace_pieces),
+        );
         app.add_system(update_background_on_num_selectable_pieces_changed);
         app.add_system_to_stage(
             CoreStage::PreUpdate,
@@ -231,6 +239,8 @@ fn update_background_on_num_selectable_pieces_changed(
         (
             With<BeltNonselectableBackgroundMarker>,
             Without<BeltSelectableBackgroundMarker>,
+            Without<NominoMarker>,
+            Without<Animator<Transform>>,
         ),
     >,
 ) {

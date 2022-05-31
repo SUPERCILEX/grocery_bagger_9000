@@ -1,4 +1,4 @@
-use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
+use bevy::{prelude::*};
 use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSystem};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
@@ -29,10 +29,9 @@ impl Plugin for DebugPlugin {
         });
         app.add_plugin(WorldInspectorPlugin::new());
         app.add_plugin(InspectableRapierPlugin);
-        app.init_resource::<DebugOptions>();
-
         app.add_plugin(ScreenDiagsPlugin);
-        app.add_plugin(FrameTimeDiagnosticsPlugin::default());
+
+        app.init_resource::<DebugOptions>();
 
         app.add_system_to_stage(
             CoreStage::PreUpdate,

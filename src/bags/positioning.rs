@@ -83,7 +83,7 @@ fn center_bags(
     mut resized_events: EventReader<WindowResized>,
     dips_window: Res<DipsWindow>,
     bags: Query<&BagSize, (With<BagMarker>, Without<Exiting>)>,
-    mut container: Query<&mut Transform, With<BagContainerMarker>>,
+    mut container: Query<&mut Transform, (With<BagContainerMarker>, Without<NominoMarker>)>,
 ) {
     if resized_events.iter().count() == 0 {
         return;

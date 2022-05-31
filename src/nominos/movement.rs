@@ -25,6 +25,7 @@ impl Plugin for PieceMovementPlugin {
         app.add_system(
             piece_rotation_handler
                 .label(PieceSystems)
+                .before(piece_selection_handler)
                 .after(AnimationSystem::AnimationUpdate),
         );
         app.add_system(
