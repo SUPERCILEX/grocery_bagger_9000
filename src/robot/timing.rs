@@ -36,12 +36,14 @@ pub struct RobotTargetMarker;
 #[derive(Component)]
 pub struct RobotTiming {
     ttl: Timer,
+    continue_trying: bool,
 }
 
 impl Default for RobotTiming {
     fn default() -> Self {
         Self {
             ttl: Timer::new(PLACEMENT_TTL, false),
+            continue_trying: false,
         }
     }
 }
@@ -55,6 +57,8 @@ fn accumulate_left_over_time(
     }
 
     if let Ok(mut robot) = timing.get_single_mut() {
+        robot.continue_trying = false;
+
         let ttl = &mut robot.ttl;
         ttl.set_duration(ttl.duration() - ttl.elapsed() + PLACEMENT_TTL);
         ttl.reset();
@@ -86,13 +90,12 @@ fn place_piece(
     } else {
         return;
     };
-    if !robot
-        .ttl
-        .tick(time.delta().mul_f32(**game_speed))
-        .just_finished()
-    {
+    robot.ttl.tick(time.delta().mul_f32(**game_speed));
+    if !robot.continue_trying && !robot.ttl.just_finished() {
         return;
     }
+    robot.continue_trying = true;
+
     let (piece, mut piece_position, collider) = if let Ok(p) = target_piece.get_single_mut() {
         p
     } else {
