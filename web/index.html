@@ -452,13 +452,14 @@ function logLevelEnd(levelId) {
     }));
 }
 
-function logPiecePlaced(score, bag) {
+function logPiecePlaced(score, bag, bag_id) {
     if (window.logger.isNewSession()) {
         window.logger.startNewSession()
     }
     window.logger.logLevelAction(PIECE_PLACED_ACTION, JSON.stringify({
         score,
         bag,
+        bag_id,
     }));
 }
 

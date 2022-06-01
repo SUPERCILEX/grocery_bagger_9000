@@ -110,7 +110,7 @@ fn log_piece_placed(
         let score = current_score.points;
         thread_pool
             .spawn(async move {
-                logPiecePlaced(score, bag_representation);
+                logPiecePlaced(score, bag_representation, bag.to_bits());
             })
             .detach();
     }
@@ -124,5 +124,5 @@ extern "C" {
 
     fn logLevelEnd(level_id: u32);
 
-    fn logPiecePlaced(score: usize, bag_state: String);
+    fn logPiecePlaced(score: usize, bag_state: String, bag_id: u64);
 }
