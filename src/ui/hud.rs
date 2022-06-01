@@ -5,7 +5,7 @@ use num_format::{Locale, ToFormattedString};
 
 use crate::{
     levels::{CurrentScore, LevelMarker, LevelSpawnStage, LevelStarted, ScoringSystems},
-    ui::consts::HUD_FONT_SIZE,
+    ui::consts::{HUD_FONT_SIZE, SCORE_COLOR},
 };
 
 pub struct HudPlugin;
@@ -52,7 +52,7 @@ fn setup_hud(
                         TextStyle {
                             font,
                             font_size: HUD_FONT_SIZE,
-                            color: Color::BLUE,
+                            color: SCORE_COLOR,
                         },
                         default(),
                     ),

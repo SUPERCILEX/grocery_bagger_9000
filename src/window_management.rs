@@ -12,6 +12,8 @@ const PIXELS_PER_UNIT: f32 = 30.;
 const TARGET_WIDTH_UNITS: f32 = 48.;
 const TARGET_HEIGHT_UNITS: f32 = 16.;
 
+const BACKGROUND_COLOR: Color = Color::rgb(74. / 255., 35. / 255., 92. / 255.);
+
 pub struct WindowManager;
 
 impl Plugin for WindowManager {
@@ -26,7 +28,7 @@ impl Plugin for WindowManager {
             focused_mode: UpdateMode::Continuous,
             ..WinitSettings::desktop_app()
         });
-        app.insert_resource(ClearColor(Color::WHITE));
+        app.insert_resource(ClearColor(BACKGROUND_COLOR)); //WHITE));
 
         app.init_resource::<DipsWindow>();
 

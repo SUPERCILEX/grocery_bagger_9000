@@ -12,7 +12,9 @@ use crate::{
         CurrentScore, LevelFinished, LevelStarted, LevelTransitionSystems, ScoringSystems,
         LAST_LEVEL,
     },
-    ui::consts::{BUTTON_COLOR, MENU_FONT_SIZE, NORMAL_BUTTON, TITLE_FONT_SIZE},
+    ui::consts::{
+        BUTTON_COLOR, MENU_FONT_SIZE, NORMAL_BUTTON, SCORE_COLOR, TITLE_COLOR, TITLE_FONT_SIZE,
+    },
     App,
 };
 
@@ -112,12 +114,12 @@ fn spawn_level_completed_summary(
             if gb9000.current_level as usize == LAST_LEVEL + 1 {
                 "Game complete!".to_string()
             } else {
-                format!("Level {} complete", gb9000.current_level)
+                format!("Level {} complete!", gb9000.current_level)
             },
             TextStyle {
                 font,
                 font_size: TITLE_FONT_SIZE,
-                color: Color::BLACK,
+                color: TITLE_COLOR,
             },
             default(),
         ),
@@ -143,7 +145,7 @@ fn spawn_score_recap(parent: &mut ChildBuilder, score: &CurrentScore, font: Hand
             TextStyle {
                 font,
                 font_size: MENU_FONT_SIZE,
-                color: Color::BLUE,
+                color: SCORE_COLOR, //BLUE,
             },
             TextAlignment {
                 horizontal: HorizontalAlign::Center,

@@ -18,12 +18,22 @@ impl NominoColor {
     pub const COUNT: usize = Self::_Last as usize;
 
     pub fn render(self) -> Color {
+        // match self {
+        //     Self::Red => Color::RED,
+        //     Self::Gold => Color::GOLD,
+        //     Self::Blue => Color::CYAN,
+        //     Self::Green => Color::GREEN,
+        //     Self::Pink => Color::FUCHSIA,
+        //     #[cfg(feature = "debug")]
+        //     Self::Debug => Color::WHITE,
+        //     Self::_Last => unreachable!(),
+        // }
         match self {
-            Self::Red => Color::RED,
-            Self::Gold => Color::GOLD,
-            Self::Blue => Color::CYAN,
-            Self::Green => Color::GREEN,
-            Self::Pink => Color::FUCHSIA,
+            Self::Red => Color::hex("DD6F2E").unwrap(),
+            Self::Gold => Color::hex("F1DE4A").unwrap(),
+            Self::Blue => Color::hex("68E2FC").unwrap(),
+            Self::Green => Color::hex("76FBC6").unwrap(),
+            Self::Pink => Color::hex("DC2FBB").unwrap(),
             #[cfg(feature = "debug")]
             Self::Debug => Color::WHITE,
             Self::_Last => unreachable!(),

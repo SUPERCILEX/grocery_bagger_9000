@@ -4,7 +4,7 @@ use crate::levels::LevelMarker;
 
 pub const TUTORIAL_FONT_SIZE_LARGE: f32 = 32.;
 pub const TUTORIAL_FONT_SIZE_SMALL: f32 = 24.;
-pub const TUTORIAL_FONT_COLOR: Color = Color::BLACK;
+pub const TUTORIAL_FONT_COLOR: Color = Color::rgb(138. / 255., 161. / 255., 238. / 255.); //Color::rgb(222. / 255., 156. / 255., 69. / 255.); //hex("DE9C45").unwrap();
 
 pub const TUTORIAL_STYLE: fn() -> Style = || Style {
     size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),

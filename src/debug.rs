@@ -223,7 +223,7 @@ fn debug_options(
 
                         option!(NominoColor::Red);
                         option!(NominoColor::Gold);
-                        option!(NominoColor::Blue);
+                        // option!(NominoColor::Blue);
                         option!(NominoColor::Green);
                         option!(NominoColor::Pink);
                         option!(NominoColor::Debug);
