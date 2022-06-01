@@ -6,7 +6,7 @@ use crate::{
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     levels::tutorials::spawn_text_tutorial,
-    nominos::{Nomino, DEG_MIRRORED},
+    nominos::{Nomino, DEG_180, DEG_MIRRORED},
     window_management::DipsWindow,
 };
 
@@ -29,19 +29,19 @@ pub fn init_level(
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
     macro_rules! piece {
-        (mirrored $nomino:expr) => {{
-            Piece {
-                nomino: $nomino,
-                color: LEVEL_COLOR,
-                rotation: *DEG_MIRRORED,
-            }
-        }};
-
         ($nomino:expr) => {{
             Piece {
                 nomino: $nomino,
                 color: LEVEL_COLOR,
                 rotation: Quat::IDENTITY,
+            }
+        }};
+
+        ($nomino:expr, $rotation:expr) => {{
+            Piece {
+                nomino: $nomino,
+                color: LEVEL_COLOR,
+                rotation: $rotation,
             }
         }};
     }
@@ -51,8 +51,8 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
         Box::new(PresetPiecesConveyorBelt::new([
             piece!(Nomino::TetrominoL),
             piece!(Nomino::TetrominoSquare),
-            piece!(mirrored Nomino::TetrominoSkew),
-            piece!(Nomino::TetrominoL),
+            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
+            piece!(Nomino::TetrominoL, *DEG_180),
             piece!(Nomino::TetrominoSquare),
             piece!(Nomino::TetrominoStraight),
         ])),
