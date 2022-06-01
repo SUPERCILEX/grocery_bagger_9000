@@ -21,7 +21,7 @@ use crate::{
     gb9000::GroceryBagger9000,
     levels::{LevelStarted, LevelTransitionSystems},
     nominos::{
-        AttemptedPlacement, NominoMarker, NominoSpawner, PiecePickedUp, PiecePlaced, PieceSystems,
+        NominoMarker, NominoSpawner, OutOfBagPlacement, PiecePickedUp, PiecePlaced, PieceSystems,
         Selectable, Selected, DEG_90, DEG_MIRRORED,
     },
     robot::RobotTargetMarker,
@@ -208,7 +208,7 @@ fn belt_empty_check(
 
 fn check_for_piece_selection_undos(
     mut commands: Commands,
-    mut attempted_placement_events: EventReader<AttemptedPlacement>,
+    mut attempted_placement_events: EventReader<OutOfBagPlacement>,
     belt: Query<(Entity, &GlobalTransform, &BeltPieceIds), With<ConveyorBeltMarker>>,
     piece_positions: Query<&GlobalTransform, (With<NominoMarker>, With<Selected>)>,
     old_robot_target: Query<Entity, With<RobotTargetMarker>>,

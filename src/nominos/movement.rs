@@ -18,7 +18,7 @@ pub struct PieceMovementPlugin;
 impl Plugin for PieceMovementPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PiecePickedUp>();
-        app.add_event::<AttemptedPlacement>();
+        app.add_event::<OutOfBagPlacement>();
         app.add_event::<PiecePlaced>();
 
         app.add_system(piece_selection_handler.label(PieceSystems));
@@ -51,7 +51,7 @@ pub struct Selected;
 pub struct PiecePickedUp(Entity);
 
 #[derive(Deref)]
-pub struct AttemptedPlacement(Entity);
+pub struct OutOfBagPlacement(Entity);
 
 pub struct PiecePlaced {
     pub piece: Entity,
@@ -68,7 +68,7 @@ fn piece_selection_handler(
     mouse_button_input: Res<Input<MouseButton>>,
     mut picked_up_events: EventWriter<PiecePickedUp>,
     mut placed_events: EventWriter<PiecePlaced>,
-    mut attempted_placement_events: EventWriter<AttemptedPlacement>,
+    mut attempted_placement_events: EventWriter<OutOfBagPlacement>,
     selectables: Query<&Selectable, With<NominoMarker>>,
     game_speed: Res<GameSpeed>,
     windows: Res<Windows>,
@@ -132,7 +132,7 @@ fn piece_selection_handler(
                         .insert_bundle(animations::error_shake(*transform, &game_speed));
                 }
             } else {
-                attempted_placement_events.send(AttemptedPlacement(piece));
+                attempted_placement_events.send(OutOfBagPlacement(piece));
             }
 
             return;

@@ -10,7 +10,7 @@ use consts::*;
 pub use consts::{DEG_180, DEG_90, DEG_MIRRORED};
 use movement::PieceMovementPlugin;
 pub use movement::{
-    AttemptedPlacement, PiecePickedUp, PiecePlaced, PieceSystems, Selectable, Selected,
+    OutOfBagPlacement, PiecePickedUp, PiecePlaced, PieceSystems, Selectable, Selected,
 };
 pub use spawn::{NominoMarker, NominoSpawner};
 
