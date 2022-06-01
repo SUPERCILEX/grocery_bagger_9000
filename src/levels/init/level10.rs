@@ -44,14 +44,14 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
         dips_window,
         Box::new(PresetPiecesConveyorBelt::new([
             piece!(Nomino::TetrominoSquare),
-            piece!(Nomino::TetrominoT),
-            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
             piece!(Nomino::TetrominoSkew),
-            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
-            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
-            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
-            piece!(Nomino::TetrominoT),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED),
+            piece!(Nomino::TetrominoSquare),
             piece!(Nomino::TetrominoStraight),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED),
+            piece!(Nomino::TetrominoStraight),
+            piece!(Nomino::TetrominoL, *DEG_180),
         ])),
     );
 }
