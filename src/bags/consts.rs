@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 
-use crate::bags::bag_size::BagSize;
+use crate::{bags::bag_size::BagSize, hex_color};
 
 pub const BAG_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
     memberships: 0b10,
@@ -36,13 +36,5 @@ pub const LID_HALFHEIGHT: f32 = 0.49;
 pub const LID_OFFSET: f32 = 0.5;
 pub const BOUNDARY_HALFWIDTH: f32 = 0.009;
 
-pub const BAG_COLOR: Color = Color::rgb(
-    0xC3u8 as f32 / 255.,
-    0xA9u8 as f32 / 255.,
-    0x88u8 as f32 / 255.,
-);
-pub const BAG_OUTLINE_COLOR: Color = Color::rgb(
-    0x64u8 as f32 / 255.,
-    0x56u8 as f32 / 255.,
-    0x46u8 as f32 / 255.,
-);
+pub const BAG_COLOR: Color = hex_color!(0xC3, 0xA9, 0x88);
+pub const BAG_OUTLINE_COLOR: Color = hex_color!(0x64, 0x56, 0x46);

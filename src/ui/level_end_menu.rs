@@ -145,7 +145,7 @@ fn spawn_score_recap(parent: &mut ChildBuilder, score: &CurrentScore, font: Hand
             TextStyle {
                 font,
                 font_size: MENU_FONT_SIZE,
-                color: SCORE_COLOR, //BLUE,
+                color: SCORE_COLOR,
             },
             TextAlignment {
                 horizontal: HorizontalAlign::Center,
