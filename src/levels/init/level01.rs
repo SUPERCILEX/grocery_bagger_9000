@@ -155,7 +155,7 @@ fn show_tutorial(
 ) {
     const ICON_SCALE: Vec3 = const_vec3!([0.05, 0.05, 0.05]);
 
-    if gb9000.state != Playing || gb9000.current_level != 0 || level_started.iter().count() > 0 {
+    if gb9000.state != Playing || gb9000.current_level != 1 || level_started.iter().count() > 0 {
         *fsm = TutorialFsm::Ready;
         return;
     }

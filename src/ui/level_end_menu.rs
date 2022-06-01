@@ -109,10 +109,10 @@ fn spawn_level_completed_summary(
 ) {
     parent.spawn_bundle(TextBundle {
         text: Text::with_section(
-            if gb9000.current_level as usize == LAST_LEVEL {
+            if gb9000.current_level as usize == LAST_LEVEL + 1 {
                 "Game complete!".to_string()
             } else {
-                format!("Level {} complete", gb9000.current_level + 1)
+                format!("Level {} complete", gb9000.current_level)
             },
             TextStyle {
                 font,
@@ -221,7 +221,7 @@ fn spawn_restart_and_next_level_buttons(
                 .with_children(|parent| {
                     parent.spawn_bundle(TextBundle {
                         text: Text::with_section(
-                            if gb9000.current_level as usize == LAST_LEVEL {
+                            if gb9000.current_level as usize == LAST_LEVEL + 1 {
                                 "Start infinite mode"
                             } else {
                                 "Next Level"

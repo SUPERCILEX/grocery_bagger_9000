@@ -115,7 +115,11 @@ fn debug_options(
                 let mut level_num = gb9000.current_level;
 
                 ui.label("Level");
-                ui.add(egui::DragValue::new(&mut level_num).speed(0.025));
+                ui.add(
+                    egui::DragValue::new(&mut level_num)
+                        .clamp_range(1..=u16::MAX)
+                        .speed(0.025),
+                );
 
                 if level_num != gb9000.current_level {
                     gb9000.current_level = level_num;

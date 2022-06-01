@@ -43,8 +43,17 @@ pub enum GameState {
     LevelEnded,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct GroceryBagger9000 {
     pub state: GameState,
     pub current_level: u16,
+}
+
+impl Default for GroceryBagger9000 {
+    fn default() -> Self {
+        Self {
+            state: default(),
+            current_level: 1,
+        }
+    }
 }

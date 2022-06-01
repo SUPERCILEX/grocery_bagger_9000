@@ -228,7 +228,7 @@ fn check_for_piece_selection_undos(
         if transform.rotation.x.abs() > 1e-5 || transform.rotation.y.abs() > 1e-5 {
             unmirrored_rotation *= *DEG_MIRRORED;
         }
-        if gb9000.current_level != 0
+        if gb9000.current_level != 1
             && unmirrored_rotation.z.abs() > 1e-5
             && unmirrored_rotation.w.abs() > 1e-5
         {

@@ -40,7 +40,7 @@ fn init_levels(
     asset_server: Res<AssetServer>,
 ) {
     if let Some(started) = level_started.iter().last() {
-        let level = **started as usize;
+        let level = **started as usize - 1;
         if level < LEVELS.len() {
             LEVELS[level](commands, dips_window, game_speed, asset_server);
         } else {
