@@ -431,6 +431,7 @@ class CapstoneLogger {
 }
 
 const PIECE_PLACED_ACTION = 0;
+const PIECE_PICKED_UP_ACTION = 1;
 
 function init_analytics(versionId) {
   getLogger(versionId);
@@ -449,6 +450,16 @@ function logLevelEnd(levelId) {
     }
     window.logger.logLevelEnd(JSON.stringify({
         levelId,
+    }));
+}
+
+function logPiecePickedUp(score, color) {
+    if (window.logger.isNewSession()) {
+        window.logger.startNewSession()
+    }
+    window.logger.logLevelAction(PIECE_PICKED_UP_ACTION, JSON.stringify({
+        score,
+        color,
     }));
 }
 

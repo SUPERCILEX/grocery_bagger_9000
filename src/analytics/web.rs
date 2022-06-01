@@ -7,7 +7,7 @@ use crate::{
     colors::NominoColor,
     gb9000::GroceryBagger9000,
     levels::{CurrentScore, LevelFinished, LevelStarted, ScoringSystems},
-    nominos::{NominoMarker, PiecePlaced, NOMINO_COLLIDER_GROUP},
+    nominos::{NominoMarker, PiecePickedUp, PiecePlaced, NOMINO_COLLIDER_GROUP},
 };
 
 pub struct AnalyticsPlugin;
@@ -18,6 +18,7 @@ impl Plugin for AnalyticsPlugin {
 
         app.add_system(log_level_start);
         app.add_system(log_level_end);
+        app.add_system(log_piece_picked_up.after(ScoringSystems));
         app.add_system(log_piece_placed.after(ScoringSystems));
     }
 }
@@ -108,9 +109,27 @@ fn log_piece_placed(
         }
 
         let score = current_score.points;
+        let bag_id = bag.to_bits();
         thread_pool
             .spawn(async move {
-                logPiecePlaced(score, bag_representation, bag.to_bits());
+                logPiecePlaced(score, bag_representation, bag_id);
+            })
+            .detach();
+    }
+}
+
+fn log_piece_picked_up(
+    mut pieces_picked_up: EventReader<PiecePickedUp>,
+    thread_pool: Res<AsyncComputeTaskPool>,
+    current_score: Res<CurrentScore>,
+    colors: Query<&NominoColor, With<NominoMarker>>,
+) {
+    for piece in pieces_picked_up.iter() {
+        let score = current_score.points;
+        let color = *colors.get(**piece).unwrap() as u32;
+        thread_pool
+            .spawn(async move {
+                logPiecePickedUp(score, color);
             })
             .detach();
     }
@@ -123,6 +142,8 @@ extern "C" {
     fn logLevelStart(level_id: u32);
 
     fn logLevelEnd(level_id: u32);
+
+    fn logPiecePickedUp(score: usize, color: u32);
 
     fn logPiecePlaced(score: usize, bag_state: String, bag_id: u64);
 }
