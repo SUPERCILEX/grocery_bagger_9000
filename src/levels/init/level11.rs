@@ -5,22 +5,30 @@ use crate::{
     bags::{BagContainerSpawner, BAG_SIZE_LARGE},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    levels::tutorials::spawn_text_tutorial,
+    levels::LevelMarker,
     nominos::{Nomino, DEG_180, DEG_MIRRORED},
+    robot::{RobotMarker, RobotTiming},
     window_management::DipsWindow,
 };
 
-const LEVEL_COLOR: NominoColor = NominoColor::Blue;
+const LEVEL_COLOR: NominoColor = NominoColor::Pink;
 
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
-    asset_server: Res<AssetServer>,
+    _: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
     commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_LARGE]);
-    spawn_text_tutorial(&mut commands, asset_server, "Bags come in different sizes");
+
+    // TODO remove
+    #[cfg(debug_assertions)]
+    commands
+        .spawn_bundle(TransformBundle::default())
+        .insert(LevelMarker)
+        .insert(RobotTiming::default())
+        .insert(RobotMarker);
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
@@ -45,13 +53,24 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
     commands.spawn_belt(
         dips_window,
         Box::new(PresetPiecesConveyorBelt::new([
-            piece!(Nomino::TetrominoStraight),
-            piece!(Nomino::TetrominoL, *DEG_180),
-            piece!(Nomino::TetrominoSquare),
-            piece!(Nomino::TetrominoStraight),
-            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
+            piece!(Nomino::TetrominoSkew),
             piece!(Nomino::TetrominoL),
+            piece!(Nomino::TetrominoL),
+            piece!(Nomino::TetrominoL, *DEG_180),
+            piece!(Nomino::TetrominoT, *DEG_180),
+            piece!(Nomino::TetrominoT),
             piece!(Nomino::TetrominoSquare),
+            piece!(Nomino::TetrominoSquare),
+            piece!(Nomino::TetrominoT),
+            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
+            piece!(Nomino::TetrominoT, *DEG_180),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
+            piece!(Nomino::TetrominoT),
+            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
+            piece!(Nomino::TetrominoT),
         ])),
     );
 }

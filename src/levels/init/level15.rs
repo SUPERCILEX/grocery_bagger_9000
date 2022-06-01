@@ -2,35 +2,33 @@ use bevy::prelude::*;
 
 use crate::{
     animations::GameSpeed,
-    bags::{BagContainerSpawner, BAG_SIZE_SMALL},
+    bags::{BagContainerSpawner, BAG_SIZE_LARGE},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
-    levels::tutorials::spawn_text_tutorial,
     nominos::Nomino,
     window_management::DipsWindow,
 };
 
-const NUM_PIECES: usize = 9;
-const LEVEL_COLOR: NominoColor = NominoColor::Pink;
-const LEVEL_OMINOS: [Nomino; 3] = [
+const NUM_PIECES: usize = 18;
+const LEVEL_COLOR: NominoColor = NominoColor::Red;
+const LEVEL_OMINOS: [Nomino; 7] = [
     Nomino::TrominoStraight,
+    Nomino::TrominoL,
     Nomino::TetrominoStraight,
     Nomino::TetrominoSquare,
+    Nomino::TetrominoT,
+    Nomino::TetrominoL,
+    Nomino::TetrominoSkew,
 ];
 
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
-    asset_server: Res<AssetServer>,
+    _: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    spawn_text_tutorial(
-        &mut commands,
-        asset_server,
-        "Some levels are randomly generated\nand may not have a perfect solution",
-    );
-    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]);
+    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_LARGE, BAG_SIZE_LARGE]);
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {

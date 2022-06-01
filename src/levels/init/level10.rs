@@ -2,14 +2,14 @@ use bevy::prelude::*;
 
 use crate::{
     animations::GameSpeed,
-    bags::{BagContainerSpawner, BAG_SIZE_SMALL},
+    bags::{BagContainerSpawner, BAG_SIZE_LARGE},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    nominos::{Nomino, DEG_MIRRORED},
+    nominos::{Nomino, DEG_180, DEG_MIRRORED},
     window_management::DipsWindow,
 };
 
-const LEVEL_COLOR: NominoColor = NominoColor::Gold;
+const LEVEL_COLOR: NominoColor = NominoColor::Red;
 
 pub fn init_level(
     mut commands: Commands,
@@ -18,19 +18,11 @@ pub fn init_level(
     _: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_SMALL]);
+    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_LARGE]);
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
     macro_rules! piece {
-        (mirrored $nomino:expr) => {{
-            Piece {
-                nomino: $nomino,
-                color: LEVEL_COLOR,
-                rotation: *DEG_MIRRORED,
-            }
-        }};
-
         ($nomino:expr) => {{
             Piece {
                 nomino: $nomino,
@@ -38,19 +30,27 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
                 rotation: Quat::IDENTITY,
             }
         }};
+
+        ($nomino:expr, $rotation:expr) => {{
+            Piece {
+                nomino: $nomino,
+                color: LEVEL_COLOR,
+                rotation: $rotation,
+            }
+        }};
     }
 
     commands.spawn_belt(
         dips_window,
         Box::new(PresetPiecesConveyorBelt::new([
-            piece!(Nomino::TetrominoL),
             piece!(Nomino::TetrominoSquare),
-            piece!(mirrored Nomino::TetrominoSkew),
-            piece!(Nomino::TetrominoL),
-            piece!(Nomino::TetrominoSquare),
-            piece!(Nomino::TetrominoStraight),
-            piece!(Nomino::TetrominoL),
-            piece!(Nomino::TetrominoL),
+            piece!(Nomino::TetrominoT),
+            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
+            piece!(Nomino::TetrominoSkew),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
+            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
+            piece!(Nomino::TetrominoT),
             piece!(Nomino::TetrominoStraight),
         ])),
     );

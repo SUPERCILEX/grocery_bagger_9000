@@ -2,75 +2,44 @@ use bevy::prelude::*;
 
 use crate::{
     animations::GameSpeed,
-    bags::{BagContainerSpawner, BAG_SIZE_LARGE},
+    bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     colors::NominoColor,
-    conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    levels::LevelMarker,
-    nominos::{Nomino, DEG_180, DEG_MIRRORED},
-    robot::{RobotMarker, RobotTiming},
+    conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
+    levels::tutorials::spawn_text_tutorial,
+    nominos::Nomino,
     window_management::DipsWindow,
 };
 
+const NUM_PIECES: usize = 9;
 const LEVEL_COLOR: NominoColor = NominoColor::Pink;
+const LEVEL_OMINOS: [Nomino; 3] = [
+    Nomino::TrominoStraight,
+    Nomino::TetrominoStraight,
+    Nomino::TetrominoSquare,
+];
 
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
-    _: Res<AssetServer>,
+    asset_server: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_LARGE]);
-
-    // TODO remove
-    #[cfg(debug_assertions)]
-    commands
-        .spawn_bundle(TransformBundle::default())
-        .insert(LevelMarker)
-        .insert(RobotTiming::default())
-        .insert(RobotMarker);
+    spawn_text_tutorial(
+        &mut commands,
+        asset_server,
+        "Some levels are randomly generated\nand may not have a perfect solution",
+    );
+    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]);
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
-    macro_rules! piece {
-        ($nomino:expr) => {{
-            Piece {
-                nomino: $nomino,
-                color: LEVEL_COLOR,
-                rotation: Quat::IDENTITY,
-            }
-        }};
-
-        ($nomino:expr, $rotation:expr) => {{
-            Piece {
-                nomino: $nomino,
-                color: LEVEL_COLOR,
-                rotation: $rotation,
-            }
-        }};
-    }
-
     commands.spawn_belt(
         dips_window,
-        Box::new(PresetPiecesConveyorBelt::new([
-            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
-            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
-            piece!(Nomino::TetrominoSkew),
-            piece!(Nomino::TetrominoL),
-            piece!(Nomino::TetrominoL),
-            piece!(Nomino::TetrominoL, *DEG_180),
-            piece!(Nomino::TetrominoT, *DEG_180),
-            piece!(Nomino::TetrominoT),
-            piece!(Nomino::TetrominoSquare),
-            piece!(Nomino::TetrominoSquare),
-            piece!(Nomino::TetrominoT),
-            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
-            piece!(Nomino::TetrominoT, *DEG_180),
-            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
-            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
-            piece!(Nomino::TetrominoT),
-            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
-            piece!(Nomino::TetrominoT),
-        ])),
+        Box::new(RandomPiecesConveyorBelt::new(
+            NUM_PIECES,
+            LEVEL_OMINOS,
+            [LEVEL_COLOR],
+        )),
     );
 }

@@ -23,18 +23,29 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Sometimes, leaving holes under\nitems is unavoidable…",
+        "Sometimes, leaving holes under\nitems is unavoidable…\nTry rearranging the items for a higher score",
     );
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
+    macro_rules! piece {
+        ($nomino:expr) => {{
+            Piece {
+                nomino: $nomino,
+                color: LEVEL_COLOR,
+                rotation: Quat::IDENTITY,
+            }
+        }};
+    }
+
     commands.spawn_belt(
         dips_window,
-        Box::new(PresetPiecesConveyorBelt::new([Piece {
-            nomino: Nomino::TetrominoStraight,
-            color: LEVEL_COLOR,
-            rotation: Quat::IDENTITY,
-        }])),
+        Box::new(PresetPiecesConveyorBelt::new([
+            piece!(Nomino::TetrominoStraight),
+            piece!(Nomino::TetrominoStraight),
+            piece!(Nomino::TetrominoSquare),
+            piece!(Nomino::TrominoL),
+        ])),
     );
 }
 

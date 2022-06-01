@@ -10,10 +10,13 @@ use crate::{
 };
 
 const NUM_PIECES: usize = 18;
-const LEVEL_OMINOS: [Nomino; 3] = [
+const LEVEL_OMINOS: [Nomino; 6] = [
     Nomino::TrominoStraight,
+    Nomino::TrominoL,
     Nomino::TetrominoStraight,
     Nomino::TetrominoSquare,
+    Nomino::TetrominoL,
+    Nomino::TetrominoSkew,
 ];
 
 pub fn init_level(
@@ -23,7 +26,11 @@ pub fn init_level(
     _: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]);
+    commands.spawn_bag(
+        &dips_window,
+        &game_speed,
+        [BAG_SIZE_SMALL, BAG_SIZE_SMALL, BAG_SIZE_SMALL],
+    );
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
@@ -32,7 +39,7 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
         Box::new(RandomPiecesConveyorBelt::new(
             NUM_PIECES,
             LEVEL_OMINOS,
-            [NominoColor::Pink, NominoColor::Blue],
+            [NominoColor::Red, NominoColor::Gold],
         )),
     );
 }
