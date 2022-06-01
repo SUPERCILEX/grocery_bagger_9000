@@ -11,7 +11,7 @@ macro_rules! hex_color {
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Component)]
 pub enum NominoColor {
-    Red,
+    Orange,
     Gold,
     Blue,
     Green,
@@ -26,11 +26,11 @@ impl NominoColor {
 
     pub fn render(self) -> Color {
         match self {
-            Self::Red => hex_color!(0xDD, 0x6F, 0x2E),
-            Self::Gold => hex_color!(0xF1, 0xDE, 0x4A),
-            Self::Blue => hex_color!(0x68, 0xE2, 0xFC),
-            Self::Green => hex_color!(0x76, 0xFB, 0xC6),
-            Self::Pink => hex_color!(0xDC, 0x2F, 0xBB),
+            Self::Orange => hex_color!(0xCC, 0x65, 0x2D),
+            Self::Gold => hex_color!(0xD6, 0xC5, 0x42),
+            Self::Blue => hex_color!(0x04, 0xBD, 0xDE),
+            Self::Green => hex_color!(0x6C, 0xE0, 0xB2),
+            Self::Pink => hex_color!(0xC2, 0x2B, 0xA6),
             #[cfg(feature = "debug")]
             Self::Debug => Color::WHITE,
             Self::_Last => unreachable!(),

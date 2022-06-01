@@ -12,4 +12,4 @@ pub const HOVERED_BUTTON: Color = hex_color!(138, 161, 238);
 pub const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
 pub const SCORE_COLOR: Color = hex_color!(221, 111, 46);
-pub const TITLE_COLOR: Color = Color::WHITE;
+pub const TITLE_COLOR: Color = BUTTON_COLOR;

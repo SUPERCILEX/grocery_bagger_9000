@@ -10,7 +10,7 @@ use crate::{
 };
 
 const NUM_PIECES: usize = 18;
-const LEVEL_COLOR: NominoColor = NominoColor::Red;
+const LEVEL_COLOR: NominoColor = NominoColor::Orange;
 const LEVEL_OMINOS: [Nomino; 5] = [
     Nomino::TrominoStraight,
     Nomino::TrominoL,

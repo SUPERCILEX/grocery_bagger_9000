@@ -31,7 +31,7 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
     commands.spawn_belt(
         dips_window,
         Box::new(InfinitePiecesConveyorBelt::new([
-            NominoColor::Red,
+            NominoColor::Orange,
             NominoColor::Gold,
             NominoColor::Green,
             NominoColor::Pink,

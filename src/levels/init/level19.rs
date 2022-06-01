@@ -39,7 +39,7 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
         Box::new(RandomPiecesConveyorBelt::new(
             NUM_PIECES,
             LEVEL_OMINOS,
-            [NominoColor::Red, NominoColor::Gold],
+            [NominoColor::Orange, NominoColor::Gold],
         )),
     );
 }

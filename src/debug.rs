@@ -221,7 +221,7 @@ fn debug_options(
                             };
                         }
 
-                        option!(NominoColor::Red);
+                        option!(NominoColor::Orange);
                         option!(NominoColor::Gold);
                         option!(NominoColor::Blue);
                         option!(NominoColor::Green);
