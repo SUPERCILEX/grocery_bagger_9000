@@ -43,6 +43,7 @@ impl Plugin for ConveyorBeltMovementPlugin {
                 .after(WindowSystems)
                 .after(PieceSystems)
                 .after(MenuButtonClickedSystems)
+                .before(LevelTransitionSystems)
                 .after(replace_pieces),
         );
         app.add_system(
