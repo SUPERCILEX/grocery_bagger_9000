@@ -30,13 +30,14 @@ enum VersionIds {
 }
 
 fn init(thread_pool: Res<AsyncComputeTaskPool>, robot_options: Res<RobotOptions>) {
+    let robot_enabled = robot_options.enabled;
     thread_pool
-        .spawn(async {
-            init_analytics(if robot_options.enabled {
+        .spawn(async move {
+            init_analytics(if robot_enabled {
                 VersionIds::WithRobot
             } else {
                 VersionIds::NoRobot
-            });
+            } as u32);
         })
         .detach();
 }

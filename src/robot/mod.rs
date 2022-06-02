@@ -36,7 +36,7 @@ fn init_robot(app: &mut App) {
 fn init_robot(app: &mut App) {
     use rand::{thread_rng, Rng};
 
-    let options = RobotOptions::default();
+    let mut options = RobotOptions::default();
     options.enabled = thread_rng().gen();
     app.insert_resource(options);
 }
