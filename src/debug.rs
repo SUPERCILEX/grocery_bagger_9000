@@ -14,6 +14,7 @@ use crate::{
     },
     levels::{LevelFinished, LevelMarker},
     nominos::*,
+    robot::RobotOptions,
 };
 
 pub struct DebugPlugin;
@@ -104,6 +105,7 @@ fn debug_options(
     mut commands: Commands,
     mut gb9000: ResMut<GroceryBagger9000>,
     mut conveyor_belt_options: ResMut<ConveyorBeltOptions>,
+    mut robot_options: ResMut<RobotOptions>,
     mut game_speed: ResMut<GameSpeed>,
     mut level_finished: EventWriter<LevelFinished>,
 ) {
@@ -155,6 +157,8 @@ fn debug_options(
                         .clamp_range(0..=9),
                 );
             });
+
+            ui.checkbox(&mut robot_options.enabled, "Enable robot");
 
             ui.separator();
             ui.horizontal(|ui| {

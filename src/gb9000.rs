@@ -22,7 +22,7 @@ impl Plugin for GroceryBagger9000Plugin {
         app.add_plugin(AnimationPlugin);
         app.add_plugin(UiPlugin);
         app.add_plugin(RobotPlugin);
-        #[cfg(not(debug_assertions))]
+        #[cfg(not(feature = "debug"))]
         app.add_plugin(crate::analytics::AnalyticsPlugin);
 
         app.add_plugin(ShapePlugin);

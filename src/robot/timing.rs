@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{math::const_vec3, prelude::*};
+use bevy::{ecs::schedule::ShouldRun, math::const_vec3, prelude::*};
 use bevy_prototype_lyon::prelude::DrawMode;
 use bevy_rapier3d::prelude::{Collider, CollisionGroups, RapierContext};
 use bevy_tweening::{AnimationSystem, Animator};
@@ -15,7 +15,7 @@ use crate::{
     conveyor_belt::BeltMovementSystems,
     levels::{LevelFinished, LevelMarker, ScoringSystems},
     nominos::{Nomino, NominoBundle, PiecePlaced, PieceSystems, Selected, NOMINO_COLLIDER_GROUP},
-    robot::spawn::RobotMarker,
+    robot::{spawn::RobotMarker, RobotOptions},
 };
 
 const PLACEMENT_TTL: Duration = Duration::from_secs(5);
@@ -32,9 +32,24 @@ pub struct RobotTimingPlugin;
 
 impl Plugin for RobotTimingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(accumulate_left_over_time.after(PieceSystems));
+        app.add_system(
+            remove_robot_on_disable.with_run_criteria(|options: Res<RobotOptions>| {
+                if options.is_changed() && !options.enabled {
+                    ShouldRun::Yes
+                } else {
+                    ShouldRun::No
+                }
+            }),
+        );
+
+        app.add_system(
+            accumulate_left_over_time
+                .with_run_criteria(run_if_robot_is_enabled)
+                .after(PieceSystems),
+        );
         app.add_system(
             place_piece
+                .with_run_criteria(run_if_robot_is_enabled)
                 .after(PieceSystems)
                 .after(ScoringSystems)
                 .after(BagReplacementDetectionSystems)
@@ -43,6 +58,7 @@ impl Plugin for RobotTimingPlugin {
         );
         app.add_system(
             show_target_placement
+                .with_run_criteria(run_if_robot_is_enabled)
                 .after(accumulate_left_over_time)
                 .after(place_piece),
         );
@@ -67,6 +83,23 @@ impl Default for RobotTiming {
             ttl: Timer::new(PLACEMENT_TTL, false),
             continue_trying: false,
         }
+    }
+}
+
+fn run_if_robot_is_enabled(options: Res<RobotOptions>) -> ShouldRun {
+    if options.enabled {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
+
+fn remove_robot_on_disable(
+    mut commands: Commands,
+    robot_entities: Query<Entity, With<IndicatorPieceMarker>>,
+) {
+    for id in robot_entities.iter() {
+        commands.entity(id).despawn_recursive();
     }
 }
 

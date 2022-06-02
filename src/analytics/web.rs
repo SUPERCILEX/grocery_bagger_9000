@@ -8,6 +8,7 @@ use crate::{
     gb9000::GroceryBagger9000,
     levels::{CurrentScore, LevelFinished, LevelStarted, ScoringSystems},
     nominos::{NominoMarker, PiecePickedUp, PiecePlaced, NOMINO_COLLIDER_GROUP},
+    robot::RobotOptions,
 };
 
 pub struct AnalyticsPlugin;
@@ -25,13 +26,18 @@ impl Plugin for AnalyticsPlugin {
 
 #[derive(Copy, Clone)]
 enum VersionIds {
-    WiderRelease = 10,
+    WithRobot = 20,
+    NoRobot = 21,
 }
 
-fn init(thread_pool: Res<AsyncComputeTaskPool>) {
+fn init(thread_pool: Res<AsyncComputeTaskPool>, robot_options: Res<RobotOptions>) {
     thread_pool
         .spawn(async {
-            init_analytics(VersionIds::WiderRelease as u32);
+            init_analytics(if robot_options.enabled {
+                VersionIds::WithRobot
+            } else {
+                VersionIds::NoRobot
+            });
         })
         .detach();
 }
