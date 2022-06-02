@@ -12,7 +12,7 @@ use movement::PieceMovementPlugin;
 pub use movement::{
     OutOfBagPlacement, PiecePickedUp, PiecePlaced, PieceSystems, Selectable, Selected,
 };
-pub use spawn::{NominoMarker, NominoSpawner};
+pub use spawn::{NominoBundle, NominoMarker, NominoSpawner};
 
 mod consts;
 mod movement;
@@ -31,7 +31,7 @@ impl Plugin for PiecesPlugin {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, FromPrimitive)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Component, FromPrimitive)]
 pub enum Nomino {
     TrominoStraight,
     TrominoL,

@@ -1,4 +1,4 @@
-use bevy::{ecs::system::EntityCommands, prelude::*};
+use bevy::prelude::*;
 use bevy_prototype_lyon::{
     geometry::GeometryBuilder,
     prelude::{
@@ -23,7 +23,7 @@ use crate::{
 
 pub type BoxedConveyorBelt = Box<dyn ConveyorBelt + Send + Sync>;
 
-#[derive(Component)]
+#[derive(Default, Component)]
 pub struct ConveyorBeltMarker;
 
 #[derive(Component)]
@@ -36,31 +36,32 @@ pub struct BeltNonselectableBackgroundMarker;
 pub struct ConveyorBeltInstance(BoxedConveyorBelt);
 
 pub trait ConveyorBeltSpawner<'w, 's> {
-    fn spawn_belt(
-        &mut self,
-        dips_window: &DipsWindow,
-        belt: BoxedConveyorBelt,
-    ) -> EntityCommands<'w, 's, '_>;
+    fn spawn_belt(&mut self, dips_window: &DipsWindow, belt: BoxedConveyorBelt);
 }
 
 pub trait ConveyorBeltBackgroundSpawner {
     fn spawn_belt_background(&mut self, num_pieces_selectable: u8);
 }
 
+#[derive(Bundle)]
+struct ConveyorBeltBundle {
+    #[bundle]
+    transforms: TransformBundle,
+    level_marker: LevelMarker,
+    conveyor_belt: ConveyorBeltInstance,
+    pieces: BeltPieceIds,
+    belt_marker: ConveyorBeltMarker,
+}
+
 impl<'w, 's> ConveyorBeltSpawner<'w, 's> for Commands<'w, 's> {
-    fn spawn_belt(
-        &mut self,
-        dips_window: &DipsWindow,
-        belt: BoxedConveyorBelt,
-    ) -> EntityCommands<'w, 's, '_> {
-        let mut commands = self.spawn_bundle(TransformBundle::from_transform(
-            compute_belt_position(dips_window),
-        ));
-        commands.insert(LevelMarker);
-        commands.insert(ConveyorBeltInstance(belt));
-        commands.insert(BeltPieceIds::default());
-        commands.insert(ConveyorBeltMarker);
-        commands
+    fn spawn_belt(&mut self, dips_window: &DipsWindow, belt: BoxedConveyorBelt) {
+        self.spawn_and_forget(ConveyorBeltBundle {
+            transforms: TransformBundle::from_transform(compute_belt_position(dips_window)),
+            conveyor_belt: ConveyorBeltInstance(belt),
+            level_marker: default(),
+            belt_marker: default(),
+            pieces: default(),
+        });
     }
 }
 

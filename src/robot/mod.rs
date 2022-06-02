@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-pub use spawn::RobotMarker;
+pub use spawn::{RobotMarker, RobotSpawner};
 use timing::RobotTimingPlugin;
 pub use timing::{RobotTargetMarker, RobotTiming};
 

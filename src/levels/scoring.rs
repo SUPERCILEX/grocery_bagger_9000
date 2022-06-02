@@ -234,6 +234,7 @@ fn get_connected_empties_count(matrix: &[impl AsRef<[bool]>]) -> u8 {
                 frontier.push_back(neighbor);
             }
         };
+
         block.left().map(&mut touch_neighbor);
         block
             .right((row.len() - 1).try_into().unwrap())

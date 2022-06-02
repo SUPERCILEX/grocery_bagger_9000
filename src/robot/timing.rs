@@ -1,13 +1,16 @@
 use std::time::Duration;
 
 use bevy::{math::const_vec3, prelude::*};
+use bevy_prototype_lyon::prelude::DrawMode;
 use bevy_rapier3d::prelude::{Collider, CollisionGroups, RapierContext};
 use bevy_tweening::Animator;
 
 use crate::{
     animations::{GameSpeed, RedoableAnimationBundle},
     bags::{BagMarker, BagSize, BAG_FLOOR_COLLIDER_GROUP, BAG_WALLS_COLLIDER_GROUP},
-    nominos::{PiecePlaced, PieceSystems, Selected, NOMINO_COLLIDER_GROUP},
+    colors::NominoColor,
+    levels::LevelMarker,
+    nominos::{Nomino, NominoBundle, PiecePlaced, PieceSystems, Selected, NOMINO_COLLIDER_GROUP},
     robot::spawn::RobotMarker,
 };
 
@@ -27,17 +30,25 @@ impl Plugin for RobotTimingPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(accumulate_left_over_time.after(PieceSystems));
         app.add_system(place_piece.before(PieceSystems));
+        app.add_system(
+            show_target_placement
+                .after(accumulate_left_over_time)
+                .after(place_piece),
+        );
     }
 }
-
-#[derive(Component)]
-pub struct RobotTargetMarker;
 
 #[derive(Component)]
 pub struct RobotTiming {
     ttl: Timer,
     continue_trying: bool,
 }
+
+#[derive(Component)]
+pub struct RobotTargetMarker;
+
+#[derive(Component)]
+struct TargetPieceMarker;
 
 impl Default for RobotTiming {
     fn default() -> Self {
@@ -62,6 +73,90 @@ fn accumulate_left_over_time(
         let ttl = &mut robot.ttl;
         ttl.set_duration(ttl.duration() - ttl.elapsed() + PLACEMENT_TTL);
         ttl.reset();
+    }
+}
+
+fn show_target_placement(
+    mut commands: Commands,
+    mut colors: Query<&mut DrawMode, With<TargetPieceMarker>>,
+    mut spawned: Local<Option<(Entity, Entity)>>,
+    timing: Query<&RobotTiming, With<RobotMarker>>,
+    bags: Query<
+        (Entity, &GlobalTransform, &BagSize),
+        (
+            With<BagMarker>,
+            Without<RobotTargetMarker>,
+            Without<Animator<Transform>>,
+        ),
+    >,
+    selected_piece: Query<(), With<Selected>>,
+    target_piece: Query<
+        (Entity, &GlobalTransform, &Collider, &Nomino, &NominoColor),
+        (With<RobotTargetMarker>, Without<BagMarker>),
+    >,
+    rapier_context: Res<RapierContext>,
+) {
+    let spawned_copy = *spawned;
+    let mut maybe_despawn = || {
+        if let Some((_, indicator)) = *spawned {
+            commands.entity(indicator).despawn_recursive();
+            *spawned = None;
+        }
+    };
+
+    let robot = if let Ok(r) = timing.get_single() {
+        r
+    } else {
+        maybe_despawn();
+        return;
+    };
+    let (target_id, piece_position, collider, nomino, color) =
+        if let Ok(p) = target_piece.get_single() {
+            p
+        } else {
+            maybe_despawn();
+            return;
+        };
+
+    let render_color = || {
+        let alpha = robot.ttl.elapsed().div_duration_f32(robot.ttl.duration());
+        let mut color = color.render();
+        color.set_a(alpha);
+        color
+    };
+
+    if let Some((_, position)) = find_robot_piece_placement(
+        bags,
+        selected_piece,
+        piece_position,
+        collider,
+        &rapier_context,
+    ) {
+        if let Some((target, indicator)) = spawned_copy && target == target_id {
+            if let DrawMode::Outlined {
+                ref mut fill_mode, ..
+            } = *colors.get_mut(indicator).unwrap()
+            {
+                fill_mode.color = render_color();
+            }
+        } else {
+            maybe_despawn();
+            *spawned = Some((
+                target_id,
+                commands
+                    .spawn_bundle(NominoBundle::new(
+                        piece_position.with_translation(position).into(),
+                        *nomino,
+                        *color,
+                        render_color(),
+                    ))
+                    .insert(LevelMarker)
+                    .insert(TargetPieceMarker)
+                    .id(),
+            ));
+        }
+    } else {
+        maybe_despawn();
     }
 }
 

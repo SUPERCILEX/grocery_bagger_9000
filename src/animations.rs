@@ -219,7 +219,7 @@ pub fn piece_loaded(
     to: Transform,
     speed: &GameSpeed,
 ) -> Animator<Transform> {
-    let bezier_6th = |x: f32| {
+    fn bezier_6th(x: f32) -> f32 {
         let x2 = x * x;
         let x4 = x2 * x2;
 
@@ -230,7 +230,8 @@ pub fn piece_loaded(
                 (-114f32).mul_add(x4, 34f32.mul_add(x * x2, 3. * x2)),
             ),
         )
-    };
+    }
+
     let steady_velocity_time = (to.translation.x - from.translation.x).abs() * 16. / 1000.;
     let enter = Tween::new(
         EaseMethod::CustomFunction(bezier_6th),

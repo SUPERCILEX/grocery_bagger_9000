@@ -4,6 +4,8 @@
 #![feature(option_result_contains)]
 #![feature(is_sorted)]
 #![feature(let_else)]
+#![feature(div_duration)]
+#![feature(is_some_with)]
 #![warn(
     clippy::all,
     clippy::float_cmp_const,
@@ -19,6 +21,7 @@
 #![allow(clippy::module_name_repetitions)]
 #![allow(clippy::multiple_crate_versions)]
 #![allow(clippy::option_if_let_else)]
+#![allow(clippy::forget_non_drop)] // TODO https://github.com/bevyengine/bevy/issues/4601
 
 use bevy::{app::App, DefaultPlugins};
 

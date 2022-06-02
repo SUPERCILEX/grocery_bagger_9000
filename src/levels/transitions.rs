@@ -45,7 +45,7 @@ pub struct LevelSpawnStage;
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
 pub struct LevelTransitionSystems;
 
-#[derive(Component)]
+#[derive(Default, Component)]
 pub struct LevelMarker;
 
 #[derive(Deref)]

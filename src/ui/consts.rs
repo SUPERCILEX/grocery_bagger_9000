@@ -1,5 +1,6 @@
-use crate::hex_color;
 use bevy::prelude::Color;
+
+use crate::hex_color;
 
 pub const HUD_FONT_SIZE: f32 = 32.;
 pub const IN_GAME_MENU_FONT_SIZE: f32 = 20.;

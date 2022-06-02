@@ -5,9 +5,8 @@ use crate::{
     bags::{BagContainerSpawner, BAG_SIZE_LARGE},
     colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    levels::LevelMarker,
     nominos::{Nomino, DEG_180, DEG_MIRRORED},
-    robot::{RobotMarker, RobotTiming},
+    robot::RobotSpawner,
     window_management::DipsWindow,
 };
 
@@ -21,14 +20,7 @@ pub fn init_level(
 ) {
     spawn_belt(&mut commands, &dips_window);
     commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_LARGE]);
-
-    // TODO remove
-    #[cfg(debug_assertions)]
-    commands
-        .spawn_bundle(TransformBundle::default())
-        .insert(LevelMarker)
-        .insert(RobotTiming::default())
-        .insert(RobotMarker);
+    commands.spawn_robot();
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
