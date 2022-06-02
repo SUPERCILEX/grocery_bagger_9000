@@ -14,7 +14,6 @@ bevy = { git = "https://github.com/SUPERCILEX/bevy" }
 bevy_ecs = { git = "https://github.com/SUPERCILEX/bevy" }
 bevy_app = { git = "https://github.com/SUPERCILEX/bevy" }
 bevy_render = { git = "https://github.com/SUPERCILEX/bevy" }
-bevy_rapier3d = { git = "https://github.com/dimforge/bevy_rapier" }
 bevy_tweening = { git = "https://github.com/SUPERCILEX/bevy_tweening" }
 bevy_screen_diags = { git = "https://github.com/SUPERCILEX/bevy_screen_diags" }
 
@@ -25,7 +24,7 @@ bevy-inspector-egui-rapier = { version = "0.3.0", features = ["rapier3d"], optio
 bevy_egui = { version = "0.14.0", default-features = false, optional = true }
 bevy_mod_debugdump = { version = "0.4.0", optional = true }
 bevy_prototype_lyon = "0.5.0"
-bevy_rapier3d = { version = "0.13.2", default-features = false, features = ["dim3", "simd-nightly"] }
+bevy_rapier3d = { version = "0.14.1", default-features = false, features = ["dim3", "simd-nightly"] }
 bevy_screen_diags = { version = "0.4.0", optional = true }
 bevy_svg = { version = "0.7.0", default-features = false, features = ["2d"] }
 bevy_tweening = { version = "0.4.0", default-features = false, features = ["bevy_ui"] }
