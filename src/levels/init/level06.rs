@@ -22,7 +22,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Sometimes, leaving holes under\nitems is unavoidable…\nTry rearranging the items for a higher score",
+        "Sometimes, leaving holes under\nitems is unavoidable…\nTry rearranging the items for a higher score.",
     );
 }
 

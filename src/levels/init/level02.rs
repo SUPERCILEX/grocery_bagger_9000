@@ -22,7 +22,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Try to completely fill the bags",
+        "Try to completely fill the bags.",
     );
 }
 

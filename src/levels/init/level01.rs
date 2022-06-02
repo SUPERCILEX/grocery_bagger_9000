@@ -107,7 +107,7 @@ fn spawn_tutorial(commands: &mut Commands, asset_server: Res<AssetServer>) {
 
             parent.spawn_bundle(TextBundle {
                 text: Text::with_section(
-                    "Left click to pick up and place items\nRight click to rotate",
+                    "Left click to pick up and place items.\nRight click to rotate.",
                     TextStyle {
                         font,
                         font_size: TUTORIAL_FONT_SIZE_SMALL,

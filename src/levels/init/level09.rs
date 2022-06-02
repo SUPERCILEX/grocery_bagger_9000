@@ -19,7 +19,7 @@ pub fn init_level(
 ) {
     spawn_belt(&mut commands, &dips_window);
     commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_LARGE]);
-    spawn_text_tutorial(&mut commands, asset_server, "Bags come in different sizes");
+    spawn_text_tutorial(&mut commands, asset_server, "Bags come in different sizes.");
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
