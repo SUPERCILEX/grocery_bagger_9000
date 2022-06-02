@@ -3,10 +3,10 @@ use std::{cmp::min, time::Duration};
 use bevy::{ecs::schedule::ShouldRun, math::const_vec3, prelude::*};
 use bevy_prototype_lyon::prelude::DrawMode;
 use bevy_rapier3d::prelude::{Collider, CollisionGroups, RapierContext};
-use bevy_tweening::{AnimationSystem, Animator};
+use bevy_tweening::{AnimationSystem, Animator, TweenCompleted};
 
 use crate::{
-    animations::{AnimationComponentsBundle, GameSpeed, Target},
+    animations::{AnimationComponentsBundle, AnimationEvent, GameSpeed, Target},
     bags::{
         BagMarker, BagReplacementDetectionSystems, BagSize, BAG_FLOOR_COLLIDER_GROUP,
         BAG_WALLS_COLLIDER_GROUP,
@@ -128,6 +128,7 @@ fn show_target_placement(
     mut indicator_piece: Query<(&mut DrawMode, &mut Transform), With<IndicatorPieceMarker>>,
     mut spawned: Local<Option<(Entity, Entity)>>,
     mut level_finished: EventReader<LevelFinished>,
+    mut completed_animations: EventReader<TweenCompleted>,
     timing: Query<&RobotTiming, With<RobotMarker>>,
     bags: Query<
         (Entity, &GlobalTransform, &BagSize),
@@ -189,6 +190,16 @@ fn show_target_placement(
         color.set_a(alpha);
         color
     };
+
+    for TweenCompleted { user_data, .. } in completed_animations.iter() {
+        let flags = (AnimationEvent::COMPLETED | AnimationEvent::BAG).bits();
+        if *user_data & flags == flags {
+            // TODO remove after stageless
+            // Force a recompute on the next frame. We need to do this because the bags
+            // query filters by animation and so the bag won't show up.
+            maybe_despawn();
+        }
+    }
 
     if !target_changes.is_changed() && spawned_copy.is_some() {
         if let Some((_, indicator)) = spawned_copy {
