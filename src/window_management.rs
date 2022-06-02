@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use bevy::{
     prelude::*,
     render::camera::WindowOrigin,
@@ -28,6 +30,9 @@ impl Plugin for WindowManager {
         });
         app.insert_resource(WinitSettings {
             focused_mode: UpdateMode::Continuous,
+            unfocused_mode: UpdateMode::ReactiveLowPower {
+                max_wait: Duration::MAX,
+            },
             ..WinitSettings::desktop_app()
         });
         app.insert_resource(ClearColor(BACKGROUND_COLOR));
