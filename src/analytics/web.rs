@@ -6,7 +6,9 @@ use crate::{
     bags::{BagMarker, BagSize},
     gb9000::GroceryBagger9000,
     levels::{CurrentScore, LevelFinished, LevelStarted, ScoringSystems},
-    nominos::{NominoColor, NominoMarker, PiecePickedUp, PiecePlaced, NOMINO_COLLIDER_GROUP},
+    nominos::{
+        Nomino, NominoColor, NominoMarker, PiecePickedUp, PiecePlaced, NOMINO_COLLIDER_GROUP,
+    },
     robot::RobotOptions,
 };
 
@@ -83,8 +85,9 @@ fn log_piece_placed(
     rapier_context: Res<RapierContext>,
     bags: Query<(&GlobalTransform, &BagSize), With<BagMarker>>,
     colors: Query<&NominoColor, With<NominoMarker>>,
+    pieces: Query<&Nomino, With<NominoMarker>>,
 ) {
-    for PiecePlaced { bag, .. } in piece_placed.iter() {
+    for PiecePlaced { bag, piece } in piece_placed.iter() {
         let (bag_coords, bag_size) = bags.get(*bag).unwrap();
 
         let width = bag_size.width();
@@ -116,9 +119,10 @@ fn log_piece_placed(
 
         let score = current_score.points;
         let bag_id = bag.to_bits();
+        let nomino = *pieces.get(*piece).unwrap() as u32;
         thread_pool
             .spawn(async move {
-                logPiecePlaced(score, bag_representation, bag_id);
+                logPiecePlaced(score, nomino, bag_representation, bag_id);
             })
             .detach();
     }
@@ -128,14 +132,17 @@ fn log_piece_picked_up(
     mut pieces_picked_up: EventReader<PiecePickedUp>,
     thread_pool: Res<AsyncComputeTaskPool>,
     current_score: Res<CurrentScore>,
-    colors: Query<&NominoColor, With<NominoMarker>>,
+    nominos: Query<(&Nomino, &NominoColor), With<NominoMarker>>,
 ) {
     for piece in pieces_picked_up.iter() {
         let score = current_score.points;
-        let color = *colors.get(**piece).unwrap() as u32;
+        let (nomino, color) = nominos.get(**piece).unwrap();
+
+        let nomino = *nomino as u32;
+        let color = *color as u32;
         thread_pool
             .spawn(async move {
-                logPiecePickedUp(score, color);
+                logPiecePickedUp(score, nomino, color);
             })
             .detach();
     }
@@ -149,7 +156,7 @@ extern "C" {
 
     fn logLevelEnd(level_id: u32);
 
-    fn logPiecePickedUp(score: usize, color: u32);
+    fn logPiecePickedUp(score: usize, kind: u32, color: u32);
 
-    fn logPiecePlaced(score: usize, bag_state: String, bag_id: u64);
+    fn logPiecePlaced(score: usize, kind: u32, bag_state: String, bag_id: u64);
 }

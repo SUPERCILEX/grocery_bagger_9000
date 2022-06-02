@@ -430,6 +430,9 @@ class CapstoneLogger {
     }
 }
 
+// Fix BigInt stupidity
+BigInt.prototype.toJSON = function() { return this.toString() }
+
 const PIECE_PLACED_ACTION = 0;
 const PIECE_PICKED_UP_ACTION = 1;
 
@@ -453,22 +456,24 @@ function logLevelEnd(levelId) {
     }));
 }
 
-function logPiecePickedUp(score, color) {
+function logPiecePickedUp(score, piece_id, color) {
     if (window.logger.isNewSession()) {
         window.logger.startNewSession()
     }
     window.logger.logLevelAction(PIECE_PICKED_UP_ACTION, JSON.stringify({
         score,
+        piece_id,
         color,
     }));
 }
 
-function logPiecePlaced(score, bag, bag_id) {
+function logPiecePlaced(score, piece_id, bag, bag_id) {
     if (window.logger.isNewSession()) {
         window.logger.startNewSession()
     }
     window.logger.logLevelAction(PIECE_PLACED_ACTION, JSON.stringify({
         score,
+        piece_id,
         bag,
         bag_id,
     }));
