@@ -385,10 +385,8 @@ fn move_pieces(
 
     for (index, piece) in belt_pieces.iter().enumerate() {
         if let Ok(position) = positions.get(*piece) {
-            let target = Transform::from_translation(piece_position(
-                &belt_options,
-                index.try_into().unwrap(),
-            ));
+            let target =
+                position.with_translation(piece_position(&belt_options, index.try_into().unwrap()));
 
             if !position.translation.abs_diff_eq(target.translation, 1e-3) {
                 commands
