@@ -92,7 +92,14 @@ fn show_target_placement(
     >,
     selected_piece: Query<(), With<Selected>>,
     target_piece: Query<
-        (Entity, &GlobalTransform, &Collider, &Nomino, &NominoColor),
+        (
+            Entity,
+            &GlobalTransform,
+            &Collider,
+            &Nomino,
+            &NominoColor,
+            ChangeTrackers<RobotTargetMarker>,
+        ),
         (With<RobotTargetMarker>, Without<BagMarker>),
     >,
     rapier_context: Res<RapierContext>,
@@ -116,7 +123,7 @@ fn show_target_placement(
         maybe_despawn();
         return;
     };
-    let (target_id, piece_position, collider, nomino, color) =
+    let (target_id, piece_position, collider, nomino, color, target_changes) =
         if let Ok(p) = target_piece.get_single() {
             p
         } else {
@@ -130,6 +137,19 @@ fn show_target_placement(
         color.set_a(alpha);
         color
     };
+
+    if !target_changes.is_changed() && spawned_copy.is_some() {
+        if let Some((_, indicator)) = spawned_copy {
+            let mut colors = indicator_piece.get_mut(indicator).unwrap().0;
+            if let DrawMode::Outlined {
+                ref mut fill_mode, ..
+            } = *colors
+            {
+                fill_mode.color = render_color();
+            }
+        }
+        return;
+    }
 
     if let Some((_, position)) = find_robot_piece_placement(
         bags,
