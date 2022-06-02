@@ -6,7 +6,7 @@ use bevy_rapier3d::prelude::{Collider, CollisionGroups, RapierContext};
 use bevy_tweening::{AnimationSystem, Animator};
 
 use crate::{
-    animations::{AnimationComponentsBundle, GameSpeed},
+    animations::{AnimationComponentsBundle, GameSpeed, Target},
     bags::{
         BagMarker, BagReplacementDetectionSystems, BagSize, BAG_FLOOR_COLLIDER_GROUP,
         BAG_WALLS_COLLIDER_GROUP,
@@ -106,6 +106,7 @@ fn show_target_placement(
         (
             Entity,
             &GlobalTransform,
+            Option<&Target<Transform>>,
             &Collider,
             &Nomino,
             &NominoColor,
@@ -134,13 +135,17 @@ fn show_target_placement(
         maybe_despawn();
         return;
     };
-    let (target_id, piece_position, collider, nomino, color, target_changes) =
+    let (target_id, piece_position, target, collider, nomino, color, target_changes) =
         if let Ok(p) = target_piece.get_single() {
             p
         } else {
             maybe_despawn();
             return;
         };
+    let mut piece_position = *piece_position;
+    if let Some(target) = target {
+        piece_position.rotation = target.rotation;
+    }
 
     let render_color = || {
         let alpha = robot.ttl.elapsed().div_duration_f32(robot.ttl.duration());
@@ -165,7 +170,7 @@ fn show_target_placement(
     if let Some((_, position, _)) = find_robot_piece_placement(
         bags,
         selected_piece,
-        piece_position,
+        &piece_position,
         collider,
         &rapier_context,
     ) {
@@ -215,7 +220,13 @@ fn place_piece(
     >,
     selected_piece: Query<(), With<Selected>>,
     mut target_piece: Query<
-        (Entity, &GlobalTransform, &mut Transform, &Collider),
+        (
+            Entity,
+            &GlobalTransform,
+            &mut Transform,
+            Option<&Target<Transform>>,
+            &Collider,
+        ),
         (With<RobotTargetMarker>, Without<BagMarker>),
     >,
     mut piece_placements: EventWriter<PiecePlaced>,
@@ -232,17 +243,21 @@ fn place_piece(
     }
     robot.continue_trying = true;
 
-    let (piece, piece_position, mut local_piece_position, collider) =
+    let (piece, piece_position, mut local_piece_position, target, collider) =
         if let Ok(p) = target_piece.get_single_mut() {
             p
         } else {
             return;
         };
+    let mut piece_position = *piece_position;
+    if let Some(target) = target {
+        piece_position.rotation = target.rotation;
+    }
 
     if let Some((bag, mut position, bag_position)) = find_robot_piece_placement(
         bags,
         selected_piece,
-        piece_position,
+        &piece_position,
         collider,
         &rapier_context,
     ) {

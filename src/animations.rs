@@ -287,8 +287,12 @@ pub fn piece_movement(
     }
 }
 
-pub fn undo_selection(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<Transform> {
-    Animator::new(Tracks::new([
+pub fn undo_selection(
+    from: Transform,
+    to: Transform,
+    speed: &GameSpeed,
+) -> RedoableAnimationBundle<Transform> {
+    let animator = Animator::new(Tracks::new([
         Tween::new(
             EaseFunction::ExponentialInOut,
             TweeningType::Once,
@@ -310,7 +314,12 @@ pub fn undo_selection(from: Transform, to: Transform, speed: &GameSpeed) -> Anim
         )
         .with_speed(**speed)
         .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
-    ]))
+    ]));
+
+    RedoableAnimationBundle {
+        animator,
+        target: Target(to),
+    }
 }
 
 pub fn mouse_tutorial_enter(target: Transform, speed: &GameSpeed) -> Animator<Transform> {

@@ -253,7 +253,7 @@ fn check_for_piece_selection_undos(
         let mut piece_commands = commands.entity(**attempted);
         piece_commands
             .remove::<Selected>()
-            .insert(animations::undo_selection(
+            .insert_bundle(animations::undo_selection(
                 from.with_translation(from_translation).into(),
                 transform,
                 &game_speed,
