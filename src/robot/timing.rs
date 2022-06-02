@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{cmp::min, time::Duration};
 
 use bevy::{ecs::schedule::ShouldRun, math::const_vec3, prelude::*};
 use bevy_prototype_lyon::prelude::DrawMode;
@@ -21,6 +21,7 @@ use crate::{
 };
 
 const PLACEMENT_TTL: Duration = Duration::from_secs(5);
+const MAX_TTL: Duration = Duration::from_secs(15);
 const INVALID_PLACEMENT_GROUPS: CollisionGroups = CollisionGroups {
     memberships: BAG_FLOOR_COLLIDER_GROUP.memberships
         | BAG_WALLS_COLLIDER_GROUP.memberships
@@ -117,7 +118,7 @@ fn accumulate_left_over_time(
         robot.continue_trying = false;
 
         let ttl = &mut robot.ttl;
-        ttl.set_duration(ttl.duration() - ttl.elapsed() + PLACEMENT_TTL);
+        ttl.set_duration(min(MAX_TTL, ttl.duration() - ttl.elapsed() + PLACEMENT_TTL));
         ttl.reset();
     }
 }
