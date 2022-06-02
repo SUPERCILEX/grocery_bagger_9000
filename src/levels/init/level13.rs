@@ -3,42 +3,53 @@ use bevy::prelude::*;
 use crate::{
     animations::GameSpeed,
     bags::{BagContainerSpawner, BAG_SIZE_SMALL},
-    conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
-    levels::tutorials::spawn_text_tutorial,
-    nominos::{Nomino, NominoColor},
+    conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
+    nominos::{Nomino, NominoColor, DEG_MIRRORED},
     window_management::DipsWindow,
 };
-
-const NUM_PIECES: usize = 9;
-const LEVEL_COLOR: NominoColor = NominoColor::Pink;
-const LEVEL_OMINOS: [Nomino; 3] = [
-    Nomino::TrominoStraight,
-    Nomino::TetrominoStraight,
-    Nomino::TetrominoSquare,
-];
 
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
-    asset_server: Res<AssetServer>,
+    _: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    spawn_text_tutorial(
-        &mut commands,
-        asset_server,
-        "Some levels are randomly generated\nand may not have a perfect solution",
-    );
     commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]);
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
+    macro_rules! piece {
+        ($nomino:expr, $color:expr) => {{
+            Piece {
+                nomino: $nomino,
+                color: $color,
+                rotation: Quat::IDENTITY,
+            }
+        }};
+
+        ($nomino:expr, Mirrored, $color:expr) => {{
+            Piece {
+                nomino: $nomino,
+                color: $color,
+                rotation: *DEG_MIRRORED,
+            }
+        }};
+    }
+
     commands.spawn_belt(
         dips_window,
-        Box::new(RandomPiecesConveyorBelt::new(
-            NUM_PIECES,
-            LEVEL_OMINOS,
-            [LEVEL_COLOR],
-        )),
+        Box::new(PresetPiecesConveyorBelt::new([
+            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Pink),
+            piece!(Nomino::TetrominoSquare, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Pink),
+            piece!(Nomino::TetrominoSkew, Mirrored, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, NominoColor::Pink),
+            piece!(Nomino::TetrominoT, NominoColor::Pink),
+            piece!(Nomino::TetrominoT, NominoColor::Pink),
+        ])),
     );
 }

@@ -3,17 +3,10 @@ use bevy::prelude::*;
 use crate::{
     animations::GameSpeed,
     bags::{BagContainerSpawner, BAG_SIZE_SMALL},
-    conveyor_belt::{ConveyorBeltSpawner, RandomPiecesConveyorBelt},
-    nominos::{Nomino, NominoColor},
+    conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
+    nominos::{Nomino, NominoColor, DEG_MIRRORED},
     window_management::DipsWindow,
 };
-
-const NUM_PIECES: usize = 18;
-const LEVEL_OMINOS: [Nomino; 3] = [
-    Nomino::TrominoStraight,
-    Nomino::TetrominoStraight,
-    Nomino::TetrominoSquare,
-];
 
 pub fn init_level(
     mut commands: Commands,
@@ -26,12 +19,46 @@ pub fn init_level(
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
+    macro_rules! piece {
+        ($nomino:expr, $color:expr) => {{
+            Piece {
+                nomino: $nomino,
+                color: $color,
+                rotation: Quat::IDENTITY,
+            }
+        }};
+
+        ($nomino:expr, Mirrored, $color:expr) => {{
+            Piece {
+                nomino: $nomino,
+                color: $color,
+                rotation: *DEG_MIRRORED,
+            }
+        }};
+    }
+
     commands.spawn_belt(
         dips_window,
-        Box::new(RandomPiecesConveyorBelt::new(
-            NUM_PIECES,
-            LEVEL_OMINOS,
-            [NominoColor::Pink, NominoColor::Blue],
-        )),
+        Box::new(PresetPiecesConveyorBelt::new([
+            piece!(Nomino::TetrominoStraight, NominoColor::Pink),
+            piece!(Nomino::TetrominoSquare, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, NominoColor::Pink),
+            piece!(Nomino::TetrominoSquare, NominoColor::Pink),
+            piece!(Nomino::TetrominoSquare, NominoColor::Blue),
+            piece!(Nomino::TetrominoStraight, NominoColor::Blue),
+            piece!(Nomino::TetrominoStraight, NominoColor::Pink),
+            piece!(Nomino::TetrominoSquare, NominoColor::Pink),
+            piece!(Nomino::TetrominoSquare, NominoColor::Blue),
+            piece!(Nomino::TetrominoL, NominoColor::Pink),
+            piece!(Nomino::TetrominoStraight, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Blue),
+            piece!(Nomino::TetrominoL, NominoColor::Pink),
+            piece!(Nomino::TetrominoSkew, NominoColor::Blue),
+            piece!(Nomino::TetrominoSkew, Mirrored, NominoColor::Blue),
+            piece!(Nomino::TetrominoL, NominoColor::Blue),
+            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Blue),
+        ])),
     );
 }
