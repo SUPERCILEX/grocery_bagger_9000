@@ -5,6 +5,7 @@ use crate::{
     bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     nominos::{Nomino, NominoColor, DEG_MIRRORED},
+    robot::RobotSpawner,
     window_management::DipsWindow,
 };
 
@@ -20,6 +21,7 @@ pub fn init_level(
         &game_speed,
         [BAG_SIZE_SMALL, BAG_SIZE_SMALL, BAG_SIZE_SMALL],
     );
+    commands.spawn_robot();
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
