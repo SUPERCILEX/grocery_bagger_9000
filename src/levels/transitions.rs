@@ -85,7 +85,10 @@ fn level_end_handler(
     let belt_empty = belt_empty_events.iter().count() > 0;
     let bag_offscreen = bag_offscreen
         .iter()
-        .filter(|t| t.user_data & (AnimationEvent::BAG | AnimationEvent::OFFSCREEN).bits() != 0)
+        .filter(|t| {
+            let flags = (AnimationEvent::BAG | AnimationEvent::OFFSCREEN).bits();
+            t.user_data & flags == flags
+        })
         .count()
         > 0;
 

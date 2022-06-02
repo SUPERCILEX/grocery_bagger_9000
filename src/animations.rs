@@ -483,7 +483,8 @@ fn cleanup_animations<T: Component>(
     mut completed_animations: EventReader<TweenCompleted>,
 ) {
     for TweenCompleted { entity, user_data } in completed_animations.iter() {
-        if *user_data & AnimationEvent::COMPLETED.bits() != 0 {
+        let flags = AnimationEvent::COMPLETED.bits();
+        if *user_data & flags == flags {
             commands
                 .entity(*entity)
                 .remove_bundle::<AnimationComponentsBundle<T>>();
@@ -496,7 +497,8 @@ fn despawn_offscreen(
     mut offscreen_animations: EventReader<TweenCompleted>,
 ) {
     for TweenCompleted { entity, user_data } in offscreen_animations.iter() {
-        if *user_data & AnimationEvent::OFFSCREEN.bits() != 0 {
+        let flags = AnimationEvent::OFFSCREEN.bits();
+        if *user_data & flags == flags {
             commands.entity(*entity).despawn_recursive();
         }
     }
