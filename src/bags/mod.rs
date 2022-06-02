@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use bag_replacement::BagReplacementPlugin;
-pub use bag_replacement::{BagFilled, BagReplacementSystems};
+pub use bag_replacement::{BagFilled, BagReplacementDetectionSystems, BagReplacementSystems};
 pub use bag_size::BagSize;
 pub use consts::*;
 use positioning::BagPositioningPlugin;

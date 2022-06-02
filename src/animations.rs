@@ -48,7 +48,14 @@ pub struct UndoableAnimationBundle<T: Component> {
 #[derive(Bundle)]
 pub struct RedoableAnimationBundle<T: Component> {
     animator: Animator<T>,
-    original: Target<T>,
+    target: Target<T>,
+}
+
+#[derive(Bundle)]
+pub struct AnimationComponentsBundle<T: Component> {
+    animator: Animator<T>,
+    original: Original<T>,
+    target: Target<T>,
 }
 
 bitflags! {
@@ -276,7 +283,7 @@ pub fn piece_movement(
 
     RedoableAnimationBundle {
         animator,
-        original: Target(to),
+        target: Target(to),
     }
 }
 
@@ -470,9 +477,7 @@ fn cleanup_animations<T: Component>(
         if *user_data & AnimationEvent::COMPLETED.bits() != 0 {
             commands
                 .entity(*entity)
-                .remove::<Animator<T>>()
-                .remove::<Target<T>>()
-                .remove::<Original<T>>();
+                .remove_bundle::<AnimationComponentsBundle<T>>();
         }
     }
 }

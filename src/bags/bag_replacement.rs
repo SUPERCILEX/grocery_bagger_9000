@@ -22,7 +22,7 @@ impl Plugin for BagReplacementPlugin {
 
         app.add_system(
             detect_filled_bags
-                .label(BagSetupSystems)
+                .label(BagReplacementDetectionSystems)
                 .after(PieceSystems),
         );
         app.add_system(
@@ -44,7 +44,7 @@ impl Plugin for BagReplacementPlugin {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
-pub struct BagSetupSystems;
+pub struct BagReplacementDetectionSystems;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
 pub struct BagReplacementSystems;

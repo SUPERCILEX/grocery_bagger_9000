@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 pub use consts::{HEIGHT, MAX_NUM_PIECES};
 pub use data::*;
-pub use movement::BeltEmptyEvent;
 use movement::ConveyorBeltMovementPlugin;
+pub use movement::{BeltEmptyEvent, BeltMovementSystems};
 use positioning::ConveyorBeltPositioningPlugin;
 pub use spawn::{BoxedConveyorBelt, ConveyorBeltSpawner};
 

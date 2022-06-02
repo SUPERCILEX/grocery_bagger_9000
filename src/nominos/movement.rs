@@ -5,7 +5,7 @@ use smallvec::SmallVec;
 
 use crate::{
     animations,
-    animations::{GameSpeed, Original, UndoableAnimationBundle},
+    animations::{AnimationComponentsBundle, GameSpeed, Original},
     bags::{BAG_BOUNDARY_COLLIDER_GROUP, BAG_COLLIDER_GROUP, BAG_FLOOR_COLLIDER_GROUP},
     levels::LevelMarker,
     nominos::*,
@@ -99,7 +99,7 @@ fn piece_selection_handler(
                 transform.rotation = original.rotation;
                 commands
                     .entity(piece)
-                    .remove_bundle::<UndoableAnimationBundle<Transform>>();
+                    .remove_bundle::<AnimationComponentsBundle<Transform>>();
             }
 
             #[cfg(feature = "debug")]
@@ -172,7 +172,7 @@ fn piece_selection_handler(
                             .with_translation(cursor_position.extend(piece_position.translation.z)),
                     )
                     .remove::<Parent>()
-                    .remove_bundle::<UndoableAnimationBundle<Transform>>();
+                    .remove_bundle::<AnimationComponentsBundle<Transform>>();
             }
             failed_selection = if selectable { None } else { Some(id) };
 
@@ -211,7 +211,7 @@ fn piece_rotation_handler(
             transform.rotation = original.rotation;
             commands
                 .entity(piece)
-                .remove_bundle::<UndoableAnimationBundle<Transform>>();
+                .remove_bundle::<AnimationComponentsBundle<Transform>>();
         }
 
         let rotation = &mut transform.rotation;
@@ -288,7 +288,7 @@ fn selected_piece_mover(
             piece_transform.rotation = original.rotation;
             commands
                 .entity(piece)
-                .remove_bundle::<UndoableAnimationBundle<Transform>>();
+                .remove_bundle::<AnimationComponentsBundle<Transform>>();
         }
         piece_transform.translation = snapped_cursor_position;
 

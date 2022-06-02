@@ -3,13 +3,17 @@ use std::time::Duration;
 use bevy::{math::const_vec3, prelude::*};
 use bevy_prototype_lyon::prelude::DrawMode;
 use bevy_rapier3d::prelude::{Collider, CollisionGroups, RapierContext};
-use bevy_tweening::Animator;
+use bevy_tweening::{AnimationSystem, Animator};
 
 use crate::{
-    animations::{GameSpeed, RedoableAnimationBundle},
-    bags::{BagMarker, BagSize, BAG_FLOOR_COLLIDER_GROUP, BAG_WALLS_COLLIDER_GROUP},
+    animations::{AnimationComponentsBundle, GameSpeed},
+    bags::{
+        BagMarker, BagReplacementDetectionSystems, BagSize, BAG_FLOOR_COLLIDER_GROUP,
+        BAG_WALLS_COLLIDER_GROUP,
+    },
     colors::NominoColor,
-    levels::{LevelFinished, LevelMarker},
+    conveyor_belt::BeltMovementSystems,
+    levels::{LevelFinished, LevelMarker, ScoringSystems},
     nominos::{Nomino, NominoBundle, PiecePlaced, PieceSystems, Selected, NOMINO_COLLIDER_GROUP},
     robot::spawn::RobotMarker,
 };
@@ -29,7 +33,14 @@ pub struct RobotTimingPlugin;
 impl Plugin for RobotTimingPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(accumulate_left_over_time.after(PieceSystems));
-        app.add_system(place_piece.before(PieceSystems));
+        app.add_system(
+            place_piece
+                .after(PieceSystems)
+                .after(ScoringSystems)
+                .after(BagReplacementDetectionSystems)
+                .after(BeltMovementSystems)
+                .after(AnimationSystem::AnimationUpdate),
+        );
         app.add_system(
             show_target_placement
                 .after(accumulate_left_over_time)
@@ -151,7 +162,7 @@ fn show_target_placement(
         return;
     }
 
-    if let Some((_, position)) = find_robot_piece_placement(
+    if let Some((_, position, _)) = find_robot_piece_placement(
         bags,
         selected_piece,
         piece_position,
@@ -204,7 +215,7 @@ fn place_piece(
     >,
     selected_piece: Query<(), With<Selected>>,
     mut target_piece: Query<
-        (Entity, &mut GlobalTransform, &Collider),
+        (Entity, &GlobalTransform, &mut Transform, &Collider),
         (With<RobotTargetMarker>, Without<BagMarker>),
     >,
     mut piece_placements: EventWriter<PiecePlaced>,
@@ -221,26 +232,28 @@ fn place_piece(
     }
     robot.continue_trying = true;
 
-    let (piece, mut piece_position, collider) = if let Ok(p) = target_piece.get_single_mut() {
-        p
-    } else {
-        return;
-    };
+    let (piece, piece_position, mut local_piece_position, collider) =
+        if let Ok(p) = target_piece.get_single_mut() {
+            p
+        } else {
+            return;
+        };
 
-    if let Some((bag, mut position)) = find_robot_piece_placement(
+    if let Some((bag, mut position, bag_position)) = find_robot_piece_placement(
         bags,
         selected_piece,
-        &piece_position,
+        piece_position,
         collider,
         &rapier_context,
     ) {
         position.z = piece_position.translation.z;
-        piece_position.translation = position;
+        local_piece_position.translation = position - bag_position;
         piece_placements.send(PiecePlaced { piece, bag });
 
+        commands.entity(bag).add_child(piece);
         commands
             .entity(piece)
-            .remove_bundle::<RedoableAnimationBundle<Transform>>();
+            .remove_bundle::<AnimationComponentsBundle<Transform>>();
     }
 }
 
@@ -257,7 +270,7 @@ fn find_robot_piece_placement(
     target_piece: &GlobalTransform,
     collider: &Collider,
     rapier_context: &RapierContext,
-) -> Option<(Entity, Vec3)> {
+) -> Option<(Entity, Vec3, Vec3)> {
     let max_rows = bags.iter().map(|b| b.2.height()).sum();
     for row in 0..max_rows {
         for (bag, bag_coords, bag_size) in bags.iter() {
@@ -280,7 +293,7 @@ fn find_robot_piece_placement(
                     continue;
                 }
 
-                return Some((bag, position));
+                return Some((bag, position, bag_coords.translation));
             }
         }
     }

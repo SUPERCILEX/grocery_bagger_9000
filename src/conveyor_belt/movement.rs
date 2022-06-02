@@ -37,7 +37,12 @@ impl Plugin for ConveyorBeltMovementPlugin {
         app.add_event::<BeltEmptyEvent>();
 
         app.add_system_to_stage(CoreStage::PostUpdate, init_pieces);
-        app.add_system(replace_pieces.after(WindowSystems).after(PieceSystems));
+        app.add_system(
+            replace_pieces
+                .label(BeltMovementSystems)
+                .after(WindowSystems)
+                .after(PieceSystems),
+        );
         app.add_system(belt_empty_check.after(replace_pieces));
         app.add_system(
             check_for_piece_selection_undos
@@ -49,6 +54,7 @@ impl Plugin for ConveyorBeltMovementPlugin {
         );
         app.add_system(
             move_pieces
+                .label(BeltMovementSystems)
                 .after(LevelTransitionSystems)
                 .after(WindowSystems)
                 .after(replace_pieces),
@@ -65,6 +71,9 @@ impl Plugin for ConveyorBeltMovementPlugin {
         );
     }
 }
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
+pub struct BeltMovementSystems;
 
 pub struct BeltEmptyEvent;
 

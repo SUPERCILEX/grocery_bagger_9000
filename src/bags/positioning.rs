@@ -3,7 +3,7 @@ use smallvec::SmallVec;
 
 use crate::{
     bags::{
-        bag_replacement::{BagSetupSystems, Exiting},
+        bag_replacement::{BagReplacementDetectionSystems, Exiting},
         consts::BAG_SPACING,
         spawn::BagContainerMarker,
         BagMarker, BagSize,
@@ -18,7 +18,11 @@ pub struct BagPositioningPlugin;
 impl Plugin for BagPositioningPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(transfer_piece_ownership.after(PieceSystems));
-        app.add_system(center_bags.after(WindowSystems).after(BagSetupSystems));
+        app.add_system(
+            center_bags
+                .after(WindowSystems)
+                .after(BagReplacementDetectionSystems),
+        );
     }
 }
 
