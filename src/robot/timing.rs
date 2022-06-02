@@ -9,7 +9,7 @@ use crate::{
     animations::{GameSpeed, RedoableAnimationBundle},
     bags::{BagMarker, BagSize, BAG_FLOOR_COLLIDER_GROUP, BAG_WALLS_COLLIDER_GROUP},
     colors::NominoColor,
-    levels::LevelMarker,
+    levels::{LevelFinished, LevelMarker},
     nominos::{Nomino, NominoBundle, PiecePlaced, PieceSystems, Selected, NOMINO_COLLIDER_GROUP},
     robot::spawn::RobotMarker,
 };
@@ -48,7 +48,7 @@ pub struct RobotTiming {
 pub struct RobotTargetMarker;
 
 #[derive(Component)]
-struct TargetPieceMarker;
+struct IndicatorPieceMarker;
 
 impl Default for RobotTiming {
     fn default() -> Self {
@@ -78,8 +78,9 @@ fn accumulate_left_over_time(
 
 fn show_target_placement(
     mut commands: Commands,
-    mut colors: Query<&mut DrawMode, With<TargetPieceMarker>>,
+    mut indicator_piece: Query<(&mut DrawMode, &mut Transform), With<IndicatorPieceMarker>>,
     mut spawned: Local<Option<(Entity, Entity)>>,
+    mut level_finished: EventReader<LevelFinished>,
     timing: Query<&RobotTiming, With<RobotMarker>>,
     bags: Query<
         (Entity, &GlobalTransform, &BagSize),
@@ -96,6 +97,11 @@ fn show_target_placement(
     >,
     rapier_context: Res<RapierContext>,
 ) {
+    if level_finished.iter().count() > 0 {
+        *spawned = None;
+        return;
+    }
+
     let spawned_copy = *spawned;
     let mut maybe_despawn = || {
         if let Some((_, indicator)) = *spawned {
@@ -133,9 +139,12 @@ fn show_target_placement(
         &rapier_context,
     ) {
         if let Some((target, indicator)) = spawned_copy && target == target_id {
+            let (mut colors, mut transform) = indicator_piece.get_mut(indicator).unwrap();
+
+            *transform = piece_position.with_translation(position).into();
             if let DrawMode::Outlined {
                 ref mut fill_mode, ..
-            } = *colors.get_mut(indicator).unwrap()
+            } = *colors
             {
                 fill_mode.color = render_color();
             }
@@ -151,7 +160,7 @@ fn show_target_placement(
                         render_color(),
                     ))
                     .insert(LevelMarker)
-                    .insert(TargetPieceMarker)
+                    .insert(IndicatorPieceMarker)
                     .id(),
             ));
         }
