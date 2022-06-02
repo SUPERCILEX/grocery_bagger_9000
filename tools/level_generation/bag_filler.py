@@ -1,5 +1,5 @@
 from nominoes import *
-import numpy as np
+
 
 class Bag():
     def __init__(self, rows, columns):
@@ -7,7 +7,7 @@ class Bag():
         self.rows = rows
         self.columns = columns
         self.pieces = []
-        self.last_placed = [0,-1]
+        self.last_placed = [0, -1]
 
     @classmethod
     def from_matrix(cls, matrix, pieces, location):
@@ -19,7 +19,7 @@ class Bag():
         return bag
 
     def __eq__(self, other):
-        if(isinstance(other, Bag)):
+        if (isinstance(other, Bag)):
             return self.pieces == other.pieces
         return False
 
@@ -31,7 +31,7 @@ class Bag():
         if self.rows == m_rows and self.columns == m_columns:
             self.matrix = matrix.copy()
 
-# precondition: every hole before this one is filled
+    # precondition: every hole before this one is filled
     def fill_next_hole(self, depth=1, nominoes=None, loc=None):
         if loc == None:
             loc = self.last_placed.copy()
@@ -68,6 +68,7 @@ class Bag():
         new_pieces = self.pieces.copy() + [piece]
         return [True, Bag.from_matrix(new_matrix, new_pieces, location)]
 
+
 ##def main():
 ##    bag_a = Bag(4,4)
 ##    shape = Domino(1)
@@ -93,6 +94,7 @@ def GetUniqueBagFillings(rows, columns):
     list_o_bags = []
     bag_list = bag.fill_next_hole()
     return dedupe_bags(bag_list)
+
 
 def dedupe_bags(bag_list):
     deduped_bags = []
