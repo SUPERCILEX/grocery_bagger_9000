@@ -36,22 +36,18 @@ impl NominoColor {
             Self::_Last => unreachable!(),
         }
     }
-
-    pub const fn id(self) -> usize {
-        self as usize
-    }
 }
 
 impl<T> Index<NominoColor> for [T] {
     type Output = T;
 
     fn index(&self, index: NominoColor) -> &Self::Output {
-        &self[index.id()]
+        &self[index as usize]
     }
 }
 
 impl<T> IndexMut<NominoColor> for [T] {
     fn index_mut(&mut self, index: NominoColor) -> &mut Self::Output {
-        &mut self[index.id()]
+        &mut self[index as usize]
     }
 }
