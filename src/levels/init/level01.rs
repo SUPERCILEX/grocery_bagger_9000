@@ -6,7 +6,6 @@ use crate::{
     animations,
     animations::GameSpeed,
     bags::{BagContainerSpawner, BAG_SIZE_SMALL},
-    colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     gb9000::{GameState::Playing, GroceryBagger9000},
     levels::{
@@ -17,8 +16,8 @@ use crate::{
         LevelMarker, LevelStarted,
     },
     nominos::{
-        Nomino, NominoMarker, NominoSpawner, PiecePickedUp, Selectable, DEG_180, DEG_90,
-        DEG_MIRRORED,
+        Nomino, NominoColor, NominoMarker, NominoSpawner, PiecePickedUp, Selectable, DEG_180,
+        DEG_90, DEG_MIRRORED,
     },
     window_management::DipsWindow,
 };

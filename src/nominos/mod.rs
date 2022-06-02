@@ -6,6 +6,7 @@ use bevy_prototype_lyon::prelude::*;
 use bevy_rapier3d::prelude::*;
 use num_derive::FromPrimitive;
 
+pub use colors::NominoColor;
 use consts::*;
 pub use consts::{DEG_180, DEG_90, DEG_MIRRORED};
 use movement::PieceMovementPlugin;
@@ -14,6 +15,7 @@ pub use movement::{
 };
 pub use spawn::{NominoBundle, NominoMarker, NominoSpawner};
 
+mod colors;
 mod consts;
 mod movement;
 mod spawn;

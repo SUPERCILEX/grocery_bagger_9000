@@ -5,10 +5,7 @@ use rand::{
     thread_rng, Rng,
 };
 
-use crate::{
-    colors::NominoColor,
-    nominos::{Nomino, DEG_180, DEG_MIRRORED},
-};
+use crate::nominos::{Nomino, NominoColor, DEG_180, DEG_MIRRORED};
 
 pub trait ConveyorBelt {
     fn next(&mut self) -> Option<Piece>;

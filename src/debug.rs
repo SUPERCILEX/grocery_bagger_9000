@@ -6,14 +6,13 @@ use bevy_screen_diags::ScreenDiagsPlugin;
 
 use crate::{
     animations::GameSpeed,
-    colors::NominoColor,
     conveyor_belt::ConveyorBeltOptions,
     gb9000::{
         GameState::{LevelEnded, Playing},
         GroceryBagger9000,
     },
     levels::{LevelFinished, LevelMarker},
-    nominos::*,
+    nominos::{NominoColor, *},
     robot::RobotOptions,
 };
 

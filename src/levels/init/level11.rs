@@ -3,9 +3,8 @@ use bevy::prelude::*;
 use crate::{
     animations::GameSpeed,
     bags::{BagContainerSpawner, BAG_SIZE_LARGE},
-    colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    nominos::{Nomino, DEG_180, DEG_MIRRORED},
+    nominos::{Nomino, NominoColor, DEG_180, DEG_MIRRORED},
     robot::RobotSpawner,
     window_management::DipsWindow,
 };

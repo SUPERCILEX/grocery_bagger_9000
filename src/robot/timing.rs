@@ -11,10 +11,12 @@ use crate::{
         BagMarker, BagReplacementDetectionSystems, BagSize, BAG_FLOOR_COLLIDER_GROUP,
         BAG_WALLS_COLLIDER_GROUP,
     },
-    colors::NominoColor,
     conveyor_belt::BeltMovementSystems,
     levels::{LevelFinished, LevelMarker, ScoringSystems},
-    nominos::{Nomino, NominoBundle, PiecePlaced, PieceSystems, Selected, NOMINO_COLLIDER_GROUP},
+    nominos::{
+        Nomino, NominoBundle, NominoColor, PiecePlaced, PieceSystems, Selected,
+        NOMINO_COLLIDER_GROUP,
+    },
     robot::{spawn::RobotMarker, RobotOptions},
 };
 

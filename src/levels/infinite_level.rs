@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use crate::{
     animations::GameSpeed,
     bags::{BagContainerSpawner, BagSize, BAG_SIZE_LARGE, BAG_SIZE_SMALL},
-    colors::NominoColor,
     conveyor_belt::{ConveyorBeltSpawner, InfinitePiecesConveyorBelt},
+    nominos::NominoColor,
     window_management::DipsWindow,
 };
 

@@ -5,10 +5,7 @@ use bevy_prototype_lyon::{
 };
 use bevy_rapier3d::prelude::*;
 
-use crate::{
-    colors::NominoColor,
-    nominos::{Nomino, NOMINO_COLLIDER_GROUP},
-};
+use crate::nominos::{Nomino, NominoColor, NOMINO_COLLIDER_GROUP};
 
 #[derive(Default, Component)]
 pub struct NominoMarker;

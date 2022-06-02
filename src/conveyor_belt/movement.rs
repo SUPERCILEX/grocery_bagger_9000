@@ -6,7 +6,6 @@ use smallvec::SmallVec;
 use crate::{
     animations,
     animations::GameSpeed,
-    colors::NominoColor,
     conveyor_belt::{
         consts::{
             LENGTH, MAX_NUM_PIECES, NON_SELECTABLE_LIGHTNESS, PIECE_WIDTH, SELECTABLE_SEPARATION,
@@ -22,8 +21,8 @@ use crate::{
     gb9000::GroceryBagger9000,
     levels::{LevelStarted, LevelTransitionSystems},
     nominos::{
-        NominoMarker, NominoSpawner, OutOfBagPlacement, PiecePickedUp, PiecePlaced, PieceSystems,
-        Selectable, Selected, DEG_90, DEG_MIRRORED,
+        NominoColor, NominoMarker, NominoSpawner, OutOfBagPlacement, PiecePickedUp, PiecePlaced,
+        PieceSystems, Selectable, Selected, DEG_90, DEG_MIRRORED,
     },
     robot::RobotTargetMarker,
     ui::MenuButtonClickedSystems,

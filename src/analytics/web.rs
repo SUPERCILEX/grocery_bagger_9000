@@ -4,10 +4,9 @@ use wasm_bindgen::prelude::*;
 
 use crate::{
     bags::{BagMarker, BagSize},
-    colors::NominoColor,
     gb9000::GroceryBagger9000,
     levels::{CurrentScore, LevelFinished, LevelStarted, ScoringSystems},
-    nominos::{NominoMarker, PiecePickedUp, PiecePlaced, NOMINO_COLLIDER_GROUP},
+    nominos::{NominoColor, NominoMarker, PiecePickedUp, PiecePlaced, NOMINO_COLLIDER_GROUP},
     robot::RobotOptions,
 };
 
