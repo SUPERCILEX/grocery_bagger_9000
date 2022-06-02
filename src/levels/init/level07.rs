@@ -22,7 +22,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Items sticking out of the bag\nare worth fewer points…\nTry rearranging the items for a higher score.",
+        "Items sticking out of the bag\nare worth fewer points…\nTry keeping the items inside for a higher score.",
     );
 }
 

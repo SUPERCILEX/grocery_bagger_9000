@@ -2,10 +2,9 @@ use bevy::prelude::*;
 
 use crate::{
     animations::GameSpeed,
-    bags::{BagContainerSpawner, BAG_SIZE_LARGE},
+    bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
     nominos::{Nomino, NominoColor, DEG_MIRRORED},
-    robot::RobotSpawner,
     window_management::DipsWindow,
 };
 
@@ -16,8 +15,7 @@ pub fn init_level(
     _: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_LARGE, BAG_SIZE_LARGE]);
-    commands.spawn_robot();
+    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]);
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
@@ -42,27 +40,16 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
     commands.spawn_belt(
         dips_window,
         Box::new(PresetPiecesConveyorBelt::new([
-            piece!(Nomino::TetrominoL, NominoColor::Gold),
-            piece!(Nomino::TetrominoL, NominoColor::Gold),
-            piece!(Nomino::TrominoStraight, NominoColor::Gold),
-            piece!(Nomino::TetrominoL, NominoColor::Gold),
-            piece!(Nomino::TrominoL, NominoColor::Gold),
-            piece!(Nomino::TrominoL, NominoColor::Gold),
-            piece!(Nomino::TetrominoSkew, NominoColor::Gold),
-            piece!(Nomino::TetrominoSkew, Mirrored, NominoColor::Gold),
-            piece!(Nomino::TetrominoL, NominoColor::Gold),
-            piece!(Nomino::TrominoL, NominoColor::Gold),
-            piece!(Nomino::TrominoStraight, NominoColor::Gold),
-            piece!(Nomino::TetrominoStraight, NominoColor::Gold),
-            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Gold),
-            piece!(Nomino::TetrominoT, NominoColor::Gold),
-            piece!(Nomino::TetrominoT, NominoColor::Gold),
-            piece!(Nomino::TrominoStraight, NominoColor::Gold),
-            piece!(Nomino::TetrominoStraight, NominoColor::Gold),
-            piece!(Nomino::TetrominoL, NominoColor::Gold),
-            piece!(Nomino::TetrominoT, NominoColor::Gold),
-            piece!(Nomino::TrominoStraight, NominoColor::Gold),
-            piece!(Nomino::TrominoStraight, NominoColor::Gold),
+            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Pink),
+            piece!(Nomino::TetrominoSquare, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Pink),
+            piece!(Nomino::TetrominoSkew, Mirrored, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, NominoColor::Pink),
+            piece!(Nomino::TetrominoT, NominoColor::Pink),
+            piece!(Nomino::TetrominoT, NominoColor::Pink),
         ])),
     );
 }

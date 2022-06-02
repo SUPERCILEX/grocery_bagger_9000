@@ -2,41 +2,45 @@ use bevy::prelude::*;
 
 use crate::{
     animations::GameSpeed,
-    bags::{BagContainerSpawner, BAG_SIZE_LARGE},
+    bags::{BagContainerSpawner, BAG_SIZE_SMALL},
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    nominos::{Nomino, NominoColor, DEG_180, DEG_MIRRORED},
+    levels::tutorials::spawn_text_tutorial,
+    nominos::{Nomino, NominoColor, DEG_MIRRORED},
     robot::RobotSpawner,
     window_management::DipsWindow,
 };
-
-const LEVEL_COLOR: NominoColor = NominoColor::Pink;
 
 pub fn init_level(
     mut commands: Commands,
     dips_window: Res<DipsWindow>,
     game_speed: Res<GameSpeed>,
-    _: Res<AssetServer>,
+    asset_server: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_LARGE]);
+    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_SMALL]);
+    spawn_text_tutorial(
+        &mut commands,
+        asset_server,
+        "Some levels include a timed robo-bagger.\nA new piece will be placed when the outlined piece turns solid.\nPlace any piece to delay the robo-bagger.",
+    );
     commands.spawn_robot();
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
     macro_rules! piece {
-        ($nomino:expr) => {{
+        ($nomino:expr, $color:expr) => {{
             Piece {
                 nomino: $nomino,
-                color: LEVEL_COLOR,
+                color: $color,
                 rotation: Quat::IDENTITY,
             }
         }};
 
-        ($nomino:expr, $rotation:expr) => {{
+        ($nomino:expr, Mirrored, $color:expr) => {{
             Piece {
                 nomino: $nomino,
-                color: LEVEL_COLOR,
-                rotation: $rotation,
+                color: $color,
+                rotation: *DEG_MIRRORED,
             }
         }};
     }
@@ -44,24 +48,17 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
     commands.spawn_belt(
         dips_window,
         Box::new(PresetPiecesConveyorBelt::new([
-            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
-            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
-            piece!(Nomino::TetrominoSkew),
-            piece!(Nomino::TetrominoL),
-            piece!(Nomino::TetrominoL),
-            piece!(Nomino::TetrominoL, *DEG_180),
-            piece!(Nomino::TetrominoT, *DEG_180),
-            piece!(Nomino::TetrominoT),
-            piece!(Nomino::TetrominoSquare),
-            piece!(Nomino::TetrominoSquare),
-            piece!(Nomino::TetrominoT),
-            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
-            piece!(Nomino::TetrominoT, *DEG_180),
-            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
-            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
-            piece!(Nomino::TetrominoT),
-            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
-            piece!(Nomino::TetrominoT),
+            piece!(Nomino::TetrominoSquare, NominoColor::Gold),
+            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Gold),
+            piece!(Nomino::TetrominoL, NominoColor::Gold),
+            piece!(Nomino::TrominoL, NominoColor::Gold),
+            piece!(Nomino::TrominoL, NominoColor::Gold),
+            piece!(Nomino::TrominoL, NominoColor::Gold),
+            piece!(Nomino::TrominoL, NominoColor::Gold),
+            piece!(Nomino::TrominoStraight, NominoColor::Gold),
+            piece!(Nomino::TrominoL, NominoColor::Gold),
+            piece!(Nomino::TrominoL, NominoColor::Gold),
+            piece!(Nomino::TrominoStraight, NominoColor::Gold),
         ])),
     );
 }

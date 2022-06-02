@@ -2,11 +2,14 @@ use bevy::prelude::*;
 
 use crate::{
     animations::GameSpeed,
-    bags::{BagContainerSpawner, BAG_SIZE_SMALL},
+    bags::{BagContainerSpawner, BAG_SIZE_LARGE},
     conveyor_belt::{ConveyorBeltSpawner, Piece, PresetPiecesConveyorBelt},
-    nominos::{Nomino, NominoColor, DEG_MIRRORED},
+    nominos::{Nomino, NominoColor, DEG_180, DEG_MIRRORED},
+    robot::RobotSpawner,
     window_management::DipsWindow,
 };
+
+const LEVEL_COLOR: NominoColor = NominoColor::Pink;
 
 pub fn init_level(
     mut commands: Commands,
@@ -15,24 +18,25 @@ pub fn init_level(
     _: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_SMALL, BAG_SIZE_SMALL]);
+    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_LARGE]);
+    commands.spawn_robot();
 }
 
 fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
     macro_rules! piece {
-        ($nomino:expr, $color:expr) => {{
+        ($nomino:expr) => {{
             Piece {
                 nomino: $nomino,
-                color: $color,
+                color: LEVEL_COLOR,
                 rotation: Quat::IDENTITY,
             }
         }};
 
-        ($nomino:expr, Mirrored, $color:expr) => {{
+        ($nomino:expr, $rotation:expr) => {{
             Piece {
                 nomino: $nomino,
-                color: $color,
-                rotation: *DEG_MIRRORED,
+                color: LEVEL_COLOR,
+                rotation: $rotation,
             }
         }};
     }
@@ -40,16 +44,24 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
     commands.spawn_belt(
         dips_window,
         Box::new(PresetPiecesConveyorBelt::new([
-            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Pink),
-            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Pink),
-            piece!(Nomino::TetrominoSquare, NominoColor::Pink),
-            piece!(Nomino::TetrominoL, NominoColor::Pink),
-            piece!(Nomino::TetrominoL, NominoColor::Pink),
-            piece!(Nomino::TetrominoL, Mirrored, NominoColor::Pink),
-            piece!(Nomino::TetrominoSkew, Mirrored, NominoColor::Pink),
-            piece!(Nomino::TetrominoL, NominoColor::Pink),
-            piece!(Nomino::TetrominoT, NominoColor::Pink),
-            piece!(Nomino::TetrominoT, NominoColor::Pink),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
+            piece!(Nomino::TetrominoSkew),
+            piece!(Nomino::TetrominoL),
+            piece!(Nomino::TetrominoL),
+            piece!(Nomino::TetrominoL, *DEG_180),
+            piece!(Nomino::TetrominoT, *DEG_180),
+            piece!(Nomino::TetrominoT),
+            piece!(Nomino::TetrominoSquare),
+            piece!(Nomino::TetrominoSquare),
+            piece!(Nomino::TetrominoT),
+            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
+            piece!(Nomino::TetrominoT, *DEG_180),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
+            piece!(Nomino::TetrominoL, *DEG_MIRRORED * *DEG_180),
+            piece!(Nomino::TetrominoT),
+            piece!(Nomino::TetrominoSkew, *DEG_MIRRORED),
+            piece!(Nomino::TetrominoT),
         ])),
     );
 }
