@@ -6,6 +6,7 @@ use smallvec::SmallVec;
 use crate::{
     animations,
     animations::GameSpeed,
+    colors::NominoColor,
     conveyor_belt::{
         consts::{
             LENGTH, MAX_NUM_PIECES, NON_SELECTABLE_LIGHTNESS, PIECE_WIDTH, SELECTABLE_SEPARATION,
@@ -122,6 +123,7 @@ fn replace_pieces(
         With<ConveyorBeltMarker>,
     >,
     mut colors: Query<&mut DrawMode, (With<NominoMarker>, Without<Selectable>)>,
+    nomino_colors: Query<&NominoColor, With<NominoMarker>>,
     selected_pieces: Query<(), With<Selected>>,
     mut placed_pieces: EventReader<PiecePlaced>,
     belt_options: Res<ConveyorBeltOptions>,
@@ -162,7 +164,7 @@ fn replace_pieces(
                 ref mut fill_mode, ..
             } = *draw_mode
             {
-                fill_mode.color = fill_mode.color.with_lightness(0.5);
+                fill_mode.color = nomino_colors.get(*id).unwrap().render();
             }
         }
 
@@ -307,6 +309,7 @@ fn update_piece_selectability_on_num_selectable_pieces_changed(
     mut commands: Commands,
     belt_options: Res<ConveyorBeltOptions>,
     conveyor_belt: Query<&BeltPieceIds, With<ConveyorBeltMarker>>,
+    nomino_colors: Query<&NominoColor, With<NominoMarker>>,
     mut colors: Query<&mut DrawMode, With<NominoMarker>>,
 ) {
     if !belt_options.is_changed() {
@@ -327,7 +330,7 @@ fn update_piece_selectability_on_num_selectable_pieces_changed(
         } = *draw_mode
         {
             if index < num_pieces_selectable {
-                fill_mode.color = fill_mode.color.with_lightness(0.5);
+                fill_mode.color = nomino_colors.get(*piece).unwrap().render();
                 commands.entity(*piece).insert(Selectable);
             } else {
                 fill_mode.color = fill_mode.color.with_lightness(NON_SELECTABLE_LIGHTNESS);
