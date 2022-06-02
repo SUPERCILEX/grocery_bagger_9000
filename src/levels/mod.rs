@@ -9,7 +9,9 @@ pub use transitions::{
     LevelFinished, LevelMarker, LevelSpawnStage, LevelStarted, LevelTransitionSystems,
 };
 
-use crate::{animations::GameSpeed, window_management::DipsWindow};
+use crate::{
+    animations::GameSpeed, levels::init::level11::Level11Plugin, window_management::DipsWindow,
+};
 
 mod infinite_level;
 mod init;
@@ -25,6 +27,7 @@ impl Plugin for LevelsPlugin {
         app.add_plugin(ScoringPlugin);
 
         app.add_plugin(Level1Plugin);
+        app.add_plugin(Level11Plugin);
 
         app.add_system_to_stage(LevelSpawnStage, init_levels);
     }
