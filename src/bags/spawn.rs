@@ -30,11 +30,11 @@ pub struct BagWallsMarker;
 pub struct BagFloorMarker;
 
 pub trait BagContainerSpawner {
-    fn spawn_bag(
+    fn spawn_bag<'a>(
         &mut self,
         window: &DipsWindow,
         game_speed: &GameSpeed,
-        sizes: impl IntoIterator<Item = BagSize> + Copy,
+        sizes: impl IntoIterator<Item = &'a BagSize> + Copy,
     ) -> SmallVec<[Entity; 3]>;
 }
 
@@ -48,13 +48,16 @@ pub trait BagSpawner<'w, 's> {
 }
 
 impl<'w, 's> BagContainerSpawner for Commands<'w, 's> {
-    fn spawn_bag(
+    fn spawn_bag<'a>(
         &mut self,
         window: &DipsWindow,
         game_speed: &GameSpeed,
-        sizes: impl IntoIterator<Item = BagSize> + Copy,
+        sizes: impl IntoIterator<Item = &'a BagSize> + Copy,
     ) -> SmallVec<[Entity; 3]> {
-        let mut spawned_bags = SmallVec::new();
+        let opened_sizes = sizes.into_iter();
+        let opened_sizes_hint = opened_sizes.size_hint();
+        let mut spawned_bags =
+            SmallVec::with_capacity(opened_sizes_hint.1.unwrap_or(opened_sizes_hint.0));
 
         let base = compute_container_coordinates(window, sizes);
         self.spawn_bundle(TransformBundle::from(Transform::from_translation(base)))
@@ -69,7 +72,7 @@ impl<'w, 's> BagContainerSpawner for Commands<'w, 's> {
                             parent,
                             game_speed,
                             Transform::from_translation(starting_position),
-                            size,
+                            *size,
                             false,
                         )
                         .id(),

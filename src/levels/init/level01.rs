@@ -58,7 +58,7 @@ fn spawn_belt(commands: &mut Commands, dips_window: &DipsWindow) {
 }
 
 fn spawn_bag(commands: &mut Commands, dips_window: &DipsWindow, game_speed: &GameSpeed) {
-    let bag = commands.spawn_bag(dips_window, game_speed, [BAG_SIZE_SMALL])[0];
+    let bag = commands.spawn_bag(dips_window, game_speed, &[BAG_SIZE_SMALL])[0];
 
     commands.entity(bag).with_children(|parent| {
         let origin = Transform::from_translation(-BAG_SIZE_SMALL.origin());

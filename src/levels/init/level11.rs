@@ -28,7 +28,7 @@ pub fn init_level(
     _: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_SMALL]);
+    commands.spawn_bag(&dips_window, &game_speed, &[BAG_SIZE_SMALL]);
     commands.spawn_robot();
 }
 

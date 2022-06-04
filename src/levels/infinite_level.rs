@@ -18,7 +18,7 @@ pub fn init_level(
     commands.spawn_bag(
         &dips_window,
         &game_speed,
-        [
+        &[
             BAG_SIZE_LARGE,
             BAG_SIZE_SMALL,
             BagSize::new(4, 2),

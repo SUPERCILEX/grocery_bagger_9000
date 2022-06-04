@@ -1,5 +1,4 @@
 use bevy::{prelude::*, window::WindowResized};
-use smallvec::SmallVec;
 
 use crate::{
     bags::{
@@ -43,9 +42,9 @@ impl BagSnapper<f32> for BagCoord {
     }
 }
 
-pub fn compute_container_coordinates(
+pub fn compute_container_coordinates<'a>(
     window: &DipsWindow,
-    bag_sizes: impl IntoIterator<Item = BagSize>,
+    bag_sizes: impl IntoIterator<Item = &'a BagSize>,
 ) -> Vec3 {
     let mut space_needed = 0;
     let mut max_half_height = 0.;
@@ -96,10 +95,6 @@ fn center_bags(
         return;
     }
 
-    let base = compute_container_coordinates(
-        &dips_window,
-        bags.iter().copied().collect::<SmallVec<[_; 3]>>(),
-    );
-
+    let base = compute_container_coordinates(&dips_window, bags.iter());
     container.single_mut().translation = base;
 }

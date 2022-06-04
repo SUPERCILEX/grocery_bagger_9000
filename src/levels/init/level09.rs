@@ -18,7 +18,7 @@ pub fn init_level(
     asset_server: Res<AssetServer>,
 ) {
     spawn_belt(&mut commands, &dips_window);
-    commands.spawn_bag(&dips_window, &game_speed, [BAG_SIZE_LARGE]);
+    commands.spawn_bag(&dips_window, &game_speed, &[BAG_SIZE_LARGE]);
     spawn_text_tutorial(&mut commands, asset_server, "Bags come in different sizes.");
 }
 

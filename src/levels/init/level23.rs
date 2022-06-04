@@ -19,7 +19,7 @@ pub fn init_level(
     commands.spawn_bag(
         &dips_window,
         &game_speed,
-        [BAG_SIZE_SMALL, BAG_SIZE_SMALL, BAG_SIZE_SMALL],
+        &[BAG_SIZE_SMALL, BAG_SIZE_SMALL, BAG_SIZE_SMALL],
     );
     commands.spawn_robot();
 }

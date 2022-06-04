@@ -28,7 +28,7 @@ pub fn init_level(
 
 fn spawn_bag(commands: &mut Commands, dips_window: &DipsWindow, game_speed: &GameSpeed) {
     let [bag1, bag2, ..] = commands
-        .spawn_bag(dips_window, game_speed, [BAG_SIZE_SMALL, BAG_SIZE_SMALL])
+        .spawn_bag(dips_window, game_speed, &[BAG_SIZE_SMALL, BAG_SIZE_SMALL])
         .as_slice() else { unreachable!() };
     let origin = Transform::from_translation(-BAG_SIZE_SMALL.origin());
 
