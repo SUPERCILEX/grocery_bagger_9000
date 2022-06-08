@@ -20,8 +20,8 @@ use crate::{
     robot::{spawn::RobotMarker, RobotOptions},
 };
 
-const PLACEMENT_TTL: Duration = Duration::from_secs(7);
-const MAX_TTL: Duration = Duration::from_secs(15);
+const PLACEMENT_TTL: Duration = Duration::from_secs(6);
+const MAX_TTL: Duration = Duration::from_secs(10);
 const INVALID_PLACEMENT_GROUPS: CollisionGroups = CollisionGroups {
     memberships: BAG_FLOOR_COLLIDER_GROUP.memberships
         | BAG_WALLS_COLLIDER_GROUP.memberships
