@@ -74,7 +74,7 @@ pub enum LevelChangeFsm {
 fn level_end_handler(
     mut gb9000: ResMut<GroceryBagger9000>,
     mut belt_empty_events: EventReader<BeltEmptyEvent>,
-    mut bag_offscreen: EventReader<TweenCompleted>,
+    mut completed_animations: EventReader<TweenCompleted>,
     mut level_started: EventReader<LevelStarted>,
     mut level_finished: EventWriter<LevelFinished>,
     mut level_fsm: Local<LevelChangeFsm>,
@@ -84,10 +84,10 @@ fn level_end_handler(
     }
 
     let belt_empty = belt_empty_events.iter().count() > 0;
-    let bag_offscreen = bag_offscreen
+    let bag_despawned = completed_animations
         .iter()
         .filter(|t| {
-            let flags = (AnimationEvent::BAG | AnimationEvent::OFFSCREEN).bits();
+            let flags = (AnimationEvent::BAG | AnimationEvent::DESPAWNABLE).bits();
             t.user_data & flags == flags
         })
         .count()
@@ -100,7 +100,7 @@ fn level_end_handler(
             }
         }
         LevelChangeFsm::PiecePlaced => {
-            if bag_offscreen {
+            if bag_despawned {
                 gb9000.state = LevelEnded;
                 level_finished.send(LevelFinished);
                 *level_fsm = default();

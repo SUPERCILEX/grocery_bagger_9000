@@ -26,7 +26,7 @@ impl Plugin for AnimationPlugin {
 
         app.add_system(cleanup_animations::<Transform>.after(AnimationSystem::AnimationUpdate));
         app.add_system(cleanup_animations::<Style>.after(AnimationSystem::AnimationUpdate));
-        app.add_system(despawn_offscreen.after(AnimationSystem::AnimationUpdate));
+        app.add_system(handle_animation_despawns.after(AnimationSystem::AnimationUpdate));
     }
 }
 
@@ -67,7 +67,7 @@ pub struct AnimationComponentsBundle<T: Component> {
 bitflags! {
     pub struct AnimationEvent: u64 {
         const COMPLETED = 1;
-        const OFFSCREEN = 1 << 1;
+        const DESPAWNABLE = 1 << 1;
         const BAG = 1 << 2;
     }
 }
@@ -193,7 +193,7 @@ pub fn bag_exit(from: Transform, to: Transform, speed: &GameSpeed) -> Animator<T
         .with_speed(**speed)
         .with_completed_event(
             true,
-            (AnimationEvent::COMPLETED | AnimationEvent::OFFSCREEN | AnimationEvent::BAG).bits(),
+            (AnimationEvent::COMPLETED | AnimationEvent::DESPAWNABLE | AnimationEvent::BAG).bits(),
         ),
     )
 }
@@ -466,7 +466,7 @@ pub fn level_complete_menu_ui_exit(
         .with_speed(**speed)
         .with_completed_event(
             true,
-            (AnimationEvent::COMPLETED | AnimationEvent::OFFSCREEN).bits(),
+            (AnimationEvent::COMPLETED | AnimationEvent::DESPAWNABLE).bits(),
         ),
     )
 }
@@ -502,12 +502,12 @@ fn cleanup_animations<T: Component>(
     }
 }
 
-fn despawn_offscreen(
+fn handle_animation_despawns(
     mut commands: Commands,
-    mut offscreen_animations: EventReader<TweenCompleted>,
+    mut animations_despawns: EventReader<TweenCompleted>,
 ) {
-    for TweenCompleted { entity, user_data } in offscreen_animations.iter() {
-        let flags = AnimationEvent::OFFSCREEN.bits();
+    for TweenCompleted { entity, user_data } in animations_despawns.iter() {
+        let flags = AnimationEvent::DESPAWNABLE.bits();
         if *user_data & flags == flags {
             commands.entity(*entity).despawn_recursive();
         }
