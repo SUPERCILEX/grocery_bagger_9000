@@ -22,7 +22,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "For best results, group items of\nthe same color into a single bag.\n\
+        "For best results, group items of\nthe same color into a single bag.\n\n\
         A full bag with mixed colors is still\nbetter than two partially filled bags.",
     );
     spawn_belt(&mut commands, &dips_window);

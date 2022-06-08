@@ -79,8 +79,8 @@ fn show_tutorial(
         spawn_text_tutorial(
             &mut commands,
             asset_server,
-            "Some levels include a timed robo-bagger.\n\
-            A new piece will be placed when the outlined\npiece turns solid.\n\
+            "Some levels include a timed robo-bagger.\n\n\
+            A new piece will be placed when the outlined\npiece turns solid.\n\n\
             Place any piece to delay the robo-bagger.",
         );
     }

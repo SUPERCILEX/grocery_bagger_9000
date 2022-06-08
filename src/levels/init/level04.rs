@@ -22,7 +22,7 @@ pub fn init_level(
     spawn_text_tutorial(
         &mut commands,
         asset_server,
-        "Only the leftmost three items are selectable.\nAfter filling a bag, a replacement bag will appear.",
+        "Only the leftmost three items are selectable.\n\nAfter filling a bag, a replacement bag will appear.",
     );
 }
 
