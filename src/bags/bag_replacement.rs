@@ -1,15 +1,16 @@
 use bevy::{math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
+use smallvec::SmallVec;
 
 use crate::{
     animations,
     animations::GameSpeed,
     bags::{
         spawn::{BagContainerMarker, BagLidMarker, BagMarker},
-        BagSize, BagSpawner, BAG_LID_COLLIDER_GROUP,
+        BagSize, BagSpawner, BAG_LID_COLLIDER_GROUP, BAG_SIZE_LARGE,
     },
     conveyor_belt::BeltEmptyEvent,
-    nominos::{NominoMarker, PiecePlaced, PieceSystems, NOMINO_COLLIDER_GROUP},
+    nominos::{NominoColor, NominoMarker, PiecePlaced, PieceSystems, NOMINO_COLLIDER_GROUP},
 };
 
 pub struct BagReplacementPlugin;
@@ -17,18 +18,29 @@ pub struct BagReplacementPlugin;
 impl Plugin for BagReplacementPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<BagFilled>();
+        app.add_event::<BagChanged>();
         app.add_event::<RemoveFilledBag>();
         app.add_event::<ReplaceFilledBag>();
 
         app.add_system(
-            detect_filled_bags
+            bag_change_detection
+                .label(BagChangeDetectionSystems)
+                .after(PieceSystems),
+        );
+        app.add_system(
+            detect_overflowing_bags
                 .label(BagReplacementDetectionSystems)
                 .after(PieceSystems),
         );
         app.add_system(
+            detect_filled_bags
+                .label(BagReplacementDetectionSystems)
+                .after(BagChangeDetectionSystems),
+        );
+        app.add_system(
             replace_full_bags
                 .label(BagReplacementSystems)
-                .after(detect_filled_bags),
+                .after(BagReplacementDetectionSystems),
         );
         app.add_system(
             remove_filled_bags
@@ -44,6 +56,9 @@ impl Plugin for BagReplacementPlugin {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
+pub struct BagChangeDetectionSystems;
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
 pub struct BagReplacementDetectionSystems;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, SystemLabel)]
@@ -51,6 +66,14 @@ pub struct BagReplacementSystems;
 
 #[derive(Deref)]
 pub struct BagFilled(Entity);
+
+pub struct BagChanged {
+    bag: Entity,
+    blocks: SmallVec<
+        [SmallVec<[Option<NominoColor>; BAG_SIZE_LARGE.width() as usize]>;
+            BAG_SIZE_LARGE.height() as usize],
+    >,
+}
 
 #[derive(Deref)]
 struct RemoveFilledBag(Entity);
@@ -61,53 +84,79 @@ struct ReplaceFilledBag(Entity);
 #[derive(Component)]
 pub struct Exiting;
 
-fn detect_filled_bags(
+fn bag_change_detection(
     mut piece_placements: EventReader<PiecePlaced>,
+    mut bag_changes: EventWriter<BagChanged>,
     bags: Query<(&GlobalTransform, &BagSize), With<BagMarker>>,
+    color_wrapper: Query<&NominoColor, With<NominoMarker>>,
+    rapier_context: Res<RapierContext>,
+) {
+    for PiecePlaced { bag, .. } in piece_placements.iter() {
+        let (bag_coords, bag_size) = bags.get(*bag).unwrap();
+
+        let width = bag_size.width() as usize;
+        let height = bag_size.height() as usize;
+        let block_origin = bag_coords.translation - bag_size.origin() + const_vec3!([0.5, 0.5, 0.]);
+
+        let mut blocks = SmallVec::with_capacity(height);
+        for row_num in 0..height {
+            let mut row = SmallVec::with_capacity(width);
+            for col in 0..width {
+                let mut color = None;
+                rapier_context.intersections_with_point(
+                    block_origin
+                        + Vec3::new(
+                            f32::from(u8::try_from(col).unwrap()),
+                            f32::from(u8::try_from(row_num).unwrap()),
+                            0.,
+                        ),
+                    NOMINO_COLLIDER_GROUP.into(),
+                    None,
+                    |color_id| {
+                        color = Some(*color_wrapper.get(color_id).unwrap());
+                        false
+                    },
+                );
+
+                row.push(color);
+            }
+            blocks.push(row);
+        }
+
+        bag_changes.send(BagChanged { bag: *bag, blocks });
+    }
+}
+
+fn detect_overflowing_bags(
+    mut piece_placements: EventReader<PiecePlaced>,
     mut filled_events: EventWriter<BagFilled>,
     rapier_context: Res<RapierContext>,
     piece_colliders: Query<(&GlobalTransform, &Collider), With<NominoMarker>>,
     lid_collider_bag: Query<&Parent, With<BagLidMarker>>,
 ) {
     for PiecePlaced { piece, bag } in piece_placements.iter() {
-        {
-            let (transform, collider) = piece_colliders.get(*piece).unwrap();
-            let bag_overflowing = rapier_context
-                .intersection_with_shape(
-                    transform.translation,
-                    transform.rotation,
-                    collider,
-                    BAG_LID_COLLIDER_GROUP.into(),
-                    Some(&|entity| **lid_collider_bag.get(entity).unwrap() == *bag),
-                )
-                .is_some();
-            if bag_overflowing {
-                filled_events.send(BagFilled(*bag));
-                continue;
-            }
+        let (transform, collider) = piece_colliders.get(*piece).unwrap();
+        let bag_overflowing = rapier_context
+            .intersection_with_shape(
+                transform.translation,
+                transform.rotation,
+                collider,
+                BAG_LID_COLLIDER_GROUP.into(),
+                Some(&|entity| **lid_collider_bag.get(entity).unwrap() == *bag),
+            )
+            .is_some();
+        if bag_overflowing {
+            filled_events.send(BagFilled(*bag));
         }
+    }
+}
 
-        let (bag_coords, bag_size) = bags.get(*bag).unwrap();
-        let block_origin = bag_coords.translation + bag_size.origin() - const_vec3!([0.5, 0.5, 0.]);
-
-        let mut top_row_full = true;
-        for i in 0..bag_size.width() {
-            let mut intersection = false;
-            rapier_context.intersections_with_point(
-                block_origin - Vec3::new(f32::from(i), 0., 0.),
-                NOMINO_COLLIDER_GROUP.into(),
-                None,
-                |_| {
-                    intersection = true;
-                    false
-                },
-            );
-
-            if !intersection {
-                top_row_full = false;
-                break;
-            }
-        }
+fn detect_filled_bags(
+    mut bag_changes: EventReader<BagChanged>,
+    mut filled_events: EventWriter<BagFilled>,
+) {
+    for BagChanged { bag, blocks } in bag_changes.iter() {
+        let top_row_full = blocks.iter().last().unwrap().iter().all(Option::is_some);
         if top_row_full {
             filled_events.send(BagFilled(*bag));
         }
