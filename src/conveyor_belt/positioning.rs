@@ -1,4 +1,4 @@
-use bevy::{prelude::*, window::WindowResized};
+use bevy::{ecs::schedule::ShouldRun, prelude::*, window::WindowResized};
 use bevy_tweening::Animator;
 
 use crate::{
@@ -15,7 +15,11 @@ pub struct ConveyorBeltPositioningPlugin;
 
 impl Plugin for ConveyorBeltPositioningPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(reposition_background_on_window_resize.after(WindowSystems));
+        app.add_system(
+            reposition_background_on_window_resize
+                .with_run_criteria(run_if_window_resized)
+                .after(WindowSystems),
+        );
     }
 }
 
@@ -31,8 +35,15 @@ pub fn compute_selectable_background(num_pieces_selectable: u8) -> Transform {
     )
 }
 
+fn run_if_window_resized(mut resized_events: EventReader<WindowResized>) -> ShouldRun {
+    if resized_events.iter().count() > 0 {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
+
 fn reposition_background_on_window_resize(
-    mut resized_events: EventReader<WindowResized>,
     dips_window: Res<DipsWindow>,
     mut background: Query<
         &mut Transform,
@@ -43,10 +54,6 @@ fn reposition_background_on_window_resize(
         ),
     >,
 ) {
-    if resized_events.iter().count() == 0 {
-        return;
-    }
-
     if let Ok(mut position) = background.get_single_mut() {
         *position = compute_belt_position(&dips_window);
     }

@@ -1,10 +1,11 @@
 use std::fmt::Write;
 
-use bevy::{prelude::*, ui::PositionType::Absolute};
+use bevy::{ecs::schedule::ShouldRun, prelude::*, ui::PositionType::Absolute};
 use num_format::{Locale, ToFormattedString};
 
 use crate::{
-    levels::{CurrentScore, LevelMarker, LevelSpawnStage, LevelStarted, ScoringSystems},
+    levels::{CurrentScore, LevelMarker, LevelSpawnStage, ScoringSystems},
+    run_criteria::run_if_level_started,
     ui::consts::{HUD_FONT_SIZE, SCORE_COLOR},
 };
 
@@ -12,24 +13,23 @@ pub struct HudPlugin;
 
 impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_score.after(ScoringSystems));
+        app.add_system(
+            update_score
+                .with_run_criteria(run_if_score_changed)
+                .after(ScoringSystems),
+        );
 
-        app.add_system_to_stage(LevelSpawnStage, setup_hud);
+        app.add_system_to_stage(
+            LevelSpawnStage,
+            setup_hud.with_run_criteria(run_if_level_started),
+        );
     }
 }
 
 #[derive(Component)]
 struct ScoreText;
 
-fn setup_hud(
-    mut commands: Commands,
-    mut level_loaded: EventReader<LevelStarted>,
-    asset_server: Res<AssetServer>,
-) {
-    if level_loaded.iter().count() == 0 {
-        return;
-    }
-
+fn setup_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
     commands
         .spawn_bundle(NodeBundle {
@@ -62,11 +62,15 @@ fn setup_hud(
         });
 }
 
-fn update_score(score: Res<CurrentScore>, mut text_query: Query<&mut Text, With<ScoreText>>) {
-    if !score.is_changed() {
-        return;
+fn run_if_score_changed(score: Res<CurrentScore>) -> ShouldRun {
+    if score.is_changed() {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
     }
+}
 
+fn update_score(score: Res<CurrentScore>, mut text_query: Query<&mut Text, With<ScoreText>>) {
     if let Ok(mut text) = text_query.get_single_mut() {
         let text = &mut text.sections[0].value;
 

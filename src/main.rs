@@ -38,6 +38,7 @@ mod gb9000;
 mod levels;
 mod nominos;
 mod robot;
+mod run_criteria;
 mod ui;
 mod window_management;
 mod window_utils;

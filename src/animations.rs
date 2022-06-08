@@ -1,6 +1,6 @@
 use std::{f32::consts::PI, time::Duration};
 
-use bevy::{math::const_vec3, prelude::*};
+use bevy::{ecs::schedule::ShouldRun, math::const_vec3, prelude::*};
 use bevy_tweening::{
     lens::{TransformPositionLens, TransformRotationLens, TransformScaleLens, UiPositionLens},
     *,
@@ -14,9 +14,15 @@ impl Plugin for AnimationPlugin {
         app.init_resource::<GameSpeed>();
 
         app.add_system(
-            change_animation_speed::<Transform>.before(AnimationSystem::AnimationUpdate),
+            change_animation_speed::<Transform>
+                .with_run_criteria(run_if_game_speed_changed)
+                .before(AnimationSystem::AnimationUpdate),
         );
-        app.add_system(change_animation_speed::<Style>.before(AnimationSystem::AnimationUpdate));
+        app.add_system(
+            change_animation_speed::<Style>
+                .with_run_criteria(run_if_game_speed_changed)
+                .before(AnimationSystem::AnimationUpdate),
+        );
 
         app.add_system(cleanup_animations::<Transform>.after(AnimationSystem::AnimationUpdate));
         app.add_system(cleanup_animations::<Style>.after(AnimationSystem::AnimationUpdate));
@@ -465,14 +471,18 @@ pub fn level_complete_menu_ui_exit(
     )
 }
 
+fn run_if_game_speed_changed(game_speed: Res<GameSpeed>) -> ShouldRun {
+    if game_speed.is_changed() {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
+
 fn change_animation_speed<T: Component>(
     game_speed: Res<GameSpeed>,
     mut animators: Query<&mut Animator<T>>,
 ) {
-    if !game_speed.is_changed() {
-        return;
-    }
-
     for mut animator in animators.iter_mut() {
         animator.set_speed(**game_speed);
     }

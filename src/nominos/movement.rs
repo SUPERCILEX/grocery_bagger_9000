@@ -1,4 +1,4 @@
-use bevy::{math::const_vec3, prelude::*};
+use bevy::{ecs::schedule::ShouldRun, math::const_vec3, prelude::*};
 use bevy_rapier3d::prelude::*;
 use bevy_tweening::AnimationSystem;
 use smallvec::SmallVec;
@@ -21,10 +21,15 @@ impl Plugin for PieceMovementPlugin {
         app.add_event::<OutOfBagPlacement>();
         app.add_event::<PiecePlaced>();
 
-        app.add_system(piece_selection_handler.label(PieceSystems));
+        app.add_system(
+            piece_selection_handler
+                .label(PieceSystems)
+                .with_run_criteria(run_if_left_clicked),
+        );
         app.add_system(
             piece_rotation_handler
                 .label(PieceSystems)
+                .with_run_criteria(run_if_right_clicked)
                 .before(piece_selection_handler)
                 .after(AnimationSystem::AnimationUpdate),
         );
@@ -63,9 +68,16 @@ const FLOATING_PIECE_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
     filters: BAG_FLOOR_COLLIDER_GROUP.filters | NOMINO_COLLIDER_GROUP.filters,
 };
 
+fn run_if_left_clicked(mouse_button_input: Res<Input<MouseButton>>) -> ShouldRun {
+    if mouse_button_input.just_pressed(MouseButton::Left) {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
+
 fn piece_selection_handler(
     mut commands: Commands,
-    mouse_button_input: Res<Input<MouseButton>>,
     mut picked_up_events: EventWriter<PiecePickedUp>,
     mut placed_events: EventWriter<PiecePlaced>,
     mut attempted_placement_events: EventWriter<OutOfBagPlacement>,
@@ -88,10 +100,6 @@ fn piece_selection_handler(
     )>,
     #[cfg(feature = "debug")] debug_options: Res<crate::debug::DebugOptions>,
 ) {
-    if !mouse_button_input.just_pressed(MouseButton::Left) {
-        return;
-    }
-
     {
         let mut selected_shape = pieces_queries.p0();
         if let Ok((piece, mut transform, collider, original)) = selected_shape.get_single_mut() {
@@ -194,18 +202,21 @@ fn piece_selection_handler(
     }
 }
 
+fn run_if_right_clicked(mouse_button_input: Res<Input<MouseButton>>) -> ShouldRun {
+    if mouse_button_input.just_pressed(MouseButton::Right) {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
+
 fn piece_rotation_handler(
     mut commands: Commands,
-    mouse_button_input: Res<Input<MouseButton>>,
     mut selected_piece: Query<
         (Entity, &mut Transform, Option<&Original<Transform>>),
         (With<NominoMarker>, With<Selected>),
     >,
 ) {
-    if !mouse_button_input.just_pressed(MouseButton::Right) {
-        return;
-    }
-
     if let Ok((piece, mut transform, original)) = selected_piece.get_single_mut() {
         if let Some(original) = original {
             transform.rotation = original.rotation;

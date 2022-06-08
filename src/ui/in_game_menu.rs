@@ -4,7 +4,8 @@ use bevy::{
 };
 
 use crate::{
-    levels::{LevelFinished, LevelMarker, LevelSpawnStage, LevelStarted},
+    levels::{LevelFinished, LevelMarker, LevelSpawnStage},
+    run_criteria::run_if_level_started,
     ui::consts::{BUTTON_COLOR, IN_GAME_MENU_FONT_SIZE, NORMAL_BUTTON},
 };
 
@@ -12,7 +13,10 @@ pub struct InGameMenuPlugin;
 
 impl Plugin for InGameMenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage(LevelSpawnStage, setup_menu);
+        app.add_system_to_stage(
+            LevelSpawnStage,
+            setup_menu.with_run_criteria(run_if_level_started),
+        );
         app.add_system_to_stage(
             CoreStage::PreUpdate,
             handle_restart_level_click.after(UiSystem::Focus),
@@ -23,15 +27,7 @@ impl Plugin for InGameMenuPlugin {
 #[derive(Component)]
 struct RestartLevelButton;
 
-fn setup_menu(
-    mut commands: Commands,
-    mut level_loaded: EventReader<LevelStarted>,
-    asset_server: Res<AssetServer>,
-) {
-    if level_loaded.iter().count() == 0 {
-        return;
-    }
-
+fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font = asset_server.load("fonts/FiraSans-Bold.ttf");
     commands
         .spawn_bundle(NodeBundle {

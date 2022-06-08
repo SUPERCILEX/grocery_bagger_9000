@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::schedule::ShouldRun, prelude::*};
 use bevy_tweening::{AnimationSystem, TweenCompleted};
 
 use crate::{
@@ -33,6 +33,7 @@ impl Plugin for LevelTransitionPlugin {
         app.add_system(
             level_unload_handler
                 .label(LevelTransitionSystems)
+                .with_run_criteria(run_if_level_finished)
                 .after(level_end_handler),
         );
     }
@@ -108,14 +109,16 @@ fn level_end_handler(
     }
 }
 
-fn level_unload_handler(
-    mut commands: Commands,
-    mut level_finished: EventReader<LevelFinished>,
-    level: Query<Entity, With<LevelMarker>>,
-) {
+fn run_if_level_finished(mut level_finished: EventReader<LevelFinished>) -> ShouldRun {
     if level_finished.iter().count() > 0 {
-        for entity in level.iter() {
-            commands.entity(entity).despawn_recursive();
-        }
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
+
+fn level_unload_handler(mut commands: Commands, level: Query<Entity, With<LevelMarker>>) {
+    for entity in level.iter() {
+        commands.entity(entity).despawn_recursive();
     }
 }

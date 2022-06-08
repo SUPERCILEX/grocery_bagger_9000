@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::schedule::ShouldRun, prelude::*};
 use bevy_egui::{egui, EguiContext, EguiPlugin, EguiSystem};
 use bevy_inspector_egui::{WorldInspectorParams, WorldInspectorPlugin};
 use bevy_inspector_egui_rapier::InspectableRapierPlugin;
@@ -37,7 +37,15 @@ impl Plugin for DebugPlugin {
             CoreStage::PreUpdate,
             debug_options.after(EguiSystem::BeginFrame),
         );
-        app.add_system(open_debug_menu);
+        app.add_system(
+            open_debug_menu.with_run_criteria(|keys: Res<Input<KeyCode>>| {
+                if keys.just_pressed(KeyCode::Semicolon) {
+                    ShouldRun::Yes
+                } else {
+                    ShouldRun::No
+                }
+            }),
+        );
     }
 }
 
@@ -259,8 +267,6 @@ fn debug_options(
         });
 }
 
-fn open_debug_menu(keys: Res<Input<KeyCode>>, mut debug_options: ResMut<DebugOptions>) {
-    if keys.just_pressed(KeyCode::Semicolon) {
-        debug_options.open = true;
-    }
+fn open_debug_menu(mut debug_options: ResMut<DebugOptions>) {
+    debug_options.open = true;
 }

@@ -1,4 +1,4 @@
-use bevy::{app::Plugin, prelude::*, ui::PositionType::Absolute};
+use bevy::{app::Plugin, ecs::schedule::ShouldRun, prelude::*, ui::PositionType::Absolute};
 use num_format::{Locale, ToFormattedString};
 
 use crate::{
@@ -24,6 +24,7 @@ impl Plugin for LevelEndMenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_system(
             show_level_end_screen
+                .with_run_criteria(run_if_should_show_end_screen)
                 .after(LevelTransitionSystems)
                 .after(ScoringSystems),
         );
@@ -55,18 +56,24 @@ struct RestartLevelButton;
 #[derive(Component)]
 struct NextLevelButton;
 
+fn run_if_should_show_end_screen(
+    mut level_end: EventReader<LevelFinished>,
+    gb9000: Res<GroceryBagger9000>,
+) -> ShouldRun {
+    if level_end.iter().count() > 0 && gb9000.state == LevelEnded {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
+
 fn show_level_end_screen(
     mut commands: Commands,
-    mut level_end: EventReader<LevelFinished>,
     score: Res<CurrentScore>,
     game_speed: Res<GameSpeed>,
     gb9000: Res<GroceryBagger9000>,
     asset_server: Res<AssetServer>,
 ) {
-    if level_end.iter().count() == 0 || gb9000.state != LevelEnded {
-        return;
-    }
-
     let from = Rect {
         bottom: Val::Percent(100.),
         ..default()

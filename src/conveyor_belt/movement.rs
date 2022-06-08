@@ -1,4 +1,4 @@
-use bevy::{math::const_vec3, prelude::*};
+use bevy::{ecs::schedule::ShouldRun, math::const_vec3, prelude::*};
 use bevy_prototype_lyon::{draw::DrawMode, entity::Path};
 use bevy_tweening::Animator;
 use smallvec::SmallVec;
@@ -25,6 +25,7 @@ use crate::{
         PieceSystems, Selectable, Selected, DEG_90, DEG_MIRRORED,
     },
     robot::RobotTargetMarker,
+    run_criteria::run_if_level_started,
     ui::MenuButtonClickedSystems,
     window_management::WindowSystems,
 };
@@ -35,7 +36,10 @@ impl Plugin for ConveyorBeltMovementPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<BeltEmptyEvent>();
 
-        app.add_system_to_stage(CoreStage::PostUpdate, init_pieces);
+        app.add_system_to_stage(
+            CoreStage::PostUpdate,
+            init_pieces.with_run_criteria(run_if_level_started),
+        );
         app.add_system(
             replace_pieces
                 .label(BeltMovementSystems)
@@ -63,10 +67,14 @@ impl Plugin for ConveyorBeltMovementPlugin {
                 .after(PieceSystems)
                 .after(replace_pieces),
         );
-        app.add_system(update_background_on_num_selectable_pieces_changed);
+        app.add_system(
+            update_background_on_num_selectable_pieces_changed
+                .with_run_criteria(run_if_belt_options_changed),
+        );
         app.add_system_to_stage(
             CoreStage::PreUpdate,
-            update_piece_selectability_on_num_selectable_pieces_changed,
+            update_piece_selectability_on_num_selectable_pieces_changed
+                .with_run_criteria(run_if_belt_options_changed),
         );
     }
 }
@@ -81,7 +89,6 @@ pub struct BeltPieceIds(SmallVec<[Entity; MAX_NUM_PIECES as usize]>);
 
 fn init_pieces(
     mut commands: Commands,
-    mut level_loaded: EventReader<LevelStarted>,
     mut conveyor_belt: Query<
         (Entity, &mut ConveyorBeltInstance, &mut BeltPieceIds),
         With<ConveyorBeltMarker>,
@@ -89,10 +96,6 @@ fn init_pieces(
     game_speed: Res<GameSpeed>,
     belt_options: Res<ConveyorBeltOptions>,
 ) {
-    if level_loaded.iter().count() == 0 {
-        return;
-    }
-
     let (id, mut conveyor_belt, mut belt_pieces) = conveyor_belt.single_mut();
     for i in 0..MAX_NUM_PIECES {
         let start =
@@ -280,6 +283,14 @@ fn update_robot_target_on_piece_selection(
     }
 }
 
+fn run_if_belt_options_changed(belt_options: Res<ConveyorBeltOptions>) -> ShouldRun {
+    if belt_options.is_changed() {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
+}
+
 fn update_background_on_num_selectable_pieces_changed(
     belt_options: Res<ConveyorBeltOptions>,
     mut selectable: Query<
@@ -299,10 +310,6 @@ fn update_background_on_num_selectable_pieces_changed(
         ),
     >,
 ) {
-    if !belt_options.is_changed() {
-        return;
-    }
-
     let num_pieces_selectable = belt_options.num_pieces_selectable;
     if let Ok(mut path) = selectable.get_single_mut() {
         *path = selectable_background_path(num_pieces_selectable);
@@ -320,10 +327,6 @@ fn update_piece_selectability_on_num_selectable_pieces_changed(
     nomino_colors: Query<&NominoColor, With<NominoMarker>>,
     mut colors: Query<&mut DrawMode, With<NominoMarker>>,
 ) {
-    if !belt_options.is_changed() {
-        return;
-    }
-
     let num_pieces_selectable = belt_options.num_pieces_selectable as usize;
     let belt_pieces = if let Ok(belt_pieces) = conveyor_belt.get_single() {
         belt_pieces
