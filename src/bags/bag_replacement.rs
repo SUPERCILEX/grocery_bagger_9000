@@ -28,13 +28,9 @@ impl Plugin for BagReplacementPlugin {
                 .after(PieceSystems),
         );
         app.add_system(
-            detect_overflowing_bags
-                .label(BagReplacementDetectionSystems)
-                .after(PieceSystems),
-        );
-        app.add_system(
             detect_filled_bags
                 .label(BagReplacementDetectionSystems)
+                .after(PieceSystems)
                 .after(BagChangeDetectionSystems),
         );
         app.add_system(
@@ -127,14 +123,29 @@ fn bag_change_detection(
     }
 }
 
-fn detect_overflowing_bags(
+fn detect_filled_bags(
+    mut bag_changes: EventReader<BagChanged>,
     mut piece_placements: EventReader<PiecePlaced>,
     mut filled_events: EventWriter<BagFilled>,
     rapier_context: Res<RapierContext>,
     piece_colliders: Query<(&GlobalTransform, &Collider), With<NominoMarker>>,
     lid_collider_bag: Query<&Parent, With<BagLidMarker>>,
 ) {
+    let mut processed_bags = SmallVec::<[Entity; 1]>::new();
+
+    for BagChanged { bag, blocks } in bag_changes.iter() {
+        let top_row_full = blocks.iter().last().unwrap().iter().all(Option::is_some);
+        if top_row_full {
+            filled_events.send(BagFilled(*bag));
+            processed_bags.push(*bag);
+        }
+    }
+
     for PiecePlaced { piece, bag } in piece_placements.iter() {
+        if processed_bags.contains(bag) {
+            continue;
+        }
+
         let (transform, collider) = piece_colliders.get(*piece).unwrap();
         let bag_overflowing = rapier_context
             .intersection_with_shape(
@@ -146,18 +157,6 @@ fn detect_overflowing_bags(
             )
             .is_some();
         if bag_overflowing {
-            filled_events.send(BagFilled(*bag));
-        }
-    }
-}
-
-fn detect_filled_bags(
-    mut bag_changes: EventReader<BagChanged>,
-    mut filled_events: EventWriter<BagFilled>,
-) {
-    for BagChanged { bag, blocks } in bag_changes.iter() {
-        let top_row_full = blocks.iter().last().unwrap().iter().all(Option::is_some);
-        if top_row_full {
             filled_events.send(BagFilled(*bag));
         }
     }
