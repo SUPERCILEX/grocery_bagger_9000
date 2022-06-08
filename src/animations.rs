@@ -2,7 +2,10 @@ use std::{f32::consts::PI, time::Duration};
 
 use bevy::{ecs::schedule::ShouldRun, math::const_vec3, prelude::*};
 use bevy_tweening::{
-    lens::{TransformPositionLens, TransformRotationLens, TransformScaleLens, UiPositionLens},
+    lens::{
+        TextColorLens, TransformPositionLens, TransformRotationLens, TransformScaleLens,
+        UiPositionLens,
+    },
     *,
 };
 use bitflags::bitflags;
@@ -13,19 +16,30 @@ impl Plugin for AnimationPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<GameSpeed>();
 
-        app.add_system(
-            change_animation_speed::<Transform>
-                .with_run_criteria(run_if_game_speed_changed)
-                .before(AnimationSystem::AnimationUpdate),
-        );
-        app.add_system(
-            change_animation_speed::<Style>
-                .with_run_criteria(run_if_game_speed_changed)
-                .before(AnimationSystem::AnimationUpdate),
-        );
+        macro_rules! add_change_animation_speed {
+            ($t:ty) => {
+                app.add_system(
+                    change_animation_speed::<$t>
+                        .with_run_criteria(run_if_game_speed_changed)
+                        .before(AnimationSystem::AnimationUpdate),
+                );
+            };
+        }
 
-        app.add_system(cleanup_animations::<Transform>.after(AnimationSystem::AnimationUpdate));
-        app.add_system(cleanup_animations::<Style>.after(AnimationSystem::AnimationUpdate));
+        add_change_animation_speed!(Transform);
+        add_change_animation_speed!(Style);
+        add_change_animation_speed!(Text);
+
+        macro_rules! add_cleanup_animations {
+            ($t:ty) => {
+                app.add_system(cleanup_animations::<$t>.after(AnimationSystem::AnimationUpdate));
+            };
+        }
+
+        add_cleanup_animations!(Transform);
+        add_cleanup_animations!(Style);
+        add_cleanup_animations!(Text);
+
         app.add_system(handle_animation_despawns.after(AnimationSystem::AnimationUpdate));
     }
 }
@@ -223,6 +237,49 @@ pub fn piece_placed(current: Transform, speed: &GameSpeed) -> Animator<Transform
         )
         .with_speed(**speed)
         .with_completed_event(true, AnimationEvent::COMPLETED.bits()),
+    ]))
+}
+
+pub fn score_particle(
+    from: GlobalTransform,
+    to: GlobalTransform,
+    speed: &GameSpeed,
+) -> Animator<Transform> {
+    Animator::new(
+        Tween::new(
+            EaseFunction::QuinticOut,
+            TweeningType::Once,
+            Duration::from_millis(600),
+            TransformPositionLens {
+                start: from.translation,
+                end: to.translation,
+            },
+        )
+        .with_speed(**speed),
+    )
+}
+
+pub fn score_particle_fade_out(from: Color, to: Color, speed: &GameSpeed) -> Animator<Text> {
+    type DynTweenable = Box<dyn Tweenable<Text> + Send + Sync + 'static>;
+    Animator::new(Sequence::new([
+        Box::new(Delay::new(Duration::from_millis(200))) as DynTweenable,
+        Box::new(
+            Tween::new(
+                EaseMethod::Linear,
+                TweeningType::Once,
+                Duration::from_millis(600),
+                TextColorLens {
+                    start: from,
+                    end: to,
+                    section: 0,
+                },
+            )
+            .with_speed(**speed)
+            .with_completed_event(
+                true,
+                (AnimationEvent::COMPLETED | AnimationEvent::DESPAWNABLE).bits(),
+            ),
+        ) as DynTweenable,
     ]))
 }
 

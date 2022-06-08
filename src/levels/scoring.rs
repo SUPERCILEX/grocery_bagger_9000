@@ -20,6 +20,8 @@ impl Plugin for ScoringPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CurrentScore>();
 
+        app.add_event::<ScoreChanged>();
+
         app.add_system(
             score_bags
                 .label(ScoringSystems)
@@ -41,10 +43,17 @@ pub struct CurrentScore {
     score_map: HashMap<Entity, u16>,
 }
 
+#[derive(Debug)]
+pub struct ScoreChanged {
+    pub cause: Entity,
+    pub diff: isize,
+}
+
 fn score_bags(
     mut bag_changes: EventReader<BagChanged>,
     bags: Query<&BagSize, With<BagMarker>>,
     mut current_score: ResMut<CurrentScore>,
+    mut score_changes: EventWriter<ScoreChanged>,
 ) {
     for BagChanged { bag, blocks } in bag_changes.iter() {
         let capacity = bags.get(*bag).unwrap().capacity();
@@ -61,6 +70,8 @@ fn score_bags(
             + diff)
             .try_into()
             .unwrap();
+
+        score_changes.send(ScoreChanged { cause: *bag, diff });
     }
 }
 

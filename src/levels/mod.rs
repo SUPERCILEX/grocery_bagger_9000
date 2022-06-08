@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use init::*;
 use level01::Level1Plugin;
 use scoring::ScoringPlugin;
-pub use scoring::{CurrentScore, ScoringSystems};
+pub use scoring::{CurrentScore, ScoreChanged, ScoringSystems};
 use transitions::LevelTransitionPlugin;
 pub use transitions::{
     LevelFinished, LevelMarker, LevelSpawnStage, LevelStarted, LevelTransitionSystems,

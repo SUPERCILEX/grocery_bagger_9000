@@ -1,4 +1,4 @@
-use std::fmt::Write;
+use std::{fmt::Write};
 
 use bevy::{ecs::schedule::ShouldRun, prelude::*, ui::PositionType::Absolute};
 use num_format::{Locale, ToFormattedString};
