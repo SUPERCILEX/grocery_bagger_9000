@@ -27,9 +27,6 @@ pub const BAG_BOUNDARY_COLLIDER_GROUP: CollisionGroups = CollisionGroups {
 pub const BAG_SIZE_LARGE: BagSize = BagSize::new(6, 6);
 pub const BAG_SIZE_SMALL: BagSize = BagSize::new(3, 4);
 
-pub const LARGEST_BAG_WIDTH: usize = 6;
-pub const LARGEST_BAG_HEIGHT: usize = 6;
-pub const LARGEST_BAG_CAPACITY: usize = LARGEST_BAG_WIDTH * LARGEST_BAG_HEIGHT;
 pub const BAG_SPACING: u8 = 2;
 
 pub const LID_HALFHEIGHT: f32 = 0.49;

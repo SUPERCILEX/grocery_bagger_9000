@@ -1,10 +1,11 @@
 use std::ops::{Index, IndexMut};
 
 use bevy::prelude::*;
+use num_derive::FromPrimitive;
 
 use crate::hex_color;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Component)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Component, FromPrimitive)]
 pub enum NominoColor {
     Orange,
     Gold,

@@ -68,8 +68,8 @@ pub struct BagReplacementSystems;
 pub struct BagFilled(Entity);
 
 pub struct BagChanged {
-    bag: Entity,
-    blocks: SmallVec<
+    pub bag: Entity,
+    pub blocks: SmallVec<
         [SmallVec<[Option<NominoColor>; BAG_SIZE_LARGE.width() as usize]>;
             BAG_SIZE_LARGE.height() as usize],
     >,
