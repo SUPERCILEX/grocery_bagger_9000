@@ -6,14 +6,6 @@
 #![feature(let_else)]
 #![feature(div_duration)]
 #![feature(is_some_with)]
-#![warn(
-    clippy::all,
-    clippy::float_cmp_const,
-    clippy::empty_structs_with_brackets,
-    clippy::pedantic,
-    clippy::nursery,
-    clippy::cargo
-)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
 #![allow(clippy::needless_pass_by_value)]

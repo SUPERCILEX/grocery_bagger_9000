@@ -1492,6 +1492,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "gb9000_level_generation"
+version = "0.1.0"
+dependencies = [
+ "smallvec",
+]
+
+[[package]]
 name = "gethostname"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

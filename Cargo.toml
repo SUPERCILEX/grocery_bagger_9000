@@ -9,6 +9,11 @@ keywords = ["bevy", "tetris", "puzzle"]
 categories = ["games"]
 license = "GPL-3.0"
 
+[workspace]
+members = [
+    "tools/level_generation"
+]
+
 [patch.crates-io]
 bevy = { git = "https://github.com/SUPERCILEX/bevy" }
 bevy_ecs = { git = "https://github.com/SUPERCILEX/bevy" }

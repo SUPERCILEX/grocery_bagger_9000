@@ -1,0 +1,13 @@
+[package]
+name = "gb9000_level_generation"
+version = "0.1.0"
+authors = ["Alex Saveau <saveau.alexandre@gmail.com>"]
+edition = "2021"
+description = "Grocery Bagger 9000 level generator"
+repository = "https://github.com/SUPERCILEX/grocery_bagger_9000"
+keywords = ["tetris", "solver"]
+categories = ["development-tools"]
+license = "GPL-3.0"
+
+[dependencies]
+smallvec = "1.8.0"
