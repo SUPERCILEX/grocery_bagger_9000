@@ -1,5 +1,7 @@
+use bevy::prelude::*;
+
 use crate::{
-    animations::{score_particle, score_particle_fade_out, GameSpeed},
+    animations::{score_particle, GameSpeed},
     bags::BagSize,
     levels::{LevelMarker, ScoreChanged, ScoringSystems},
     ui::{
@@ -8,8 +10,6 @@ use crate::{
     },
     window_management::{DipsWindow, WindowSystems},
 };
-use bevy::{prelude::*};
-
 
 pub struct JuicePlugin;
 
@@ -79,7 +79,6 @@ fn score_juice_handler(
                 ..default()
             })
             .insert(LevelMarker)
-            .insert(score_particle(from, to, &game_speed))
-            .insert(score_particle_fade_out(from_color, to_color, &game_speed));
+            .insert_bundle(score_particle(from, to, from_color, to_color, &game_speed));
     }
 }

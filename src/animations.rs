@@ -243,9 +243,14 @@ pub fn piece_placed(current: Transform, speed: &GameSpeed) -> Animator<Transform
 pub fn score_particle(
     from: GlobalTransform,
     to: GlobalTransform,
+    from_color: Color,
+    to_color: Color,
     speed: &GameSpeed,
-) -> Animator<Transform> {
-    Animator::new(
+) -> (Animator<Transform>, Animator<Text>) {
+    // TODO remove after new animation code
+    type DynTweenable = Box<dyn Tweenable<Text> + Send + Sync + 'static>;
+
+    let enter = Animator::new(
         Tween::new(
             EaseFunction::QuinticOut,
             TweeningType::Once,
@@ -256,12 +261,9 @@ pub fn score_particle(
             },
         )
         .with_speed(**speed),
-    )
-}
+    );
 
-pub fn score_particle_fade_out(from: Color, to: Color, speed: &GameSpeed) -> Animator<Text> {
-    type DynTweenable = Box<dyn Tweenable<Text> + Send + Sync + 'static>;
-    Animator::new(Sequence::new([
+    let exit = Animator::new(Sequence::new([
         Box::new(Delay::new(Duration::from_millis(200))) as DynTweenable,
         Box::new(
             Tween::new(
@@ -269,8 +271,8 @@ pub fn score_particle_fade_out(from: Color, to: Color, speed: &GameSpeed) -> Ani
                 TweeningType::Once,
                 Duration::from_millis(600),
                 TextColorLens {
-                    start: from,
-                    end: to,
+                    start: from_color,
+                    end: to_color,
                     section: 0,
                 },
             )
@@ -280,7 +282,9 @@ pub fn score_particle_fade_out(from: Color, to: Color, speed: &GameSpeed) -> Ani
                 (AnimationEvent::COMPLETED | AnimationEvent::DESPAWNABLE).bits(),
             ),
         ) as DynTweenable,
-    ]))
+    ]));
+
+    (enter, exit)
 }
 
 pub fn piece_loaded(
