@@ -6,7 +6,10 @@ use num_format::{Locale, ToFormattedString};
 use crate::{
     levels::{CurrentScore, LevelMarker, LevelSpawnStage, ScoringSystems},
     run_criteria::run_if_level_started,
-    ui::consts::{HUD_FONT_SIZE, SCORE_COLOR},
+    ui::{
+        consts::{HUD_FONT_SIZE, SCORE_COLOR},
+        PRIMARY_FONT,
+    },
 };
 
 pub struct HudPlugin;
@@ -30,7 +33,7 @@ impl Plugin for HudPlugin {
 struct ScoreText;
 
 fn setup_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+    let font = asset_server.load(PRIMARY_FONT);
     commands
         .spawn_bundle(NodeBundle {
             style: Style {

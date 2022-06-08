@@ -14,3 +14,5 @@ pub const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
 pub const SCORE_COLOR: Color = hex_color!(221, 111, 46);
 pub const TITLE_COLOR: Color = BUTTON_COLOR;
+
+pub const PRIMARY_FONT: &str = "fonts/FiraSans-Bold.ttf";

@@ -1,6 +1,6 @@
 use bevy::{prelude::*, ui::PositionType::Absolute};
 
-use crate::{hex_color, levels::LevelMarker};
+use crate::{hex_color, levels::LevelMarker, ui::PRIMARY_FONT};
 
 pub const TUTORIAL_FONT_SIZE_LARGE: f32 = 32.;
 pub const TUTORIAL_FONT_SIZE_SMALL: f32 = 24.;
@@ -26,7 +26,7 @@ pub fn spawn_text_tutorial(
     asset_server: Res<AssetServer>,
     text: impl Into<String>,
 ) {
-    let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+    let font = asset_server.load(PRIMARY_FONT);
     commands
         .spawn_bundle(NodeBundle {
             style: TUTORIAL_STYLE(),

@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 
+pub use consts::PRIMARY_FONT;
 use consts::{HOVERED_BUTTON, NORMAL_BUTTON, PRESSED_BUTTON};
 use hud::HudPlugin;
 use in_game_menu::InGameMenuPlugin;

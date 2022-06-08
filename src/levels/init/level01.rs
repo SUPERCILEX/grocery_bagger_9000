@@ -19,6 +19,7 @@ use crate::{
         Nomino, NominoColor, NominoMarker, NominoSpawner, PiecePickedUp, Selectable, DEG_180,
         DEG_90, DEG_MIRRORED,
     },
+    ui::PRIMARY_FONT,
     window_management::DipsWindow,
 };
 
@@ -76,7 +77,7 @@ fn spawn_bag(commands: &mut Commands, dips_window: &DipsWindow, game_speed: &Gam
 }
 
 fn spawn_tutorial(commands: &mut Commands, asset_server: Res<AssetServer>) {
-    let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+    let font = asset_server.load(PRIMARY_FONT);
     commands
         .spawn_bundle(NodeBundle {
             style: TUTORIAL_STYLE(),

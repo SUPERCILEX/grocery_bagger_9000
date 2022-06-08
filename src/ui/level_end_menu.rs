@@ -12,8 +12,11 @@ use crate::{
         CurrentScore, LevelFinished, LevelStarted, LevelTransitionSystems, ScoringSystems,
         LAST_LEVEL,
     },
-    ui::consts::{
-        BUTTON_COLOR, MENU_FONT_SIZE, NORMAL_BUTTON, SCORE_COLOR, TITLE_COLOR, TITLE_FONT_SIZE,
+    ui::{
+        consts::{
+            BUTTON_COLOR, MENU_FONT_SIZE, NORMAL_BUTTON, SCORE_COLOR, TITLE_COLOR, TITLE_FONT_SIZE,
+        },
+        PRIMARY_FONT,
     },
     App,
 };
@@ -83,7 +86,7 @@ fn show_level_end_screen(
         ..default()
     };
 
-    let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+    let font = asset_server.load(PRIMARY_FONT);
     commands
         .spawn_bundle(NodeBundle {
             style: Style {
