@@ -28,7 +28,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
       - name: Build project
-        run: cargo build --release --all-features
+        run: cargo build --release --all-features --workspace
 
   build_web:
     runs-on: ubuntu-latest
@@ -80,7 +80,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
       - name: Run tests
-        run: cargo test
+        run: cargo test --workspace
 
   lint:
     runs-on: ubuntu-latest
@@ -107,7 +107,7 @@ jobs:
       - name: Run lint
         run: |
           cargo fmt --check
-          cargo clippy --all-targets --all-features -- -D warnings \
+          cargo clippy --all-targets --all-features --workspace -- -D warnings \
             -W clippy::all \
             -W clippy::float_cmp_const \
             -W clippy::empty_structs_with_brackets \
