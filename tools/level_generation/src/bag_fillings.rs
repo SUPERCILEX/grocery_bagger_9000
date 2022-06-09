@@ -1,7 +1,5 @@
 use std::{collections::HashSet, iter::repeat};
 
-use smallvec::SmallVec;
-
 const PIECES: &[RawNomino] = &[
     RawNomino::TrominoStraight,
     RawNomino::TrominoStraight180,
@@ -98,160 +96,62 @@ impl RawNomino {
         }
     }
 
-    #[allow(clippy::too_many_lines)]
-    fn blocks(self) -> SmallVec<[(i8, i8); 4]> {
-        let mut blocks = SmallVec::new();
-        blocks.push((0, 0));
+    const fn blocks(self) -> &'static [(i8, i8)] {
         match self {
-            Self::TrominoStraight => {
-                blocks.push((0, 1));
-                blocks.push((0, 2));
-            }
-            Self::TrominoStraight180 => {
-                blocks.push((1, 0));
-                blocks.push((2, 0));
-            }
-            Self::TrominoL => {
-                blocks.push((0, -1));
-                blocks.push((1, 0));
-            }
-            Self::TrominoL90 => {
-                blocks.push((1, 0));
-                blocks.push((0, 1));
-            }
-            Self::TrominoL180 => {
-                blocks.push((1, 0));
-                blocks.push((0, -1));
-            }
-            Self::TrominoL270 => {
-                blocks.push((-1, 0));
-                blocks.push((0, -1));
-            }
-            Self::TetrominoStraight => {
-                blocks.push((0, 1));
-                blocks.push((0, 2));
-                blocks.push((0, 3));
-            }
-            Self::TetrominoStraight180 => {
-                blocks.push((1, 0));
-                blocks.push((2, 0));
-                blocks.push((3, 0));
-            }
-            Self::TetrominoSquare => {
-                blocks.push((0, 1));
-                blocks.push((1, 0));
-                blocks.push((1, 1));
-            }
-            Self::TetrominoT => {
-                blocks.push((0, 2));
-                blocks.push((1, 1));
-                blocks.push((0, 1));
-            }
-            Self::TetrominoT90 => {
-                blocks.push((2, 0));
-                blocks.push((1, -1));
-                blocks.push((1, 0));
-            }
-            Self::TetrominoT180 => {
-                blocks.push((0, 2));
-                blocks.push((-1, 1));
-                blocks.push((0, 1));
-            }
-            Self::TetrominoT270 => {
-                blocks.push((2, 0));
-                blocks.push((1, 1));
-                blocks.push((1, 0));
-            }
-            Self::TetrominoL => {
-                blocks.push((2, 0));
-                blocks.push((1, 0));
-                blocks.push((0, 1));
-            }
-            Self::TetrominoL90 => {
-                blocks.push((0, -2));
-                blocks.push((0, -1));
-                blocks.push((1, 0));
-            }
-            Self::TetrominoL180 => {
-                blocks.push((-2, 0));
-                blocks.push((-1, 0));
-                blocks.push((0, -1));
-            }
-            Self::TetrominoL270 => {
-                blocks.push((0, 2));
-                blocks.push((0, 1));
-                blocks.push((-1, 0));
-            }
-            Self::TetrominoLMirrored => {
-                blocks.push((2, 0));
-                blocks.push((1, 0));
-                blocks.push((0, -1));
-            }
-            Self::TetrominoLMirrored90 => {
-                blocks.push((0, -2));
-                blocks.push((0, -1));
-                blocks.push((-1, 0));
-            }
-            Self::TetrominoLMirrored180 => {
-                blocks.push((-2, 0));
-                blocks.push((-1, 0));
-                blocks.push((0, 1));
-            }
-            Self::TetrominoLMirrored270 => {
-                blocks.push((0, 2));
-                blocks.push((0, 1));
-                blocks.push((1, 0));
-            }
-            Self::TetrominoSkew => {
-                blocks.push((1, 0));
-                blocks.push((1, 1));
-                blocks.push((2, 1));
-            }
-            Self::TetrominoSkew180 => {
-                blocks.push((0, 1));
-                blocks.push((-1, 1));
-                blocks.push((-1, 2));
-            }
-            Self::TetrominoSkewMirrored => {
-                blocks.push((1, 0));
-                blocks.push((1, -1));
-                blocks.push((2, -1));
-            }
-            Self::TetrominoSkewMirrored180 => {
-                blocks.push((0, 1));
-                blocks.push((1, 1));
-                blocks.push((1, 2));
-            }
+            Self::TrominoStraight => &[(0, 0), (0, 1), (0, 2)],
+            Self::TrominoStraight180 => &[(0, 0), (1, 0), (2, 0)],
+            Self::TrominoL => &[(0, 0), (0, -1), (1, 0)],
+            Self::TrominoL90 => &[(0, 0), (1, 0), (0, 1)],
+            Self::TrominoL180 => &[(0, 0), (1, 0), (0, -1)],
+            Self::TrominoL270 => &[(0, 0), (-1, 0), (0, -1)],
+            Self::TetrominoStraight => &[(0, 0), (0, 1), (0, 2), (0, 3)],
+            Self::TetrominoStraight180 => &[(0, 0), (1, 0), (2, 0), (3, 0)],
+            Self::TetrominoSquare => &[(0, 0), (0, 1), (1, 0), (1, 1)],
+            Self::TetrominoT => &[(0, 0), (0, 2), (1, 1), (0, 1)],
+            Self::TetrominoT90 => &[(0, 0), (2, 0), (1, -1), (1, 0)],
+            Self::TetrominoT180 => &[(0, 0), (0, 2), (-1, 1), (0, 1)],
+            Self::TetrominoT270 => &[(0, 0), (2, 0), (1, 1), (1, 0)],
+            Self::TetrominoL => &[(0, 0), (2, 0), (1, 0), (0, 1)],
+            Self::TetrominoL90 => &[(0, 0), (0, -2), (0, -1), (1, 0)],
+            Self::TetrominoL180 => &[(0, 0), (-2, 0), (-1, 0), (0, -1)],
+            Self::TetrominoL270 => &[(0, 0), (0, 2), (0, 1), (-1, 0)],
+            Self::TetrominoLMirrored => &[(0, 0), (2, 0), (1, 0), (0, -1)],
+            Self::TetrominoLMirrored90 => &[(0, 0), (0, -2), (0, -1), (-1, 0)],
+            Self::TetrominoLMirrored180 => &[(0, 0), (-2, 0), (-1, 0), (0, 1)],
+            Self::TetrominoLMirrored270 => &[(0, 0), (0, 2), (0, 1), (1, 0)],
+            Self::TetrominoSkew => &[(0, 0), (1, 0), (1, 1), (2, 1)],
+            Self::TetrominoSkew180 => &[(0, 0), (0, 1), (-1, 1), (-1, 2)],
+            Self::TetrominoSkewMirrored => &[(0, 0), (1, 0), (1, -1), (2, -1)],
+            Self::TetrominoSkewMirrored180 => &[(0, 0), (0, 1), (1, 1), (1, 2)],
         }
-        blocks
     }
 }
 
 struct Bag {
-    blocks: SmallVec<[SmallVec<[u8; 6]>; 6]>,
-    width: u8,
-    height: u8,
+    blocks: Vec<Vec<u8>>,
 }
 
 impl Bag {
     fn new(width: u8, height: u8) -> Self {
-        let mut blocks = SmallVec::new();
+        let mut blocks = Vec::new();
         for _ in 0..height {
             blocks.push(repeat(0).take(usize::from(width)).collect());
         }
-
-        Self {
-            blocks,
-            width,
-            height,
-        }
+        Self { blocks }
     }
 
     fn extend_search_space(&self, search_space: &mut Vec<(RawNomino, u8, u8, u8)>, depth: u8) {
-        for piece in PIECES {
-            for row in 0..self.height {
-                for col in 0..self.width {
-                    search_space.push((*piece, depth, row, col));
+        for (row_num, row) in self.blocks.iter().enumerate() {
+            for (col, cell) in row.iter().enumerate() {
+                if *cell == 0 {
+                    for piece in PIECES {
+                        search_space.push((
+                            *piece,
+                            depth,
+                            u8::try_from(row_num).unwrap(),
+                            u8::try_from(col).unwrap(),
+                        ));
+                    }
                 }
             }
         }
@@ -268,16 +168,17 @@ impl Bag {
     }
 }
 
-pub fn generate(width: u8, height: u8) -> HashSet<SmallVec<[Nomino; 8]>> {
+pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
     let mut bags = HashSet::new();
-    let mut piece_stack = SmallVec::<[_; 16]>::new();
+    let mut piece_stack = Vec::with_capacity(8);
     let mut search_space =
         Vec::with_capacity(PIECES.len() * usize::from(width) * usize::from(height));
 
     let mut scratchpad = Bag::new(width, height);
+    let mut undo_ops = Vec::with_capacity(4);
 
     scratchpad.extend_search_space(&mut search_space, 0);
-    'outer: while let Some((piece, depth, target_row, target_col)) = search_space.pop() {
+    while let Some((piece, depth, target_row, target_col)) = search_space.pop() {
         while piece_stack.len() > usize::from(depth) {
             scratchpad.erase_at_depth(u8::try_from(piece_stack.len()).unwrap());
             piece_stack.pop();
@@ -292,28 +193,41 @@ pub fn generate(width: u8, height: u8) -> HashSet<SmallVec<[Nomino; 8]>> {
         };
         piece_stack.push((piece, block_count));
 
+        let mut failed = false;
         for (offset_row, offset_col) in blocks {
-            let row = i16::from(target_row) + i16::from(offset_row);
-            let col = i16::from(target_col) + i16::from(offset_col);
+            let row = i16::from(target_row) + i16::from(*offset_row);
+            let col = i16::from(target_col) + i16::from(*offset_col);
             if row < 0 || row >= i16::from(height) || col < 0 || col >= i16::from(width) {
-                continue 'outer;
+                failed = true;
+                break;
             }
 
             let row = usize::try_from(row).unwrap();
             let col = usize::try_from(col).unwrap();
             let cell = &mut scratchpad.blocks[row][col];
             if *cell > 0 {
-                continue 'outer;
+                failed = true;
+                break;
             }
 
             *cell = u8::try_from(piece_stack.len()).unwrap();
+            undo_ops.push((row, col));
         }
+
+        if failed {
+            while let Some((row, col)) = undo_ops.pop() {
+                scratchpad.blocks[row][col] = 0;
+            }
+            piece_stack.pop();
+            continue;
+        }
+        undo_ops.clear();
 
         if block_count == width * height {
             let mut bag = piece_stack
                 .iter()
                 .map(|(p, _)| p.into_nomino())
-                .collect::<SmallVec<_>>();
+                .collect::<Vec<_>>();
             bag.sort_unstable();
             bags.insert(bag);
         } else {

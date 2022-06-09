@@ -8,6 +8,3 @@ repository = "https://github.com/SUPERCILEX/grocery_bagger_9000"
 keywords = ["tetris", "solver"]
 categories = ["development-tools"]
 license = "GPL-3.0"
-
-[dependencies]
-smallvec = "1.8.0"
