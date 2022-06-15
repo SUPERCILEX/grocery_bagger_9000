@@ -134,6 +134,7 @@ struct Scratchpad {
     bag_matrix: Vec<Vec<u8>>,
     search_space: Vec<(RawNomino, u8, u8, u8)>,
     undo_ops: Vec<(usize, usize)>,
+    scratch_bag: Vec<Vec<u8>>,
 }
 
 impl Scratchpad {
@@ -152,18 +153,45 @@ impl Scratchpad {
     }
 
     fn extend_search_space(&mut self, depth: u8) {
+        self.scratch_bag.clone_from(&self.bag_matrix);
+
         for (row_num, row) in self.bag_matrix.iter().enumerate() {
             for (col, cell) in row.iter().enumerate() {
-                if *cell == 0 {
-                    for piece in PIECES {
-                        self.search_space.push((
-                            *piece,
-                            depth,
-                            u8::try_from(row_num).unwrap(),
-                            u8::try_from(col).unwrap(),
-                        ));
-                    }
+                if *cell > 0 {
+                    continue;
                 }
+
+                for piece in PIECES {
+                    Self::apply_pending_undo_ops_disjoint(
+                        &mut self.scratch_bag,
+                        &mut self.undo_ops,
+                    );
+
+                    let succeeded = Self::attempt_piece_placement_disjoint(
+                        self.bag_width,
+                        self.bag_height,
+                        &mut self.scratch_bag,
+                        &mut self.undo_ops,
+                        piece.blocks(),
+                        depth,
+                        u8::try_from(row_num).unwrap(),
+                        u8::try_from(col).unwrap(),
+                    );
+
+                    let failed = !succeeded
+                        || Self::is_duplicate_disjoint(&self.scratch_bag, &self.undo_ops);
+                    if failed {
+                        continue;
+                    }
+
+                    self.search_space.push((
+                        *piece,
+                        depth,
+                        u8::try_from(row_num).unwrap(),
+                        u8::try_from(col).unwrap(),
+                    ));
+                }
+                Self::apply_pending_undo_ops_disjoint(&mut self.scratch_bag, &mut self.undo_ops);
             }
         }
     }
@@ -178,8 +206,23 @@ impl Scratchpad {
         }
     }
 
-    fn attempt_piece_placement(
-        &mut self,
+    fn place_piece(&mut self, blocks: &[(i8, i8)], depth: u8, target_row: u8, target_col: u8) {
+        for (offset_row, offset_col) in blocks {
+            let row = i16::from(target_row) + i16::from(*offset_row);
+            let col = i16::from(target_col) + i16::from(*offset_col);
+
+            let row = usize::try_from(row).unwrap();
+            let col = usize::try_from(col).unwrap();
+            self.bag_matrix[row][col] = depth + 1;
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn attempt_piece_placement_disjoint(
+        bag_width: u8,
+        bag_height: u8,
+        bag_matrix: &mut [Vec<u8>],
+        undo_ops: &mut Vec<(usize, usize)>,
         blocks: &[(i8, i8)],
         depth: u8,
         target_row: u8,
@@ -189,42 +232,41 @@ impl Scratchpad {
         for (offset_row, offset_col) in blocks {
             let row = i16::from(target_row) + i16::from(*offset_row);
             let col = i16::from(target_col) + i16::from(*offset_col);
-            if row < 0
-                || row >= i16::from(self.bag_height)
-                || col < 0
-                || col >= i16::from(self.bag_width)
-            {
+            if row < 0 || row >= i16::from(bag_height) || col < 0 || col >= i16::from(bag_width) {
                 failed = true;
                 break;
             }
 
             let row = usize::try_from(row).unwrap();
             let col = usize::try_from(col).unwrap();
-            let cell = &mut self.bag_matrix[row][col];
+            let cell = &mut bag_matrix[row][col];
             if *cell > 0 {
                 failed = true;
                 break;
             }
 
             *cell = depth + 1;
-            self.undo_ops.push((row, col));
+            undo_ops.push((row, col));
         }
         !failed
     }
 
-    fn apply_pending_undo_ops(&mut self) {
-        while let Some((row, col)) = self.undo_ops.pop() {
-            self.bag_matrix[row][col] = 0;
+    fn apply_pending_undo_ops_disjoint(
+        bag_matrix: &mut [Vec<u8>],
+        undo_ops: &mut Vec<(usize, usize)>,
+    ) {
+        while let Some((row, col)) = undo_ops.pop() {
+            bag_matrix[row][col] = 0;
         }
     }
 
-    fn is_duplicate(&self) -> bool {
+    fn is_duplicate_disjoint(bag_matrix: &[Vec<u8>], undo_ops: &Vec<(usize, usize)>) -> bool {
         let mut valid = false;
-        for (row, col) in &self.undo_ops {
-            if *row > 0 && self.bag_matrix[*row - 1][*col] == 0 {
+        for (row, col) in undo_ops {
+            if *row > 0 && bag_matrix[*row - 1][*col] == 0 {
                 return true;
             }
-            valid |= *col == 0 || self.bag_matrix[*row][*col - 1] > 0;
+            valid |= *col == 0 || bag_matrix[*row][*col - 1] > 0;
         }
         !valid
     }
@@ -244,13 +286,7 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
         }
 
         let blocks = piece.blocks();
-        let succeeded = scratchpad.attempt_piece_placement(blocks, depth, target_row, target_col);
-
-        if !succeeded || scratchpad.is_duplicate() {
-            scratchpad.apply_pending_undo_ops();
-            continue;
-        }
-        scratchpad.undo_ops.clear();
+        scratchpad.place_piece(blocks, depth, target_row, target_col);
 
         let block_count = u8::try_from(blocks.len()).unwrap();
         let block_count = if let Some((_, last_count)) = piece_stack.last() {
