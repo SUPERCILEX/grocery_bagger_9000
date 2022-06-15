@@ -134,6 +134,10 @@ struct Scratchpad {
     bag_matrix: Vec<Vec<u8>>,
     search_space: Vec<(RawNomino, u8, u8, u8)>,
     undo_ops: Vec<(usize, usize)>,
+
+    symmetries: HashSet<Vec<Vec<u8>>>,
+    scratch_bag: Vec<Vec<u8>>,
+    scratch_bags_pool: Vec<Vec<Vec<u8>>>,
 }
 
 impl Scratchpad {
@@ -152,19 +156,52 @@ impl Scratchpad {
     }
 
     fn extend_search_space(&mut self, depth: u8) {
+        self.scratch_bag.clone_from(&self.bag_matrix);
+
         for (row_num, row) in self.bag_matrix.iter().enumerate() {
             for (col, cell) in row.iter().enumerate() {
-                if *cell == 0 {
-                    for piece in PIECES {
-                        self.search_space.push((
-                            *piece,
-                            depth,
-                            u8::try_from(row_num).unwrap(),
-                            u8::try_from(col).unwrap(),
-                        ));
+                if *cell > 0 {
+                    continue;
+                }
+
+                for piece in PIECES {
+                    Self::apply_undo_ops(&mut self.scratch_bag, &mut self.undo_ops);
+
+                    let succeeded = Self::attempt_piece_placement_without_undo(
+                        self.bag_width,
+                        self.bag_height,
+                        &mut self.scratch_bag,
+                        &mut self.undo_ops,
+                        piece.blocks(),
+                        depth,
+                        u8::try_from(row_num).unwrap(),
+                        u8::try_from(col).unwrap(),
+                    );
+
+                    if !succeeded || self.symmetries.contains(&self.scratch_bag) {
+                        continue;
                     }
+
+                    let mut rotated = self.scratch_bags_pool.pop().unwrap_or_default();
+                    rotated.clone_from(&self.scratch_bag);
+                    for row in &mut rotated {
+                        row.reverse();
+                    }
+                    rotated.reverse();
+                    self.symmetries.insert(rotated);
+
+                    self.search_space.push((
+                        *piece,
+                        depth,
+                        u8::try_from(row_num).unwrap(),
+                        u8::try_from(col).unwrap(),
+                    ));
                 }
             }
+        }
+
+        for bag in self.symmetries.drain() {
+            self.scratch_bags_pool.push(bag);
         }
     }
 
@@ -185,39 +222,63 @@ impl Scratchpad {
         target_row: u8,
         target_col: u8,
     ) -> bool {
+        let succeeded = Self::attempt_piece_placement_without_undo(
+            self.bag_width,
+            self.bag_height,
+            &mut self.bag_matrix,
+            &mut self.undo_ops,
+            blocks,
+            depth,
+            target_row,
+            target_col,
+        );
+
+        if succeeded {
+            self.undo_ops.clear();
+            true
+        } else {
+            Self::apply_undo_ops(&mut self.bag_matrix, &mut self.undo_ops);
+            false
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn attempt_piece_placement_without_undo(
+        bag_width: u8,
+        bag_height: u8,
+        bag_matrix: &mut [Vec<u8>],
+        undo_ops: &mut Vec<(usize, usize)>,
+        blocks: &[(i8, i8)],
+        depth: u8,
+        target_row: u8,
+        target_col: u8,
+    ) -> bool {
         let mut failed = false;
         for (offset_row, offset_col) in blocks {
             let row = i16::from(target_row) + i16::from(*offset_row);
             let col = i16::from(target_col) + i16::from(*offset_col);
-            if row < 0
-                || row >= i16::from(self.bag_height)
-                || col < 0
-                || col >= i16::from(self.bag_width)
-            {
+            if row < 0 || row >= i16::from(bag_height) || col < 0 || col >= i16::from(bag_width) {
                 failed = true;
                 break;
             }
 
             let row = usize::try_from(row).unwrap();
             let col = usize::try_from(col).unwrap();
-            let cell = &mut self.bag_matrix[row][col];
+            let cell = &mut bag_matrix[row][col];
             if *cell > 0 {
                 failed = true;
                 break;
             }
 
             *cell = depth + 1;
-            self.undo_ops.push((row, col));
+            undo_ops.push((row, col));
         }
+        !failed
+    }
 
-        if failed {
-            while let Some((row, col)) = self.undo_ops.pop() {
-                self.bag_matrix[row][col] = 0;
-            }
-            false
-        } else {
-            self.undo_ops.clear();
-            true
+    fn apply_undo_ops(bag_matrix: &mut [Vec<u8>], undo_ops: &mut Vec<(usize, usize)>) {
+        while let Some((row, col)) = undo_ops.pop() {
+            bag_matrix[row][col] = 0;
         }
     }
 }
