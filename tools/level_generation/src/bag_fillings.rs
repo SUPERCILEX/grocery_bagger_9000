@@ -209,16 +209,24 @@ impl Scratchpad {
             *cell = depth + 1;
             self.undo_ops.push((row, col));
         }
+        !failed
+    }
 
-        if failed {
-            while let Some((row, col)) = self.undo_ops.pop() {
-                self.bag_matrix[row][col] = 0;
-            }
-            false
-        } else {
-            self.undo_ops.clear();
-            true
+    fn apply_pending_undo_ops(&mut self) {
+        while let Some((row, col)) = self.undo_ops.pop() {
+            self.bag_matrix[row][col] = 0;
         }
+    }
+
+    fn is_duplicate(&self) -> bool {
+        let mut valid = false;
+        for (row, col) in &self.undo_ops {
+            if *row > 0 && self.bag_matrix[*row - 1][*col] == 0 {
+                return true;
+            }
+            valid |= *col == 0 || self.bag_matrix[*row][*col - 1] > 0;
+        }
+        !valid
     }
 }
 
@@ -238,9 +246,11 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
         let blocks = piece.blocks();
         let succeeded = scratchpad.attempt_piece_placement(blocks, depth, target_row, target_col);
 
-        if !succeeded {
+        if !succeeded || scratchpad.is_duplicate() {
+            scratchpad.apply_pending_undo_ops();
             continue;
         }
+        scratchpad.undo_ops.clear();
 
         let block_count = u8::try_from(blocks.len()).unwrap();
         let block_count = if let Some((_, last_count)) = piece_stack.last() {
