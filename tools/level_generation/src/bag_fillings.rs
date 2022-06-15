@@ -127,25 +127,31 @@ impl RawNomino {
     }
 }
 
-struct Bag {
-    blocks: Vec<Vec<u8>>,
+#[derive(Debug, Default)]
+struct Scratchpad {
+    bag_matrix: Vec<Vec<u8>>,
+    search_space: Vec<(RawNomino, u8, u8, u8)>,
 }
 
-impl Bag {
+impl Scratchpad {
     fn new(width: u8, height: u8) -> Self {
-        let mut blocks = Vec::new();
+        let mut bag_matrix = Vec::new();
         for _ in 0..height {
-            blocks.push(repeat(0).take(usize::from(width)).collect());
+            bag_matrix.push(repeat(0).take(usize::from(width)).collect());
         }
-        Self { blocks }
+
+        Self {
+            bag_matrix,
+            ..Self::default()
+        }
     }
 
-    fn extend_search_space(&self, search_space: &mut Vec<(RawNomino, u8, u8, u8)>, depth: u8) {
-        for (row_num, row) in self.blocks.iter().enumerate() {
+    fn extend_search_space(&mut self, depth: u8) {
+        for (row_num, row) in self.bag_matrix.iter().enumerate() {
             for (col, cell) in row.iter().enumerate() {
                 if *cell == 0 {
                     for piece in PIECES {
-                        search_space.push((
+                        self.search_space.push((
                             *piece,
                             depth,
                             u8::try_from(row_num).unwrap(),
@@ -158,7 +164,7 @@ impl Bag {
     }
 
     fn erase_at_depth(&mut self, depth: u8) {
-        for row in &mut self.blocks {
+        for row in &mut self.bag_matrix {
             for cell in row {
                 if *cell == depth {
                     *cell = 0;
@@ -171,14 +177,12 @@ impl Bag {
 pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
     let mut bags = HashSet::new();
     let mut piece_stack = Vec::with_capacity(8);
-    let mut search_space =
-        Vec::with_capacity(PIECES.len() * usize::from(width) * usize::from(height));
 
-    let mut scratchpad = Bag::new(width, height);
+    let mut scratchpad = Scratchpad::new(width, height);
     let mut undo_ops = Vec::with_capacity(4);
 
-    scratchpad.extend_search_space(&mut search_space, 0);
-    while let Some((piece, depth, target_row, target_col)) = search_space.pop() {
+    scratchpad.extend_search_space(0);
+    while let Some((piece, depth, target_row, target_col)) = scratchpad.search_space.pop() {
         while piece_stack.len() > usize::from(depth) {
             scratchpad.erase_at_depth(u8::try_from(piece_stack.len()).unwrap());
             piece_stack.pop();
@@ -204,7 +208,7 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
 
             let row = usize::try_from(row).unwrap();
             let col = usize::try_from(col).unwrap();
-            let cell = &mut scratchpad.blocks[row][col];
+            let cell = &mut scratchpad.bag_matrix[row][col];
             if *cell > 0 {
                 failed = true;
                 break;
@@ -216,7 +220,7 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
 
         if failed {
             while let Some((row, col)) = undo_ops.pop() {
-                scratchpad.blocks[row][col] = 0;
+                scratchpad.bag_matrix[row][col] = 0;
             }
             piece_stack.pop();
             continue;
@@ -231,7 +235,7 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
             bag.sort_unstable();
             bags.insert(bag);
         } else {
-            scratchpad.extend_search_space(&mut search_space, depth + 1);
+            scratchpad.extend_search_space(depth + 1);
         }
     }
 
