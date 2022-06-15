@@ -129,18 +129,23 @@ impl RawNomino {
 
 #[derive(Debug, Default)]
 struct Scratchpad {
+    bag_width: u8,
+    bag_height: u8,
     bag_matrix: Vec<Vec<u8>>,
     search_space: Vec<(RawNomino, u8, u8, u8)>,
+    undo_ops: Vec<(usize, usize)>,
 }
 
 impl Scratchpad {
-    fn new(width: u8, height: u8) -> Self {
+    fn new(bag_width: u8, bag_height: u8) -> Self {
         let mut bag_matrix = Vec::new();
-        for _ in 0..height {
-            bag_matrix.push(repeat(0).take(usize::from(width)).collect());
+        for _ in 0..bag_height {
+            bag_matrix.push(repeat(0).take(usize::from(bag_width)).collect());
         }
 
         Self {
+            bag_width,
+            bag_height,
             bag_matrix,
             ..Self::default()
         }
@@ -172,6 +177,49 @@ impl Scratchpad {
             }
         }
     }
+
+    fn attempt_piece_placement(
+        &mut self,
+        blocks: &[(i8, i8)],
+        depth: u8,
+        target_row: u8,
+        target_col: u8,
+    ) -> bool {
+        let mut failed = false;
+        for (offset_row, offset_col) in blocks {
+            let row = i16::from(target_row) + i16::from(*offset_row);
+            let col = i16::from(target_col) + i16::from(*offset_col);
+            if row < 0
+                || row >= i16::from(self.bag_height)
+                || col < 0
+                || col >= i16::from(self.bag_width)
+            {
+                failed = true;
+                break;
+            }
+
+            let row = usize::try_from(row).unwrap();
+            let col = usize::try_from(col).unwrap();
+            let cell = &mut self.bag_matrix[row][col];
+            if *cell > 0 {
+                failed = true;
+                break;
+            }
+
+            *cell = depth + 1;
+            self.undo_ops.push((row, col));
+        }
+
+        if failed {
+            while let Some((row, col)) = self.undo_ops.pop() {
+                self.bag_matrix[row][col] = 0;
+            }
+            false
+        } else {
+            self.undo_ops.clear();
+            true
+        }
+    }
 }
 
 pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
@@ -179,7 +227,6 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
     let mut piece_stack = Vec::with_capacity(8);
 
     let mut scratchpad = Scratchpad::new(width, height);
-    let mut undo_ops = Vec::with_capacity(4);
 
     scratchpad.extend_search_space(0);
     while let Some((piece, depth, target_row, target_col)) = scratchpad.search_space.pop() {
@@ -189,35 +236,11 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
         }
 
         let blocks = piece.blocks();
+        let succeeded = scratchpad.attempt_piece_placement(blocks, depth, target_row, target_col);
 
-        let mut failed = false;
-        for (offset_row, offset_col) in blocks {
-            let row = i16::from(target_row) + i16::from(*offset_row);
-            let col = i16::from(target_col) + i16::from(*offset_col);
-            if row < 0 || row >= i16::from(height) || col < 0 || col >= i16::from(width) {
-                failed = true;
-                break;
-            }
-
-            let row = usize::try_from(row).unwrap();
-            let col = usize::try_from(col).unwrap();
-            let cell = &mut scratchpad.bag_matrix[row][col];
-            if *cell > 0 {
-                failed = true;
-                break;
-            }
-
-            *cell = depth + 1;
-            undo_ops.push((row, col));
-        }
-
-        if failed {
-            while let Some((row, col)) = undo_ops.pop() {
-                scratchpad.bag_matrix[row][col] = 0;
-            }
+        if !succeeded {
             continue;
         }
-        undo_ops.clear();
 
         let block_count = u8::try_from(blocks.len()).unwrap();
         let block_count = if let Some((_, last_count)) = piece_stack.last() {
