@@ -189,13 +189,6 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
         }
 
         let blocks = piece.blocks();
-        let block_count = u8::try_from(blocks.len()).unwrap();
-        let block_count = if let Some((_, last_count)) = piece_stack.last() {
-            last_count + block_count
-        } else {
-            block_count
-        };
-        piece_stack.push((piece, block_count));
 
         let mut failed = false;
         for (offset_row, offset_col) in blocks {
@@ -214,7 +207,7 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
                 break;
             }
 
-            *cell = u8::try_from(piece_stack.len()).unwrap();
+            *cell = depth + 1;
             undo_ops.push((row, col));
         }
 
@@ -222,10 +215,17 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
             while let Some((row, col)) = undo_ops.pop() {
                 scratchpad.bag_matrix[row][col] = 0;
             }
-            piece_stack.pop();
             continue;
         }
         undo_ops.clear();
+
+        let block_count = u8::try_from(blocks.len()).unwrap();
+        let block_count = if let Some((_, last_count)) = piece_stack.last() {
+            last_count + block_count
+        } else {
+            block_count
+        };
+        piece_stack.push((piece, block_count));
 
         if block_count == width * height {
             let mut bag = piece_stack
