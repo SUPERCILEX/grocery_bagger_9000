@@ -67,16 +67,12 @@ impl<'w, 's> BagContainerSpawner for Commands<'w, 's> {
                 let mut starting_position = Vec3::ZERO;
                 for size in sizes {
                     starting_position.x += size.half_width();
-                    spawned_bags.push(
-                        spawn_bag(
-                            parent,
-                            game_speed,
-                            Transform::from_translation(starting_position),
-                            *size,
-                            false,
-                        )
-                        .id(),
-                    );
+                    let mut transform = Transform::from_translation(starting_position);
+                    if size.height() % 2 != 0 {
+                        transform.translation.y += 0.5;
+                    }
+
+                    spawned_bags.push(spawn_bag(parent, game_speed, transform, *size, false).id());
                     starting_position.x += size.half_width() + f32::from(BAG_SPACING);
                 }
             });
