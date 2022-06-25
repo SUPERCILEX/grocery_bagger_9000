@@ -462,7 +462,7 @@ trait ColorUtils {
 impl ColorUtils for Color {
     fn with_lightness(&self, value: f32) -> Color {
         let mut color = self.as_hsla();
-        if let Color::Hsla { lightness, .. } = &mut color {
+        if let Self::Hsla { lightness, .. } = &mut color {
             *lightness = value;
         } else {
             unreachable!()

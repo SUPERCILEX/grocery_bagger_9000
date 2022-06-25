@@ -64,7 +64,7 @@ fn main() {
                 let render_app = app.get_sub_app(RenderApp).unwrap();
                 let render_graph = render_app.world.get_resource::<RenderGraph>().unwrap();
 
-                render_graph_dot(&*render_graph).as_bytes()
+                render_graph_dot(render_graph).as_bytes()
             })
             .unwrap();
         File::create("render_schedule.dot")
