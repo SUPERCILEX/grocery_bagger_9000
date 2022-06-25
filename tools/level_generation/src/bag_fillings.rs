@@ -310,3 +310,28 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
 
     bags
 }
+
+#[cfg(test)]
+mod tests {
+    use std::io::{BufWriter, Write};
+
+    use goldenfile::Mint;
+    use rstest::rstest;
+
+    use super::*;
+
+    #[rstest]
+    fn bag_fillings(#[values(3, 4, 5)] width: u8, #[values(3, 4, 5)] height: u8) {
+        let mut mint = Mint::new("testdata/bag_fillings");
+        let file = mint.new_goldenfile(format!("{width}x{height}")).unwrap();
+        let mut writer = BufWriter::new(file);
+
+        let bags = generate(width, height);
+        let mut bags = bags.iter().collect::<Vec<_>>();
+        bags.sort_unstable();
+        for bag in bags {
+            writeln!(writer, "{:?}", bag).unwrap();
+        }
+        writer.flush().unwrap();
+    }
+}
