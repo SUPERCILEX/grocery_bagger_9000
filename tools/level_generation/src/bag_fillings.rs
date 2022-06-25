@@ -131,10 +131,10 @@ impl RawNomino {
 struct Scratchpad {
     bag_width: usize,
     bag_height: usize,
-    bag_matrix: Vec<Vec<u8>>,
+    bag_matrix: Box<[Box<[u8]>]>,
     search_space: Vec<(RawNomino, u8, usize, usize)>,
     undo_ops: Vec<(usize, usize)>,
-    scratch_bag: Vec<Vec<u8>>,
+    scratch_bag: Box<[Box<[u8]>]>,
 }
 
 impl Scratchpad {
@@ -147,7 +147,7 @@ impl Scratchpad {
         Self {
             bag_width,
             bag_height,
-            bag_matrix,
+            bag_matrix: bag_matrix.into(),
             ..Self::default()
         }
     }
@@ -192,8 +192,8 @@ impl Scratchpad {
     }
 
     fn erase_at_depth(&mut self, depth: u8) {
-        for row in &mut self.bag_matrix {
-            for cell in row {
+        for row in &mut *self.bag_matrix {
+            for cell in &mut **row {
                 if *cell == depth {
                     *cell = 0;
                 }
@@ -221,7 +221,7 @@ impl Scratchpad {
     fn attempt_piece_placement_disjoint(
         bag_width: usize,
         bag_height: usize,
-        bag_matrix: &mut [Vec<u8>],
+        bag_matrix: &mut [Box<[u8]>],
         undo_ops: &mut Vec<(usize, usize)>,
         blocks: &[(usize, isize)],
         depth: u8,
@@ -255,7 +255,7 @@ impl Scratchpad {
     }
 
     fn apply_pending_undo_ops_disjoint(
-        bag_matrix: &mut [Vec<u8>],
+        bag_matrix: &mut [Box<[u8]>],
         undo_ops: &mut Vec<(usize, usize)>,
     ) {
         while let Some((row, col)) = undo_ops.pop() {
@@ -263,7 +263,7 @@ impl Scratchpad {
         }
     }
 
-    fn is_duplicate_disjoint(bag_matrix: &[Vec<u8>], undo_ops: &Vec<(usize, usize)>) -> bool {
+    fn is_duplicate_disjoint(bag_matrix: &[Box<[u8]>], undo_ops: &Vec<(usize, usize)>) -> bool {
         let mut valid = false;
         for (row, col) in undo_ops {
             if *row > 0 && bag_matrix[*row - 1][*col] == 0 {
