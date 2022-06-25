@@ -96,7 +96,7 @@ impl RawNomino {
         }
     }
 
-    const fn blocks(self) -> &'static [(u8, i8)] {
+    const fn blocks(self) -> &'static [(usize, isize)] {
         match self {
             Self::TrominoStraight => &[(0, 0), (0, 1), (0, 2)],
             Self::TrominoStraight180 => &[(0, 0), (1, 0), (2, 0)],
@@ -129,19 +129,19 @@ impl RawNomino {
 
 #[derive(Debug, Default)]
 struct Scratchpad {
-    bag_width: u8,
-    bag_height: u8,
+    bag_width: usize,
+    bag_height: usize,
     bag_matrix: Vec<Vec<u8>>,
-    search_space: Vec<(RawNomino, u8, u8, u8)>,
+    search_space: Vec<(RawNomino, u8, usize, usize)>,
     undo_ops: Vec<(usize, usize)>,
     scratch_bag: Vec<Vec<u8>>,
 }
 
 impl Scratchpad {
-    fn new(bag_width: u8, bag_height: u8) -> Self {
+    fn new(bag_width: usize, bag_height: usize) -> Self {
         let mut bag_matrix = Vec::new();
         for _ in 0..bag_height {
-            bag_matrix.push(repeat(0).take(usize::from(bag_width)).collect());
+            bag_matrix.push(repeat(0).take(bag_width).collect());
         }
 
         Self {
@@ -174,8 +174,8 @@ impl Scratchpad {
                         &mut self.undo_ops,
                         piece.blocks(),
                         depth,
-                        u8::try_from(row_num).unwrap(),
-                        u8::try_from(col).unwrap(),
+                        row_num,
+                        col,
                     );
 
                     let failed = !succeeded
@@ -184,12 +184,7 @@ impl Scratchpad {
                         continue;
                     }
 
-                    self.search_space.push((
-                        *piece,
-                        depth,
-                        u8::try_from(row_num).unwrap(),
-                        u8::try_from(col).unwrap(),
-                    ));
+                    self.search_space.push((*piece, depth, row_num, col));
                 }
                 Self::apply_pending_undo_ops_disjoint(&mut self.scratch_bag, &mut self.undo_ops);
             }
@@ -206,39 +201,43 @@ impl Scratchpad {
         }
     }
 
-    fn place_piece(&mut self, blocks: &[(u8, i8)], depth: u8, target_row: u8, target_col: u8) {
+    fn place_piece(
+        &mut self,
+        blocks: &[(usize, isize)],
+        depth: u8,
+        target_row: usize,
+        target_col: usize,
+    ) {
         for (offset_row, offset_col) in blocks {
             let row = target_row + *offset_row;
-            let col = u8::try_from(i16::from(target_col) + i16::from(*offset_col)).unwrap();
+            let col = usize::try_from(isize::try_from(target_col).unwrap() + *offset_col).unwrap();
 
-            self.bag_matrix[usize::from(row)][usize::from(col)] = depth + 1;
+            self.bag_matrix[row][col] = depth + 1;
         }
     }
 
     #[allow(clippy::too_many_arguments)]
     fn attempt_piece_placement_disjoint(
-        bag_width: u8,
-        bag_height: u8,
+        bag_width: usize,
+        bag_height: usize,
         bag_matrix: &mut [Vec<u8>],
         undo_ops: &mut Vec<(usize, usize)>,
-        blocks: &[(u8, i8)],
+        blocks: &[(usize, isize)],
         depth: u8,
-        target_row: u8,
-        target_col: u8,
+        target_row: usize,
+        target_col: usize,
     ) -> bool {
         for (offset_row, offset_col) in blocks {
             let row = target_row + *offset_row;
-            let col = i16::from(target_col) + i16::from(*offset_col);
+            let col = isize::try_from(target_col).unwrap() + *offset_col;
             if row >= bag_height || col < 0 {
                 return false;
             }
-            let col = u8::try_from(col).unwrap();
+            let col = usize::try_from(col).unwrap();
             if col >= bag_width {
                 return false;
             }
 
-            let row = usize::from(row);
-            let col = usize::from(col);
             let cell = &mut bag_matrix[row][col];
             if *cell > 0 {
                 return false;
@@ -271,7 +270,7 @@ impl Scratchpad {
     }
 }
 
-pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
+pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
     let mut bags = HashSet::new();
     let mut piece_stack = Vec::with_capacity(8);
 
@@ -295,7 +294,7 @@ pub fn generate(width: u8, height: u8) -> HashSet<Vec<Nomino>> {
         };
         piece_stack.push((piece, block_count));
 
-        if block_count == width * height {
+        if usize::from(block_count) == width * height {
             let mut bag = piece_stack
                 .iter()
                 .map(|(p, _)| p.into_nomino())
@@ -320,7 +319,7 @@ mod tests {
     use super::*;
 
     #[rstest]
-    fn bag_fillings(#[values(3, 4, 5)] width: u8, #[values(3, 4, 5)] height: u8) {
+    fn bag_fillings(#[values(3, 4, 5)] width: usize, #[values(3, 4, 5)] height: usize) {
         let mut mint = Mint::new("testdata/bag_fillings");
         let file = mint.new_goldenfile(format!("{width}x{height}")).unwrap();
         let mut writer = BufWriter::new(file);
