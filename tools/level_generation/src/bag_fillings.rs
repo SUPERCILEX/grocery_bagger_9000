@@ -134,7 +134,6 @@ struct Scratchpad {
     full_count: usize,
     bag_matrix: Box<[Box<[u8]>]>,
     search_space: Vec<(RawNomino, u8, usize, usize)>,
-    undo_ops: Vec<(usize, usize)>,
     scratch_bag: Box<[Box<[u8]>]>,
     rows: Box<[usize]>,
 }
@@ -178,22 +177,16 @@ impl Scratchpad {
             }
 
             for piece in PIECES {
-                Self::apply_pending_undo_ops_disjoint(&mut self.scratch_bag, &mut self.undo_ops);
-
                 let succeeded = Self::attempt_piece_placement_disjoint(
                     self.bag_width,
                     self.bag_height,
                     &mut self.scratch_bag,
-                    &mut self.undo_ops,
                     piece.blocks(),
-                    depth,
                     row,
                     col,
                 );
 
-                let failed =
-                    !succeeded || Self::is_duplicate_disjoint(&self.scratch_bag, &self.undo_ops);
-                if failed {
+                if !succeeded {
                     continue;
                 }
 
@@ -204,7 +197,6 @@ impl Scratchpad {
 
                 self.search_space.push((*piece, depth, row, col));
             }
-            Self::apply_pending_undo_ops_disjoint(&mut self.scratch_bag, &mut self.undo_ops);
         }
     }
 
@@ -225,21 +217,25 @@ impl Scratchpad {
         target_row: usize,
         target_col: usize,
     ) {
-        unsafe {
-            *self
-                .bag_matrix
-                .get_unchecked_mut(target_row)
-                .get_unchecked_mut(target_col) = depth + 1;
-        }
-        for (offset_row, offset_col) in blocks {
-            let row = target_row + *offset_row;
-            let col = usize::try_from(isize::try_from(target_col).unwrap() + *offset_col).unwrap();
+        let cells = Self::blocks_to_cells(blocks, target_row, target_col);
+        Self::place_cells_disjoint(&mut self.bag_matrix, cells, depth, target_row, target_col);
+    }
 
+    fn place_cells_disjoint(
+        bag_matrix: &mut [Box<[u8]>],
+        cells: impl IntoIterator<Item = (usize, usize)>,
+        depth: u8,
+        target_row: usize,
+        target_col: usize,
+    ) {
+        unsafe {
+            *bag_matrix
+                .get_unchecked_mut(target_row)
+                .get_unchecked_mut(target_col) = depth;
+        }
+        for (row, col) in cells {
             unsafe {
-                *self
-                    .bag_matrix
-                    .get_unchecked_mut(row)
-                    .get_unchecked_mut(col) = depth + 1;
+                *bag_matrix.get_unchecked_mut(row).get_unchecked_mut(col) = depth;
             }
         }
     }
@@ -249,9 +245,7 @@ impl Scratchpad {
         bag_width: usize,
         bag_height: usize,
         bag_matrix: &mut [Box<[u8]>],
-        undo_ops: &mut Vec<(usize, usize)>,
         blocks: &[(usize, isize)],
-        depth: u8,
         target_row: usize,
         target_col: usize,
     ) -> bool {
@@ -270,40 +264,40 @@ impl Scratchpad {
             if *cell > 0 {
                 return false;
             }
-
-            *cell = depth + 1;
-            undo_ops.push((row, col));
         }
 
-        unsafe {
-            *bag_matrix
-                .get_unchecked_mut(target_row)
-                .get_unchecked_mut(target_col) = depth + 1;
-        }
-        undo_ops.push((target_row, target_col));
+        let cells = Self::blocks_to_cells(blocks, target_row, target_col);
 
-        true
+        Self::place_cells_disjoint(bag_matrix, cells.clone(), 1, target_row, target_col);
+        let failed = Self::is_duplicate_disjoint(bag_matrix, cells.clone());
+        Self::place_cells_disjoint(bag_matrix, cells, 0, target_row, target_col);
+
+        !failed
     }
 
-    fn apply_pending_undo_ops_disjoint(
-        bag_matrix: &mut [Box<[u8]>],
-        undo_ops: &mut Vec<(usize, usize)>,
-    ) {
-        while let Some((row, col)) = undo_ops.pop() {
-            unsafe {
-                *bag_matrix.get_unchecked_mut(row).get_unchecked_mut(col) = 0;
-            }
-        }
+    fn blocks_to_cells(
+        blocks: &[(usize, isize)],
+        target_row: usize,
+        target_col: usize,
+    ) -> impl IntoIterator<Item = (usize, usize)> + Clone + '_ {
+        blocks.iter().map(move |(offset_row, offset_col)| {
+            let row = target_row + *offset_row;
+            let col = usize::try_from(isize::try_from(target_col).unwrap() + *offset_col).unwrap();
+            (row, col)
+        })
     }
 
-    fn is_duplicate_disjoint(bag_matrix: &[Box<[u8]>], undo_ops: &Vec<(usize, usize)>) -> bool {
+    fn is_duplicate_disjoint(
+        bag_matrix: &[Box<[u8]>],
+        cells: impl IntoIterator<Item = (usize, usize)>,
+    ) -> bool {
         let mut valid = false;
-        for (row, col) in undo_ops {
+        for (row, col) in cells {
             unsafe {
-                if *row > 0 && *bag_matrix.get_unchecked(*row - 1).get_unchecked(*col) == 0 {
+                if row > 0 && *bag_matrix.get_unchecked(row - 1).get_unchecked(col) == 0 {
                     return true;
                 }
-                valid |= *col == 0 || *bag_matrix.get_unchecked(*row).get_unchecked(*col - 1) > 0;
+                valid |= col == 0 || *bag_matrix.get_unchecked(row).get_unchecked(col - 1) > 0;
             }
         }
         !valid
@@ -324,7 +318,7 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
         }
 
         let blocks = piece.blocks();
-        scratchpad.place_piece(blocks, depth, target_row, target_col);
+        scratchpad.place_piece(blocks, depth + 1, target_row, target_col);
 
         let block_count = blocks.len() + 1;
         let block_count = if let Some((_, last_count)) = piece_stack.last() {
