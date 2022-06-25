@@ -96,32 +96,32 @@ impl RawNomino {
         }
     }
 
-    const fn blocks(self) -> &'static [(i8, i8)] {
+    const fn blocks(self) -> &'static [(u8, u8)] {
         match self {
             Self::TrominoStraight => &[(0, 0), (0, 1), (0, 2)],
             Self::TrominoStraight180 => &[(0, 0), (1, 0), (2, 0)],
-            Self::TrominoL => &[(0, 0), (0, -1), (1, 0)],
+            Self::TrominoL => &[(0, 0), (0, 1), (1, 1)],
             Self::TrominoL90 => &[(0, 0), (1, 0), (0, 1)],
-            Self::TrominoL180 => &[(0, 0), (1, 0), (1, 1)],
-            Self::TrominoL270 => &[(0, 0), (1, 0), (1, -1)],
+            Self::TrominoL180 => &[(1, 0), (1, 1), (0, 1)],
+            Self::TrominoL270 => &[(0, 0), (1, 0), (1, 1)],
             Self::TetrominoStraight => &[(0, 0), (0, 1), (0, 2), (0, 3)],
             Self::TetrominoStraight180 => &[(0, 0), (1, 0), (2, 0), (3, 0)],
             Self::TetrominoSquare => &[(0, 0), (0, 1), (1, 0), (1, 1)],
-            Self::TetrominoT => &[(0, 0), (0, 2), (1, 1), (0, 1)],
-            Self::TetrominoT90 => &[(0, 0), (2, 0), (1, -1), (1, 0)],
-            Self::TetrominoT180 => &[(0, 0), (0, 2), (-1, 1), (0, 1)],
-            Self::TetrominoT270 => &[(0, 0), (2, 0), (1, 1), (1, 0)],
-            Self::TetrominoL => &[(0, 0), (2, 0), (1, 0), (0, 1)],
-            Self::TetrominoL90 => &[(0, 0), (0, -2), (0, -1), (1, 0)],
-            Self::TetrominoL180 => &[(0, 0), (-2, 0), (-1, 0), (0, -1)],
-            Self::TetrominoL270 => &[(0, 0), (0, 2), (0, 1), (-1, 0)],
-            Self::TetrominoLMirrored => &[(0, 0), (2, 0), (1, 0), (0, -1)],
-            Self::TetrominoLMirrored90 => &[(0, 0), (0, -2), (0, -1), (-1, 0)],
-            Self::TetrominoLMirrored180 => &[(0, 0), (-2, 0), (-1, 0), (0, 1)],
-            Self::TetrominoLMirrored270 => &[(0, 0), (0, 2), (0, 1), (1, 0)],
+            Self::TetrominoT => &[(0, 0), (0, 1), (0, 2), (1, 1)],
+            Self::TetrominoT90 => &[(0, 1), (1, 1), (2, 1), (1, 0)],
+            Self::TetrominoT180 => &[(1, 0), (1, 1), (1, 2), (0, 1)],
+            Self::TetrominoT270 => &[(0, 0), (1, 0), (2, 0), (1, 1)],
+            Self::TetrominoL => &[(0, 0), (1, 0), (2, 0), (0, 1)],
+            Self::TetrominoL90 => &[(0, 0), (0, 1), (0, 2), (1, 2)],
+            Self::TetrominoL180 => &[(0, 1), (1, 1), (2, 1), (2, 0)],
+            Self::TetrominoL270 => &[(0, 0), (1, 0), (1, 1), (1, 2)],
+            Self::TetrominoLMirrored => &[(0, 0), (0, 1), (1, 1), (2, 1)],
+            Self::TetrominoLMirrored90 => &[(1, 0), (1, 1), (1, 2), (0, 2)],
+            Self::TetrominoLMirrored180 => &[(0, 0), (1, 0), (2, 0), (2, 1)],
+            Self::TetrominoLMirrored270 => &[(0, 0), (0, 1), (0, 2), (1, 0)],
             Self::TetrominoSkew => &[(0, 0), (1, 0), (1, 1), (2, 1)],
-            Self::TetrominoSkew180 => &[(0, 0), (0, 1), (-1, 1), (-1, 2)],
-            Self::TetrominoSkewMirrored => &[(0, 0), (1, 0), (1, -1), (2, -1)],
+            Self::TetrominoSkew180 => &[(1, 0), (1, 1), (0, 1), (0, 2)],
+            Self::TetrominoSkewMirrored => &[(0, 1), (1, 1), (1, 0), (2, 0)],
             Self::TetrominoSkewMirrored180 => &[(0, 0), (0, 1), (1, 1), (1, 2)],
         }
     }
@@ -206,14 +206,16 @@ impl Scratchpad {
         }
     }
 
-    fn place_piece(&mut self, blocks: &[(i8, i8)], depth: u8, target_row: u8, target_col: u8) {
-        for (offset_row, offset_col) in blocks {
-            let row = i16::from(target_row) + i16::from(*offset_row);
-            let col = i16::from(target_col) + i16::from(*offset_col);
+    fn place_piece(&mut self, blocks: &[(u8, u8)], depth: u8, target_row: u8, target_col: u8) {
+        let base_offset = blocks[0];
+        let target_row = target_row - base_offset.0;
+        let target_col = target_col - base_offset.1;
 
-            let row = usize::try_from(row).unwrap();
-            let col = usize::try_from(col).unwrap();
-            self.bag_matrix[row][col] = depth + 1;
+        for (offset_row, offset_col) in blocks {
+            let row = target_row + *offset_row;
+            let col = target_col + *offset_col;
+
+            self.bag_matrix[usize::from(row)][usize::from(col)] = depth + 1;
         }
     }
 
@@ -223,16 +225,23 @@ impl Scratchpad {
         bag_height: u8,
         bag_matrix: &mut [Vec<u8>],
         undo_ops: &mut Vec<(usize, usize)>,
-        blocks: &[(i8, i8)],
+        blocks: &[(u8, u8)],
         depth: u8,
         target_row: u8,
         target_col: u8,
     ) -> bool {
+        let base_offset = blocks[0];
+        if target_row < base_offset.0 || target_col < base_offset.1 {
+            return false;
+        }
+        let target_row = target_row - base_offset.0;
+        let target_col = target_col - base_offset.1;
+
         let mut failed = false;
         for (offset_row, offset_col) in blocks {
-            let row = i16::from(target_row) + i16::from(*offset_row);
-            let col = i16::from(target_col) + i16::from(*offset_col);
-            if row < 0 || row >= i16::from(bag_height) || col < 0 || col >= i16::from(bag_width) {
+            let row = target_row + *offset_row;
+            let col = target_col + *offset_col;
+            if row >= bag_height || col >= bag_width {
                 failed = true;
                 break;
             }
