@@ -136,6 +136,7 @@ struct Scratchpad {
     search_space: Vec<(RawNomino, u8, usize, usize)>,
     undo_ops: Vec<(usize, usize)>,
     scratch_bag: Box<[Box<[u8]>]>,
+    rows: Box<[usize]>,
 }
 
 impl Scratchpad {
@@ -150,6 +151,10 @@ impl Scratchpad {
             bag_height,
             full_count: bag_width * bag_height,
             bag_matrix: bag_matrix.into(),
+            rows: repeat(bag_height)
+                .take(bag_width)
+                .collect::<Vec<_>>()
+                .into(),
             ..Self::default()
         }
     }
@@ -157,45 +162,47 @@ impl Scratchpad {
     fn extend_search_space(&mut self, depth: u8, block_count: usize) {
         self.scratch_bag.clone_from(&self.bag_matrix);
 
-        for (row_num, row) in self.bag_matrix.iter().enumerate() {
-            for (col, cell) in row.iter().enumerate() {
-                if *cell > 0 {
+        for (col, row) in self.rows.iter_mut().enumerate() {
+            *row = self.bag_height;
+            while *row > 0 && self.bag_matrix[*row - 1][col] == 0 {
+                *row -= 1;
+            }
+        }
+
+        for (col, row) in self.rows.iter().enumerate() {
+            let row = *row;
+            if row >= self.bag_height {
+                continue;
+            }
+
+            for piece in PIECES {
+                Self::apply_pending_undo_ops_disjoint(&mut self.scratch_bag, &mut self.undo_ops);
+
+                let succeeded = Self::attempt_piece_placement_disjoint(
+                    self.bag_width,
+                    self.bag_height,
+                    &mut self.scratch_bag,
+                    &mut self.undo_ops,
+                    piece.blocks(),
+                    depth,
+                    row,
+                    col,
+                );
+
+                let failed =
+                    !succeeded || Self::is_duplicate_disjoint(&self.scratch_bag, &self.undo_ops);
+                if failed {
                     continue;
                 }
 
-                for piece in PIECES {
-                    Self::apply_pending_undo_ops_disjoint(
-                        &mut self.scratch_bag,
-                        &mut self.undo_ops,
-                    );
-
-                    let succeeded = Self::attempt_piece_placement_disjoint(
-                        self.bag_width,
-                        self.bag_height,
-                        &mut self.scratch_bag,
-                        &mut self.undo_ops,
-                        piece.blocks(),
-                        depth,
-                        row_num,
-                        col,
-                    );
-
-                    let failed = !succeeded
-                        || Self::is_duplicate_disjoint(&self.scratch_bag, &self.undo_ops);
-                    if failed {
-                        continue;
-                    }
-
-                    let block_count_diff =
-                        self.full_count - (block_count + piece.blocks().len() + 1);
-                    if block_count_diff == 5 || (block_count_diff < 3 && block_count_diff != 0) {
-                        continue;
-                    }
-
-                    self.search_space.push((*piece, depth, row_num, col));
+                let block_count_diff = self.full_count - (block_count + piece.blocks().len() + 1);
+                if block_count_diff == 5 || (block_count_diff < 3 && block_count_diff != 0) {
+                    continue;
                 }
-                Self::apply_pending_undo_ops_disjoint(&mut self.scratch_bag, &mut self.undo_ops);
+
+                self.search_space.push((*piece, depth, row, col));
             }
+            Self::apply_pending_undo_ops_disjoint(&mut self.scratch_bag, &mut self.undo_ops);
         }
     }
 
