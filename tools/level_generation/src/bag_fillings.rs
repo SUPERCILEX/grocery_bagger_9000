@@ -96,10 +96,6 @@ impl RawNomino {
         }
     }
 
-    const fn block_counts() -> &'static [usize] {
-        &[3, 4]
-    }
-
     const fn blocks(self) -> &'static [(usize, isize)] {
         match self {
             Self::TrominoStraight => &[(0, 1), (0, 2)],
@@ -135,11 +131,11 @@ impl RawNomino {
 struct Scratchpad {
     bag_width: usize,
     bag_height: usize,
+    full_count: usize,
     bag_matrix: Box<[Box<[u8]>]>,
     search_space: Vec<(RawNomino, u8, usize, usize)>,
     undo_ops: Vec<(usize, usize)>,
     scratch_bag: Box<[Box<[u8]>]>,
-    valid_block_counts: HashSet<usize>,
 }
 
 impl Scratchpad {
@@ -152,34 +148,13 @@ impl Scratchpad {
         Self {
             bag_width,
             bag_height,
+            full_count: bag_width * bag_height,
             bag_matrix: bag_matrix.into(),
-            valid_block_counts: Self::compute_valid_block_counts(bag_width, bag_height),
             ..Self::default()
         }
     }
 
-    fn compute_valid_block_counts(bag_width: usize, bag_height: usize) -> HashSet<usize> {
-        let mut counts = HashSet::new();
-        let max = bag_width * bag_height;
-
-        let mut stack = Vec::new();
-        for count in RawNomino::block_counts() {
-            stack.push(*count);
-        }
-        while let Some(total) = stack.pop() {
-            if total > max || !counts.insert(total) {
-                continue;
-            }
-
-            for count in RawNomino::block_counts() {
-                stack.push(total + *count);
-            }
-        }
-
-        counts
-    }
-
-    fn extend_search_space(&mut self, depth: u8) {
+    fn extend_search_space(&mut self, depth: u8, block_count: usize) {
         self.scratch_bag.clone_from(&self.bag_matrix);
 
         for (row_num, row) in self.bag_matrix.iter().enumerate() {
@@ -208,6 +183,12 @@ impl Scratchpad {
                     let failed = !succeeded
                         || Self::is_duplicate_disjoint(&self.scratch_bag, &self.undo_ops);
                     if failed {
+                        continue;
+                    }
+
+                    let block_count_diff =
+                        self.full_count - (block_count + piece.blocks().len() + 1);
+                    if block_count_diff == 5 || (block_count_diff < 3 && block_count_diff != 0) {
                         continue;
                     }
 
@@ -307,9 +288,8 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
     let mut piece_stack = Vec::with_capacity(8);
 
     let mut scratchpad = Scratchpad::new(width, height);
-    let full_bag = width * height;
 
-    scratchpad.extend_search_space(0);
+    scratchpad.extend_search_space(0, 0);
     while let Some((piece, depth, target_row, target_col)) = scratchpad.search_space.pop() {
         while piece_stack.len() > usize::from(depth) {
             scratchpad.erase_at_depth(u8::try_from(piece_stack.len()).unwrap());
@@ -327,18 +307,15 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
         };
         piece_stack.push((piece, block_count));
 
-        if block_count == full_bag {
+        if block_count == scratchpad.full_count {
             let mut bag = piece_stack
                 .iter()
                 .map(|(p, _)| p.into_nomino())
                 .collect::<Vec<_>>();
             bag.sort_unstable();
             bags.insert(bag);
-        } else if scratchpad
-            .valid_block_counts
-            .contains(&(full_bag - block_count))
-        {
-            scratchpad.extend_search_space(depth + 1);
+        } else {
+            scratchpad.extend_search_space(depth + 1, block_count);
         }
     }
 
