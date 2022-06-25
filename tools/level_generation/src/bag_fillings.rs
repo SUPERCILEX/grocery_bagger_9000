@@ -1,5 +1,7 @@
 use std::{collections::HashSet, iter::repeat};
 
+use serde::Serialize;
+
 const PIECES: &[RawNomino] = &[
     RawNomino::TrominoStraight,
     RawNomino::TrominoStraight180,
@@ -28,7 +30,7 @@ const PIECES: &[RawNomino] = &[
     RawNomino::TetrominoSkewMirrored180,
 ];
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Serialize)]
 pub enum Nomino {
     TrominoStraight,
     TrominoL,
@@ -345,7 +347,7 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
 
 #[cfg(test)]
 mod tests {
-    use std::io::{BufWriter, Write};
+    use std::io::BufWriter;
 
     use goldenfile::Mint;
     use rstest::rstest;
@@ -356,14 +358,11 @@ mod tests {
     fn bag_fillings(#[values(3, 4, 5)] width: usize, #[values(3, 4, 5)] height: usize) {
         let mut mint = Mint::new("testdata/bag_fillings");
         let file = mint.new_goldenfile(format!("{width}x{height}")).unwrap();
-        let mut writer = BufWriter::new(file);
+        let writer = BufWriter::new(file);
 
         let bags = generate(width, height);
         let mut bags = bags.iter().collect::<Vec<_>>();
         bags.sort_unstable();
-        for bag in bags {
-            writeln!(writer, "{:?}", bag).unwrap();
-        }
-        writer.flush().unwrap();
+        serde_json::to_writer_pretty(writer, &bags).unwrap();
     }
 }

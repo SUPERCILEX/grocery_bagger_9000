@@ -1,2 +1,12 @@
-[TrominoStraight, TrominoStraight, TrominoStraight]
-[TrominoStraight, TrominoL, TrominoL]
+[
+  [
+    "TrominoStraight",
+    "TrominoStraight",
+    "TrominoStraight"
+  ],
+  [
+    "TrominoStraight",
+    "TrominoL",
+    "TrominoL"
+  ]
+]
