@@ -98,31 +98,31 @@ impl RawNomino {
 
     const fn blocks(self) -> &'static [(usize, isize)] {
         match self {
-            Self::TrominoStraight => &[(0, 0), (0, 1), (0, 2)],
-            Self::TrominoStraight180 => &[(0, 0), (1, 0), (2, 0)],
-            Self::TrominoL => &[(0, 0), (0, 1), (1, 1)],
-            Self::TrominoL90 => &[(0, 0), (1, 0), (0, 1)],
-            Self::TrominoL180 => &[(0, 0), (1, 0), (1, -1)],
-            Self::TrominoL270 => &[(0, 0), (1, 0), (1, 1)],
-            Self::TetrominoStraight => &[(0, 0), (0, 1), (0, 2), (0, 3)],
-            Self::TetrominoStraight180 => &[(0, 0), (1, 0), (2, 0), (3, 0)],
-            Self::TetrominoSquare => &[(0, 0), (0, 1), (1, 0), (1, 1)],
-            Self::TetrominoT => &[(0, 0), (0, 1), (0, 2), (1, 1)],
-            Self::TetrominoT90 => &[(0, 0), (1, 0), (2, 0), (1, -1)],
-            Self::TetrominoT180 => &[(0, 0), (1, -1), (1, 0), (1, 1)],
-            Self::TetrominoT270 => &[(0, 0), (1, 0), (2, 0), (1, 1)],
-            Self::TetrominoL => &[(0, 0), (1, 0), (2, 0), (0, 1)],
-            Self::TetrominoL90 => &[(0, 0), (0, 1), (0, 2), (1, 2)],
-            Self::TetrominoL180 => &[(0, 0), (1, 0), (2, 0), (2, -1)],
-            Self::TetrominoL270 => &[(0, 0), (1, 0), (1, 1), (1, 2)],
-            Self::TetrominoLMirrored => &[(0, 0), (0, 1), (1, 1), (2, 1)],
-            Self::TetrominoLMirrored90 => &[(0, 0), (1, -2), (1, -1), (1, 0)],
-            Self::TetrominoLMirrored180 => &[(0, 0), (1, 0), (2, 0), (2, 1)],
-            Self::TetrominoLMirrored270 => &[(0, 0), (0, 1), (0, 2), (1, 0)],
-            Self::TetrominoSkew => &[(0, 0), (1, 0), (1, 1), (2, 1)],
-            Self::TetrominoSkew180 => &[(0, 0), (1, -1), (1, 0), (0, 1)],
-            Self::TetrominoSkewMirrored => &[(0, 0), (1, 0), (1, -1), (2, -1)],
-            Self::TetrominoSkewMirrored180 => &[(0, 0), (0, 1), (1, 1), (1, 2)],
+            Self::TrominoStraight => &[(0, 1), (0, 2)],
+            Self::TrominoStraight180 => &[(1, 0), (2, 0)],
+            Self::TrominoL => &[(0, 1), (1, 1)],
+            Self::TrominoL90 => &[(1, 0), (0, 1)],
+            Self::TrominoL180 => &[(1, 0), (1, -1)],
+            Self::TrominoL270 => &[(1, 0), (1, 1)],
+            Self::TetrominoStraight => &[(0, 1), (0, 2), (0, 3)],
+            Self::TetrominoStraight180 => &[(1, 0), (2, 0), (3, 0)],
+            Self::TetrominoSquare => &[(0, 1), (1, 0), (1, 1)],
+            Self::TetrominoT => &[(0, 1), (0, 2), (1, 1)],
+            Self::TetrominoT90 => &[(1, 0), (2, 0), (1, -1)],
+            Self::TetrominoT180 => &[(1, -1), (1, 0), (1, 1)],
+            Self::TetrominoT270 => &[(1, 0), (2, 0), (1, 1)],
+            Self::TetrominoL => &[(1, 0), (2, 0), (0, 1)],
+            Self::TetrominoL90 => &[(0, 1), (0, 2), (1, 2)],
+            Self::TetrominoL180 => &[(1, 0), (2, 0), (2, -1)],
+            Self::TetrominoL270 => &[(1, 0), (1, 1), (1, 2)],
+            Self::TetrominoLMirrored => &[(0, 1), (1, 1), (2, 1)],
+            Self::TetrominoLMirrored90 => &[(1, -2), (1, -1), (1, 0)],
+            Self::TetrominoLMirrored180 => &[(1, 0), (2, 0), (2, 1)],
+            Self::TetrominoLMirrored270 => &[(0, 1), (0, 2), (1, 0)],
+            Self::TetrominoSkew => &[(1, 0), (1, 1), (2, 1)],
+            Self::TetrominoSkew180 => &[(1, -1), (1, 0), (0, 1)],
+            Self::TetrominoSkewMirrored => &[(1, 0), (1, -1), (2, -1)],
+            Self::TetrominoSkewMirrored180 => &[(0, 1), (1, 1), (1, 2)],
         }
     }
 }
@@ -208,6 +208,7 @@ impl Scratchpad {
         target_row: usize,
         target_col: usize,
     ) {
+        self.bag_matrix[target_row][target_col] = depth + 1;
         for (offset_row, offset_col) in blocks {
             let row = target_row + *offset_row;
             let col = usize::try_from(isize::try_from(target_col).unwrap() + *offset_col).unwrap();
@@ -246,6 +247,10 @@ impl Scratchpad {
             *cell = depth + 1;
             undo_ops.push((row, col));
         }
+
+        bag_matrix[target_row][target_col] = depth + 1;
+        undo_ops.push((target_row, target_col));
+
         true
     }
 
@@ -286,7 +291,7 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
         let blocks = piece.blocks();
         scratchpad.place_piece(blocks, depth, target_row, target_col);
 
-        let block_count = u8::try_from(blocks.len()).unwrap();
+        let block_count = u8::try_from(blocks.len() + 1).unwrap();
         let block_count = if let Some((_, last_count)) = piece_stack.last() {
             last_count + block_count
         } else {
