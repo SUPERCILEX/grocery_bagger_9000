@@ -226,32 +226,28 @@ impl Scratchpad {
         target_row: u8,
         target_col: u8,
     ) -> bool {
-        let mut failed = false;
         for (offset_row, offset_col) in blocks {
             let row = target_row + *offset_row;
             let col = i16::from(target_col) + i16::from(*offset_col);
             if row >= bag_height || col < 0 {
-                failed = true;
-                break;
+                return false;
             }
             let col = u8::try_from(col).unwrap();
             if col >= bag_width {
-                failed = true;
-                break;
+                return false;
             }
 
             let row = usize::from(row);
             let col = usize::from(col);
             let cell = &mut bag_matrix[row][col];
             if *cell > 0 {
-                failed = true;
-                break;
+                return false;
             }
 
             *cell = depth + 1;
             undo_ops.push((row, col));
         }
-        !failed
+        true
     }
 
     fn apply_pending_undo_ops_disjoint(
