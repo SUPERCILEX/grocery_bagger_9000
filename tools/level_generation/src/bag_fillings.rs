@@ -96,6 +96,10 @@ impl RawNomino {
         }
     }
 
+    const fn block_counts() -> &'static [usize] {
+        &[3, 4]
+    }
+
     const fn blocks(self) -> &'static [(usize, isize)] {
         match self {
             Self::TrominoStraight => &[(0, 1), (0, 2)],
@@ -135,6 +139,7 @@ struct Scratchpad {
     search_space: Vec<(RawNomino, u8, usize, usize)>,
     undo_ops: Vec<(usize, usize)>,
     scratch_bag: Box<[Box<[u8]>]>,
+    valid_block_counts: HashSet<usize>,
 }
 
 impl Scratchpad {
@@ -148,8 +153,30 @@ impl Scratchpad {
             bag_width,
             bag_height,
             bag_matrix: bag_matrix.into(),
+            valid_block_counts: Self::compute_valid_block_counts(bag_width, bag_height),
             ..Self::default()
         }
+    }
+
+    fn compute_valid_block_counts(bag_width: usize, bag_height: usize) -> HashSet<usize> {
+        let mut counts = HashSet::new();
+        let max = bag_width * bag_height;
+
+        let mut stack = Vec::new();
+        for count in RawNomino::block_counts() {
+            stack.push(*count);
+        }
+        while let Some(total) = stack.pop() {
+            if total > max || !counts.insert(total) {
+                continue;
+            }
+
+            for count in RawNomino::block_counts() {
+                stack.push(total + *count);
+            }
+        }
+
+        counts
     }
 
     fn extend_search_space(&mut self, depth: u8) {
@@ -280,6 +307,7 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
     let mut piece_stack = Vec::with_capacity(8);
 
     let mut scratchpad = Scratchpad::new(width, height);
+    let full_bag = width * height;
 
     scratchpad.extend_search_space(0);
     while let Some((piece, depth, target_row, target_col)) = scratchpad.search_space.pop() {
@@ -291,7 +319,7 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
         let blocks = piece.blocks();
         scratchpad.place_piece(blocks, depth, target_row, target_col);
 
-        let block_count = u8::try_from(blocks.len() + 1).unwrap();
+        let block_count = blocks.len() + 1;
         let block_count = if let Some((_, last_count)) = piece_stack.last() {
             last_count + block_count
         } else {
@@ -299,14 +327,17 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
         };
         piece_stack.push((piece, block_count));
 
-        if usize::from(block_count) == width * height {
+        if block_count == full_bag {
             let mut bag = piece_stack
                 .iter()
                 .map(|(p, _)| p.into_nomino())
                 .collect::<Vec<_>>();
             bag.sort_unstable();
             bags.insert(bag);
-        } else {
+        } else if scratchpad
+            .valid_block_counts
+            .contains(&(full_bag - block_count))
+        {
             scratchpad.extend_search_space(depth + 1);
         }
     }
