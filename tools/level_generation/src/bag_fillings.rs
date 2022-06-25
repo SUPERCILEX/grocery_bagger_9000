@@ -164,7 +164,9 @@ impl Scratchpad {
 
         for (col, row) in self.rows.iter_mut().enumerate() {
             *row = self.bag_height;
-            while *row > 0 && self.bag_matrix[*row - 1][col] == 0 {
+            while *row > 0
+                && unsafe { *self.bag_matrix.get_unchecked(*row - 1).get_unchecked(col) } == 0
+            {
                 *row -= 1;
             }
         }
@@ -223,12 +225,22 @@ impl Scratchpad {
         target_row: usize,
         target_col: usize,
     ) {
-        self.bag_matrix[target_row][target_col] = depth + 1;
+        unsafe {
+            *self
+                .bag_matrix
+                .get_unchecked_mut(target_row)
+                .get_unchecked_mut(target_col) = depth + 1;
+        }
         for (offset_row, offset_col) in blocks {
             let row = target_row + *offset_row;
             let col = usize::try_from(isize::try_from(target_col).unwrap() + *offset_col).unwrap();
 
-            self.bag_matrix[row][col] = depth + 1;
+            unsafe {
+                *self
+                    .bag_matrix
+                    .get_unchecked_mut(row)
+                    .get_unchecked_mut(col) = depth + 1;
+            }
         }
     }
 
@@ -254,7 +266,7 @@ impl Scratchpad {
                 return false;
             }
 
-            let cell = &mut bag_matrix[row][col];
+            let cell = unsafe { bag_matrix.get_unchecked_mut(row).get_unchecked_mut(col) };
             if *cell > 0 {
                 return false;
             }
@@ -263,7 +275,11 @@ impl Scratchpad {
             undo_ops.push((row, col));
         }
 
-        bag_matrix[target_row][target_col] = depth + 1;
+        unsafe {
+            *bag_matrix
+                .get_unchecked_mut(target_row)
+                .get_unchecked_mut(target_col) = depth + 1;
+        }
         undo_ops.push((target_row, target_col));
 
         true
@@ -274,17 +290,21 @@ impl Scratchpad {
         undo_ops: &mut Vec<(usize, usize)>,
     ) {
         while let Some((row, col)) = undo_ops.pop() {
-            bag_matrix[row][col] = 0;
+            unsafe {
+                *bag_matrix.get_unchecked_mut(row).get_unchecked_mut(col) = 0;
+            }
         }
     }
 
     fn is_duplicate_disjoint(bag_matrix: &[Box<[u8]>], undo_ops: &Vec<(usize, usize)>) -> bool {
         let mut valid = false;
         for (row, col) in undo_ops {
-            if *row > 0 && bag_matrix[*row - 1][*col] == 0 {
-                return true;
+            unsafe {
+                if *row > 0 && *bag_matrix.get_unchecked(*row - 1).get_unchecked(*col) == 0 {
+                    return true;
+                }
+                valid |= *col == 0 || *bag_matrix.get_unchecked(*row).get_unchecked(*col - 1) > 0;
             }
-            valid |= *col == 0 || bag_matrix[*row][*col - 1] > 0;
         }
         !valid
     }
