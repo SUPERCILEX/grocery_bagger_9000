@@ -1,4 +1,4 @@
-use std::{collections::HashSet, iter::repeat};
+use std::{collections::HashSet, iter::repeat, thread};
 
 use serde::Serialize;
 
@@ -308,11 +308,41 @@ impl Scratchpad {
 
 pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
     let mut bags = HashSet::new();
+
+    let seed_search_space = {
+        let mut scratchpad = Scratchpad::new(width, height);
+        scratchpad.extend_search_space(0, 0);
+        scratchpad.search_space
+    };
+
+    thread::scope(|scope| {
+        let num_threads = thread::available_parallelism().unwrap().get();
+        let mut sub_problems = Vec::with_capacity(num_threads);
+        let problems_per_thread = seed_search_space.len() / num_threads
+            + if seed_search_space.len() % num_threads == 0 {
+                0
+            } else {
+                1
+            };
+
+        for seed in seed_search_space.chunks(problems_per_thread) {
+            let mut scratchpad = Scratchpad::new(width, height);
+            scratchpad.search_space.extend(seed);
+            sub_problems.push(scope.spawn(move || exhaust_scratchpad(scratchpad)));
+        }
+
+        for problem in sub_problems {
+            bags.extend(problem.join().unwrap());
+        }
+    });
+
+    bags
+}
+
+fn exhaust_scratchpad(mut scratchpad: Scratchpad) -> HashSet<Vec<Nomino>> {
+    let mut bags = HashSet::new();
     let mut piece_stack = Vec::with_capacity(8);
 
-    let mut scratchpad = Scratchpad::new(width, height);
-
-    scratchpad.extend_search_space(0, 0);
     while let Some((piece, depth, target_row, target_col)) = scratchpad.search_space.pop() {
         while piece_stack.len() > usize::from(depth) {
             scratchpad.erase_at_depth(u8::try_from(piece_stack.len()).unwrap());
