@@ -332,6 +332,7 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
 fn exhaust_scratchpad(mut scratchpad: Scratchpad) -> HashSet<Vec<Nomino>> {
     let mut bags = HashSet::new();
     let mut piece_stack = Vec::<(RawNomino, usize, (usize, usize))>::with_capacity(8);
+    let mut completed_bag = Vec::new();
 
     while let Some((piece, depth, (target_row, target_col))) = scratchpad.search_space.pop() {
         while piece_stack.len() > usize::from(depth) {
@@ -351,12 +352,14 @@ fn exhaust_scratchpad(mut scratchpad: Scratchpad) -> HashSet<Vec<Nomino>> {
         piece_stack.push((piece, block_count, (target_row, target_col)));
 
         if block_count == scratchpad.full_count {
-            let mut bag = piece_stack
-                .iter()
-                .map(|p| p.0.into_nomino())
-                .collect::<Vec<_>>();
-            bag.sort_unstable();
-            bags.insert(bag);
+            completed_bag.extend(piece_stack.iter().map(|p| p.0.into_nomino()));
+            completed_bag.sort_unstable();
+
+            // TODO use entry API when available
+            if !bags.contains(&completed_bag) {
+                bags.insert(completed_bag.clone());
+            }
+            completed_bag.clear();
         } else {
             scratchpad.extend_search_space(depth + 1, block_count);
         }
