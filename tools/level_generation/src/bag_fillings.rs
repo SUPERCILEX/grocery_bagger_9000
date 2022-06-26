@@ -135,7 +135,7 @@ struct Scratchpad {
     bag_height: usize,
     full_count: usize,
     bag_matrix: Box<[Box<[u8]>]>,
-    search_space: Vec<(RawNomino, u8, usize, usize)>,
+    search_space: Vec<(RawNomino, u8, (usize, usize))>,
     scratch_bag: Box<[Box<[u8]>]>,
     rows: Box<[usize]>,
 }
@@ -197,17 +197,7 @@ impl Scratchpad {
                     continue;
                 }
 
-                self.search_space.push((*piece, depth, row, col));
-            }
-        }
-    }
-
-    fn erase_at_depth(&mut self, depth: u8) {
-        for row in &mut *self.bag_matrix {
-            for cell in &mut **row {
-                if *cell == depth {
-                    *cell = 0;
-                }
+                self.search_space.push((*piece, depth, (row, col)));
             }
         }
     }
@@ -341,29 +331,29 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
 
 fn exhaust_scratchpad(mut scratchpad: Scratchpad) -> HashSet<Vec<Nomino>> {
     let mut bags = HashSet::new();
-    let mut piece_stack = Vec::with_capacity(8);
+    let mut piece_stack = Vec::<(RawNomino, usize, (usize, usize))>::with_capacity(8);
 
-    while let Some((piece, depth, target_row, target_col)) = scratchpad.search_space.pop() {
+    while let Some((piece, depth, (target_row, target_col))) = scratchpad.search_space.pop() {
         while piece_stack.len() > usize::from(depth) {
-            scratchpad.erase_at_depth(u8::try_from(piece_stack.len()).unwrap());
-            piece_stack.pop();
+            let (piece, _, (target_row, target_col)) = piece_stack.pop().unwrap();
+            scratchpad.place_piece(piece.blocks(), 0, target_row, target_col);
         }
 
         let blocks = piece.blocks();
         scratchpad.place_piece(blocks, depth + 1, target_row, target_col);
 
         let block_count = blocks.len() + 1;
-        let block_count = if let Some((_, last_count)) = piece_stack.last() {
+        let block_count = if let Some((_, last_count, _)) = piece_stack.last() {
             last_count + block_count
         } else {
             block_count
         };
-        piece_stack.push((piece, block_count));
+        piece_stack.push((piece, block_count, (target_row, target_col)));
 
         if block_count == scratchpad.full_count {
             let mut bag = piece_stack
                 .iter()
-                .map(|(p, _)| p.into_nomino())
+                .map(|p| p.0.into_nomino())
                 .collect::<Vec<_>>();
             bag.sort_unstable();
             bags.insert(bag);
