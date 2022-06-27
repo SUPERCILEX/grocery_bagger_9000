@@ -260,7 +260,7 @@ impl Scratchpad {
 
         let cells = Self::blocks_to_cells(blocks, target_row, target_col);
 
-        Self::place_cells_disjoint(bag_matrix, cells.clone(), 1, target_row, target_col);
+        Self::place_cells_disjoint(bag_matrix, cells.clone(), 9, target_row, target_col);
         let failed = Self::is_duplicate_disjoint(bag_matrix, cells.clone());
         Self::place_cells_disjoint(bag_matrix, cells, 0, target_row, target_col);
 
