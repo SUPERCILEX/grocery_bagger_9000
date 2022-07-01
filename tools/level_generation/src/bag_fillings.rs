@@ -2,13 +2,16 @@ use std::{collections::HashSet, iter::repeat, thread};
 
 use serde::Serialize;
 
-const PIECES: &[RawNomino] = &[
+const TROMINOS: &[RawNomino] = &[
     RawNomino::TrominoStraight,
     RawNomino::TrominoStraight180,
     RawNomino::TrominoL,
     RawNomino::TrominoL90,
     RawNomino::TrominoL180,
     RawNomino::TrominoL270,
+];
+
+const TETROMINOS: &[RawNomino] = &[
     RawNomino::TetrominoStraight,
     RawNomino::TetrominoStraight180,
     RawNomino::TetrominoSquare,
@@ -167,21 +170,29 @@ impl Scratchpad {
             }
         }
 
-        for piece in PIECES {
-            let succeeded = self.attempt_piece_placement(piece.blocks(), target_row, target_col);
+        macro_rules! attempt_placements {
+            ($pieces:expr, $num_blocks:expr) => {
+                for piece in $pieces {
+                    let succeeded =
+                        self.attempt_piece_placement(piece.blocks(), target_row, target_col);
 
-            if !succeeded {
-                continue;
-            }
+                    if !succeeded {
+                        continue;
+                    }
 
-            let block_count_diff = self.full_count - (block_count + piece.blocks().len() + 1);
-            if block_count_diff == 5 || (block_count_diff < 3 && block_count_diff != 0) {
-                continue;
-            }
+                    let block_count_diff = self.full_count - (block_count + $num_blocks);
+                    if block_count_diff == 5 || (block_count_diff < 3 && block_count_diff != 0) {
+                        continue;
+                    }
 
-            self.search_space
-                .push((*piece, depth, (target_row, target_col)));
+                    self.search_space
+                        .push((*piece, depth, (target_row, target_col)));
+                }
+            };
         }
+
+        attempt_placements!(TROMINOS, 3);
+        attempt_placements!(TETROMINOS, 4);
     }
 
     fn place_piece(
