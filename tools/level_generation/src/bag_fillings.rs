@@ -2,37 +2,6 @@ use std::{collections::HashSet, iter::repeat, thread};
 
 use serde::Serialize;
 
-const TROMINOS: &[RawNomino] = &[
-    RawNomino::TrominoStraight,
-    RawNomino::TrominoStraight180,
-    RawNomino::TrominoL,
-    RawNomino::TrominoL90,
-    RawNomino::TrominoL180,
-    RawNomino::TrominoL270,
-];
-
-const TETROMINOS: &[RawNomino] = &[
-    RawNomino::TetrominoStraight,
-    RawNomino::TetrominoStraight180,
-    RawNomino::TetrominoSquare,
-    RawNomino::TetrominoT,
-    RawNomino::TetrominoT90,
-    RawNomino::TetrominoT180,
-    RawNomino::TetrominoT270,
-    RawNomino::TetrominoL,
-    RawNomino::TetrominoL90,
-    RawNomino::TetrominoL180,
-    RawNomino::TetrominoL270,
-    RawNomino::TetrominoLMirrored,
-    RawNomino::TetrominoLMirrored90,
-    RawNomino::TetrominoLMirrored180,
-    RawNomino::TetrominoLMirrored270,
-    RawNomino::TetrominoSkew,
-    RawNomino::TetrominoSkew180,
-    RawNomino::TetrominoSkewMirrored,
-    RawNomino::TetrominoSkewMirrored180,
-];
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Ord, PartialOrd, Serialize)]
 pub enum Nomino {
     TrominoStraight,
@@ -170,29 +139,45 @@ impl Scratchpad {
             }
         }
 
-        macro_rules! attempt_placements {
-            ($pieces:expr, $num_blocks:expr) => {
-                for piece in $pieces {
-                    let succeeded =
-                        self.attempt_piece_placement(piece.blocks(), target_row, target_col);
-
-                    if !succeeded {
-                        continue;
+        macro_rules! attempt_placement {
+            ($piece:expr) => {
+                let piece = $piece;
+                if self.attempt_piece_placement(piece.blocks(), target_row, target_col) {
+                    let block_count_diff =
+                        self.full_count - (block_count + piece.blocks().len() + 1);
+                    if block_count_diff != 5 && !(block_count_diff < 3 && block_count_diff != 0) {
+                        self.search_space
+                            .push((piece, depth, (target_row, target_col)));
                     }
-
-                    let block_count_diff = self.full_count - (block_count + $num_blocks);
-                    if block_count_diff == 5 || (block_count_diff < 3 && block_count_diff != 0) {
-                        continue;
-                    }
-
-                    self.search_space
-                        .push((*piece, depth, (target_row, target_col)));
                 }
             };
         }
 
-        attempt_placements!(TROMINOS, 3);
-        attempt_placements!(TETROMINOS, 4);
+        attempt_placement!(RawNomino::TrominoStraight);
+        attempt_placement!(RawNomino::TrominoStraight180);
+        attempt_placement!(RawNomino::TrominoL);
+        attempt_placement!(RawNomino::TrominoL90);
+        attempt_placement!(RawNomino::TrominoL180);
+        attempt_placement!(RawNomino::TrominoL270);
+        attempt_placement!(RawNomino::TetrominoStraight);
+        attempt_placement!(RawNomino::TetrominoStraight180);
+        attempt_placement!(RawNomino::TetrominoSquare);
+        attempt_placement!(RawNomino::TetrominoT);
+        attempt_placement!(RawNomino::TetrominoT90);
+        attempt_placement!(RawNomino::TetrominoT180);
+        attempt_placement!(RawNomino::TetrominoT270);
+        attempt_placement!(RawNomino::TetrominoL);
+        attempt_placement!(RawNomino::TetrominoL90);
+        attempt_placement!(RawNomino::TetrominoL180);
+        attempt_placement!(RawNomino::TetrominoL270);
+        attempt_placement!(RawNomino::TetrominoLMirrored);
+        attempt_placement!(RawNomino::TetrominoLMirrored90);
+        attempt_placement!(RawNomino::TetrominoLMirrored180);
+        attempt_placement!(RawNomino::TetrominoLMirrored270);
+        attempt_placement!(RawNomino::TetrominoSkew);
+        attempt_placement!(RawNomino::TetrominoSkew180);
+        attempt_placement!(RawNomino::TetrominoSkewMirrored);
+        attempt_placement!(RawNomino::TetrominoSkewMirrored180);
     }
 
     fn place_piece(
@@ -223,6 +208,7 @@ impl Scratchpad {
         }
     }
 
+    #[inline]
     fn attempt_piece_placement(
         &self,
         blocks: &[(usize, isize)],
