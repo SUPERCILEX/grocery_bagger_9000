@@ -199,9 +199,11 @@ impl Scratchpad {
         }
         for (offset_row, offset_col) in blocks {
             let row = target_row + *offset_row;
-            let col = usize::try_from(isize::try_from(target_col).unwrap() + *offset_col).unwrap();
-
             unsafe {
+                let col =
+                    usize::try_from(isize::try_from(target_col).unwrap_unchecked() + *offset_col)
+                        .unwrap_unchecked();
+
                 *self
                     .bag_matrix
                     .get_unchecked_mut(row)
@@ -218,11 +220,11 @@ impl Scratchpad {
     ) -> bool {
         for (offset_row, offset_col) in blocks {
             let row = target_row + *offset_row;
-            let col = isize::try_from(target_col).unwrap() + *offset_col;
+            let col = unsafe { isize::try_from(target_col).unwrap_unchecked() } + *offset_col;
             if row >= self.bag_height || col < 0 {
                 return false;
             }
-            let col = usize::try_from(col).unwrap();
+            let col = unsafe { usize::try_from(col).unwrap_unchecked() };
             if col >= self.bag_width {
                 return false;
             }
