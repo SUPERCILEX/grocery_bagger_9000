@@ -137,7 +137,6 @@ struct Scratchpad {
     bag_matrix: Box<[Box<[u8]>]>,
     search_space: Vec<(RawNomino, u8, (usize, usize))>,
     scratch_bag: Box<[Box<[u8]>]>,
-    rows: Box<[usize]>,
 }
 
 impl Scratchpad {
@@ -152,10 +151,6 @@ impl Scratchpad {
             bag_height,
             full_count: bag_width * bag_height,
             bag_matrix: bag_matrix.into(),
-            rows: repeat(bag_height)
-                .take(bag_width)
-                .collect::<Vec<_>>()
-                .into(),
             ..Self::default()
         }
     }
@@ -163,42 +158,39 @@ impl Scratchpad {
     fn extend_search_space(&mut self, depth: u8, block_count: usize) {
         self.scratch_bag.clone_from(&self.bag_matrix);
 
-        for (col, row) in self.rows.iter_mut().enumerate() {
-            *row = self.bag_height;
-            while *row > 0
-                && unsafe { *self.bag_matrix.get_unchecked(*row - 1).get_unchecked(col) } == 0
-            {
-                *row -= 1;
+        let mut target_row = 0;
+        let mut target_col = 0;
+        'outer: for (row_num, row) in self.bag_matrix.iter().enumerate() {
+            for (col, cell) in row.iter().enumerate() {
+                if *cell == 0 {
+                    target_row = row_num;
+                    target_col = col;
+                    break 'outer;
+                }
             }
         }
 
-        for (col, row) in self.rows.iter().enumerate() {
-            let row = *row;
-            if row >= self.bag_height {
+        for piece in PIECES {
+            let succeeded = Self::attempt_piece_placement_disjoint(
+                self.bag_width,
+                self.bag_height,
+                &mut self.scratch_bag,
+                piece.blocks(),
+                target_row,
+                target_col,
+            );
+
+            if !succeeded {
                 continue;
             }
 
-            for piece in PIECES {
-                let succeeded = Self::attempt_piece_placement_disjoint(
-                    self.bag_width,
-                    self.bag_height,
-                    &mut self.scratch_bag,
-                    piece.blocks(),
-                    row,
-                    col,
-                );
-
-                if !succeeded {
-                    continue;
-                }
-
-                let block_count_diff = self.full_count - (block_count + piece.blocks().len() + 1);
-                if block_count_diff == 5 || (block_count_diff < 3 && block_count_diff != 0) {
-                    continue;
-                }
-
-                self.search_space.push((*piece, depth, (row, col)));
+            let block_count_diff = self.full_count - (block_count + piece.blocks().len() + 1);
+            if block_count_diff == 5 || (block_count_diff < 3 && block_count_diff != 0) {
+                continue;
             }
+
+            self.search_space
+                .push((*piece, depth, (target_row, target_col)));
         }
     }
 
@@ -257,14 +249,7 @@ impl Scratchpad {
                 return false;
             }
         }
-
-        let cells = Self::blocks_to_cells(blocks, target_row, target_col);
-
-        Self::place_cells_disjoint(bag_matrix, cells.clone(), 9, target_row, target_col);
-        let failed = Self::is_duplicate_disjoint(bag_matrix, cells.clone());
-        Self::place_cells_disjoint(bag_matrix, cells, 0, target_row, target_col);
-
-        !failed
+        true
     }
 
     fn blocks_to_cells(
@@ -277,22 +262,6 @@ impl Scratchpad {
             let col = usize::try_from(isize::try_from(target_col).unwrap() + *offset_col).unwrap();
             (row, col)
         })
-    }
-
-    fn is_duplicate_disjoint(
-        bag_matrix: &[Box<[u8]>],
-        cells: impl IntoIterator<Item = (usize, usize)>,
-    ) -> bool {
-        let mut valid = false;
-        for (row, col) in cells {
-            unsafe {
-                if row > 0 && *bag_matrix.get_unchecked(row - 1).get_unchecked(col) == 0 {
-                    return true;
-                }
-                valid |= col == 0 || *bag_matrix.get_unchecked(row).get_unchecked(col - 1) > 0;
-            }
-        }
-        !valid
     }
 }
 
@@ -378,7 +347,7 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[ignore]
+    // #[ignore]
     fn bag_fillings(#[values(3, 4, 5, 6)] width: usize, #[values(3, 4, 5, 6)] height: usize) {
         let mut mint = Mint::new("testdata/bag_fillings");
         let file = mint.new_goldenfile(format!("{width}x{height}")).unwrap();
