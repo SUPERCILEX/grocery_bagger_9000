@@ -318,7 +318,7 @@ mod tests {
     use super::*;
 
     #[rstest]
-    // #[ignore]
+    #[ignore]
     fn bag_fillings(#[values(3, 4, 5, 6)] width: usize, #[values(3, 4, 5, 6)] height: usize) {
         let mut mint = Mint::new("testdata/bag_fillings");
         let file = mint.new_goldenfile(format!("{width}x{height}")).unwrap();
