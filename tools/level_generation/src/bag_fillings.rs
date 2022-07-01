@@ -136,7 +136,6 @@ struct Scratchpad {
     full_count: usize,
     bag_matrix: Box<[Box<[u8]>]>,
     search_space: Vec<(RawNomino, u8, (usize, usize))>,
-    scratch_bag: Box<[Box<[u8]>]>,
 }
 
 impl Scratchpad {
@@ -156,8 +155,6 @@ impl Scratchpad {
     }
 
     fn extend_search_space(&mut self, depth: u8, block_count: usize) {
-        self.scratch_bag.clone_from(&self.bag_matrix);
-
         let mut target_row = 0;
         let mut target_col = 0;
         'outer: for (row_num, row) in self.bag_matrix.iter().enumerate() {
@@ -171,14 +168,7 @@ impl Scratchpad {
         }
 
         for piece in PIECES {
-            let succeeded = Self::attempt_piece_placement_disjoint(
-                self.bag_width,
-                self.bag_height,
-                &mut self.scratch_bag,
-                piece.blocks(),
-                target_row,
-                target_col,
-            );
+            let succeeded = self.attempt_piece_placement(piece.blocks(), target_row, target_col);
 
             if !succeeded {
                 continue;
@@ -201,34 +191,27 @@ impl Scratchpad {
         target_row: usize,
         target_col: usize,
     ) {
-        let cells = Self::blocks_to_cells(blocks, target_row, target_col);
-        Self::place_cells_disjoint(&mut self.bag_matrix, cells, depth, target_row, target_col);
-    }
-
-    fn place_cells_disjoint(
-        bag_matrix: &mut [Box<[u8]>],
-        cells: impl IntoIterator<Item = (usize, usize)>,
-        depth: u8,
-        target_row: usize,
-        target_col: usize,
-    ) {
         unsafe {
-            *bag_matrix
+            *self
+                .bag_matrix
                 .get_unchecked_mut(target_row)
                 .get_unchecked_mut(target_col) = depth;
         }
-        for (row, col) in cells {
+        for (offset_row, offset_col) in blocks {
+            let row = target_row + *offset_row;
+            let col = usize::try_from(isize::try_from(target_col).unwrap() + *offset_col).unwrap();
+
             unsafe {
-                *bag_matrix.get_unchecked_mut(row).get_unchecked_mut(col) = depth;
+                *self
+                    .bag_matrix
+                    .get_unchecked_mut(row)
+                    .get_unchecked_mut(col) = depth;
             }
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
-    fn attempt_piece_placement_disjoint(
-        bag_width: usize,
-        bag_height: usize,
-        bag_matrix: &mut [Box<[u8]>],
+    fn attempt_piece_placement(
+        &self,
         blocks: &[(usize, isize)],
         target_row: usize,
         target_col: usize,
@@ -236,32 +219,20 @@ impl Scratchpad {
         for (offset_row, offset_col) in blocks {
             let row = target_row + *offset_row;
             let col = isize::try_from(target_col).unwrap() + *offset_col;
-            if row >= bag_height || col < 0 {
+            if row >= self.bag_height || col < 0 {
                 return false;
             }
             let col = usize::try_from(col).unwrap();
-            if col >= bag_width {
+            if col >= self.bag_width {
                 return false;
             }
 
-            let cell = unsafe { bag_matrix.get_unchecked_mut(row).get_unchecked_mut(col) };
+            let cell = unsafe { self.bag_matrix.get_unchecked(row).get_unchecked(col) };
             if *cell > 0 {
                 return false;
             }
         }
         true
-    }
-
-    fn blocks_to_cells(
-        blocks: &[(usize, isize)],
-        target_row: usize,
-        target_col: usize,
-    ) -> impl IntoIterator<Item = (usize, usize)> + Clone + '_ {
-        blocks.iter().map(move |(offset_row, offset_col)| {
-            let row = target_row + *offset_row;
-            let col = usize::try_from(isize::try_from(target_col).unwrap() + *offset_col).unwrap();
-            (row, col)
-        })
     }
 }
 
