@@ -245,18 +245,11 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
     };
 
     thread::scope(|scope| {
-        let num_threads = thread::available_parallelism().unwrap().get();
-        let mut sub_problems = Vec::with_capacity(num_threads);
-        let problems_per_thread = seed_search_space.len() / num_threads
-            + if seed_search_space.len() % num_threads == 0 {
-                0
-            } else {
-                1
-            };
+        let mut sub_problems = Vec::with_capacity(seed_search_space.len());
 
-        for seed in seed_search_space.chunks(problems_per_thread) {
+        for seed in seed_search_space {
             let mut scratchpad = Scratchpad::new(width, height);
-            scratchpad.search_space.extend(seed);
+            scratchpad.search_space.push(seed);
             sub_problems.push(scope.spawn(move || exhaust_scratchpad(scratchpad)));
         }
 
