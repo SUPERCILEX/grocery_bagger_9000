@@ -261,8 +261,8 @@ pub fn generate(width: usize, height: usize) -> HashSet<Vec<Nomino>> {
     bags
 }
 
-fn exhaust_scratchpad(mut scratchpad: Scratchpad) -> HashSet<Vec<Nomino>> {
-    let mut bags = HashSet::new();
+fn exhaust_scratchpad(mut scratchpad: Scratchpad) -> HashSet<Vec<Nomino>, ahash::RandomState> {
+    let mut bags = HashSet::with_hasher(ahash::RandomState::new());
     let mut piece_stack = Vec::<(RawNomino, usize, (usize, usize))>::with_capacity(8);
     let mut completed_bag = Vec::new();
 
@@ -287,7 +287,6 @@ fn exhaust_scratchpad(mut scratchpad: Scratchpad) -> HashSet<Vec<Nomino>> {
             completed_bag.extend(piece_stack.iter().map(|p| p.0.into_nomino()));
             completed_bag.sort_unstable();
 
-            // TODO use entry API when available
             if !bags.contains(&completed_bag) {
                 bags.insert(completed_bag.clone());
             }

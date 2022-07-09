@@ -25,7 +25,7 @@ bevy_screen_diags = { git = "https://github.com/SUPERCILEX/bevy_screen_diags" }
 [dependencies]
 bevy = { version = "0.7.0", default-features = false }
 bevy-inspector-egui = { version = "0.11.0", optional = true }
-bevy-inspector-egui-rapier = { version = "0.3.0", features = ["rapier3d"], optional = true }
+bevy-inspector-egui-rapier = { version = "0.4.0", features = ["rapier3d"], optional = true }
 bevy_egui = { version = "0.14.0", default-features = false, optional = true }
 bevy_mod_debugdump = { version = "0.4.0", optional = true }
 bevy_prototype_lyon = "0.5.0"
@@ -39,8 +39,8 @@ num-derive = "0.3.3"
 num-format = "0.4.0"
 num-traits = "0.2.15"
 rand = "0.8.5"
-smallvec = "1.8.0"
-tracing = { version = "0.1.34", features = ["release_max_level_off"] }
+smallvec = "1.9.0"
+tracing = { version = "0.1.35", features = ["release_max_level_off"] }
 
 [features]
 debug = ["dep:bevy_egui", "dep:bevy_screen_diags", "dep:bevy-inspector-egui", "dep:bevy-inspector-egui-rapier"]
@@ -53,7 +53,7 @@ bevy = { version = "0.7.0", default-features = false, features = ["bevy_render",
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 bevy = { version = "0.7.0", default-features = false, features = ["bevy_render", "bevy_ui", "bevy_text"] }
 bevy-web-resizer = "2.0.0"
-wasm-bindgen = "0.2.80"
+wasm-bindgen = "0.2.81"
 
 [profile.release]
 lto = true
