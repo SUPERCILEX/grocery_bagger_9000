@@ -7,9 +7,13 @@ license = "GPL-3.0"
 [package]
 name = "grocery_bagger_9000"
 version = "1.0.1"
+authors.workspace = true
+edition.workspace = true
 description = "A Tetris-like puzzler with a twist"
+repository.workspace = true
 keywords = ["bevy", "tetris", "puzzle"]
 categories = ["games"]
+license.workspace = true
 
 [workspace]
 members = [
