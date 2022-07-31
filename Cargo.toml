@@ -1,13 +1,15 @@
+[workspace.package]
+authors = ["Alex Saveau <saveau.alexandre@gmail.com>"]
+edition = "2021"
+repository = "https://github.com/SUPERCILEX/grocery_bagger_9000"
+license = "GPL-3.0"
+
 [package]
 name = "grocery_bagger_9000"
 version = "1.0.1"
-authors = ["Alex Saveau <saveau.alexandre@gmail.com>"]
-edition = "2021"
 description = "A Tetris-like puzzler with a twist"
-repository = "https://github.com/SUPERCILEX/grocery_bagger_9000"
 keywords = ["bevy", "tetris", "puzzle"]
 categories = ["games"]
-license = "GPL-3.0"
 
 [workspace]
 members = [
